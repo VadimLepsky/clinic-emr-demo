@@ -1,38 +1,34 @@
 import { getPrescriptionDisplayStatus, type PrescriptionDisplayStatus } from '@/lib/data'
 import type { PrescriptionSummary, Service } from '@/lib/types'
-import { formatDate } from '@/components/documents/format'
+import { formatDate, formatSheetDate } from '@/lib/format'
 
-const moneyFormatter = new Intl.NumberFormat('uk-UA', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
-
-export function formatMoney(amount: number) {
-  return `${moneyFormatter.format(amount)} грн`
-}
+export { formatMoney, formatMoneyWhole } from '@/lib/format'
 
 export function serviceSourceLabel(service: Service) {
-  return service.source === 'crm' ? 'Клініка' : (service.lab_name ?? 'Лабораторія')
+  return service.source === 'crm' ? 'Clinic' : (service.lab_name ?? 'Laboratory')
 }
 
-/** The prescription's title on the sheet and in its dialog, from its creation date. */
-export function prescriptionTitle(isoDate: string) {
-  return `Призначення з візиту від ${formatDate(isoDate)}`
+/** The care plan's title on the sheet (24/10/2026) and in its dialog (24 Oct 2026), from its creation date. */
+export function prescriptionTitle(isoDate: string, place: 'sheet' | 'dialog' = 'sheet') {
+  return `Care plan from the visit on ${place === 'sheet' ? formatSheetDate(isoDate) : formatDate(isoDate)}`
 }
 
 export function lineTotal(unitPrice: number, quantity: number, discountPct: number) {
   return unitPrice * quantity * (1 - discountPct / 100)
 }
 
-// shortLabel — lists, filters and home pages; label — only the badge in the prescription dialog header.
+// shortLabel — lists, filters and home pages; label — only the badge in the care plan dialog header.
 export const prescriptionStatusMeta: Record<
   PrescriptionDisplayStatus,
   { label: string; shortLabel: string; className: string }
 > = {
-  active: { label: 'Активне', shortLabel: 'Активне', className: 'bg-status-success-bg text-status-success-fg' },
+  active: { label: 'Active', shortLabel: 'Active', className: 'bg-status-success-bg text-status-success-fg' },
   locked: {
-    label: 'Оплачено, редагування закрите',
-    shortLabel: 'Оплачено',
+    label: 'Paid, editing closed',
+    shortLabel: 'Paid',
     className: 'bg-status-info-bg text-status-info-fg',
   },
-  completed: { label: 'Виконано', shortLabel: 'Виконано', className: 'bg-status-neutral-bg text-status-neutral-fg' },
+  completed: { label: 'Completed', shortLabel: 'Completed', className: 'bg-status-neutral-bg text-status-neutral-fg' },
 }
 
 export function prescriptionStatus(summary: PrescriptionSummary) {

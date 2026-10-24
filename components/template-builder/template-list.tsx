@@ -36,7 +36,7 @@ export function TemplateList() {
       )
       await mutateGlobal('templates')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Не вдалося змінити статус')
+      toast.error(error instanceof Error ? error.message : 'Could not change the status')
     }
   }
 
@@ -44,22 +44,22 @@ export function TemplateList() {
     try {
       const copy = await duplicateTemplate(id)
       await Promise.all([mutate(), mutateGlobal('templates')])
-      toast.success('Шаблон продубльовано')
+      toast.success('Template duplicated')
       router.push(`/templates/${copy.id}`)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Не вдалося дублювати шаблон')
+      toast.error(error instanceof Error ? error.message : 'Could not duplicate the template')
     }
   }
 
   return (
     <Page>
       <PageHeader
-        title="Шаблони"
-        description="Неактивні шаблони приховані від лікарів."
+        title="Templates"
+        description="Inactive templates are hidden from doctors."
         actions={
           <Button nativeButton={false} render={<Link href="/templates/new" />}>
             <PlusIcon aria-hidden="true" />
-            Новий шаблон
+            New template
           </Button>
         }
       />
@@ -68,13 +68,13 @@ export function TemplateList() {
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead>Назва</TableHead>
-              <TableHead>Тип</TableHead>
-              <TableHead>Спеціальність</TableHead>
-              <TableHead>Папка</TableHead>
-              <TableHead className="text-right">Версія</TableHead>
-              <TableHead>Активний</TableHead>
-              <TableHead className="text-right">Дії</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Kind</TableHead>
+              <TableHead>Specialty</TableHead>
+              <TableHead>Folder</TableHead>
+              <TableHead className="text-right">Version</TableHead>
+              <TableHead>Active</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -89,7 +89,7 @@ export function TemplateList() {
             {templates?.length === 0 && (
               <TableRow>
                 <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
-                  Шаблонів ще немає.
+                  No templates yet.
                 </TableCell>
               </TableRow>
             )}
@@ -108,18 +108,18 @@ export function TemplateList() {
                   <Switch
                     checked={t.is_active}
                     onCheckedChange={(v) => toggleActive(t.id, v)}
-                    aria-label={`Активний: ${t.name}`}
+                    aria-label={`Active: ${t.name}`}
                   />
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-col items-end">
                     <Button nativeButton={false} variant="ghost" size="sm" render={<Link href={`/templates/${t.id}`} />}>
                       <PencilIcon aria-hidden="true" />
-                      Редагувати
+                      Edit
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => handleDuplicate(t.id)}>
                       <CopyIcon aria-hidden="true" />
-                      Дублювати
+                      Duplicate
                     </Button>
                   </div>
                 </TableCell>

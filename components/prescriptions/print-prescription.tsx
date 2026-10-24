@@ -33,10 +33,10 @@ export function usePrintPrescription() {
 
     try {
       const detail = await getPrescription(prescriptionId)
-      if (!detail) throw new Error('Призначення не знайдено')
+      if (!detail) throw new Error('Care plan not found')
       const { summary, items } = detail
       const [patient, clinicSettings] = await Promise.all([getPatient(summary.patient_id), getClinicSettings()])
-      if (!patient) throw new Error('Пацієнта не знайдено')
+      if (!patient) throw new Error('Patient not found')
       if (cleanupRef.current !== cleanup) return
 
       document.body.append(container)
@@ -68,7 +68,7 @@ export function usePrintPrescription() {
       window.print()
     } catch (error) {
       cleanup()
-      toast.error(error instanceof Error ? error.message : 'Не вдалося підготувати друк')
+      toast.error(error instanceof Error ? error.message : 'Could not prepare printing')
     }
   }, [])
 

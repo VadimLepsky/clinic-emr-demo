@@ -15,7 +15,7 @@ import {
 import { PatientSearch } from '@/components/patients/patient-search'
 import { TemplatePicker } from '@/components/documents/template-picker-dialog'
 
-/** Step 1: find the patient. Step 2, in the same dialog: pick the template («Назад» returns to the search). */
+/** Step 1: find the patient. Step 2, in the same dialog: pick the template («Back» returns to the search). */
 export function NewVisitDialog() {
   const [open, setOpen] = useState(false)
   const [patient, setPatient] = useState<Patient | null>(null)
@@ -30,28 +30,28 @@ export function NewVisitDialog() {
     <>
       <Button onClick={start}>
         <PlusIcon className="size-4" aria-hidden="true" />
-        Новий прийом
+        New visit
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-2xl">
           {patient ? (
             <>
               <DialogHeader>
-                <DialogTitle>Оберіть шаблон</DialogTitle>
-                <DialogDescription>Пацієнт: {patient.full_name}</DialogDescription>
+                <DialogTitle>Choose a template</DialogTitle>
+                <DialogDescription>Patient: {patient.full_name}</DialogDescription>
               </DialogHeader>
               <TemplatePicker patientId={patient.id} onPicked={() => setOpen(false)} />
               <DialogFooter>
                 <Button variant="outline" onClick={() => setPatient(null)}>
-                  Назад
+                  Back
                 </Button>
               </DialogFooter>
             </>
           ) : (
             <>
               <DialogHeader>
-                <DialogTitle>Новий прийом</DialogTitle>
-                <DialogDescription>Знайдіть пацієнта, потім оберіть шаблон документа.</DialogDescription>
+                <DialogTitle>New visit</DialogTitle>
+                <DialogDescription>Find the patient, then choose a document template.</DialogDescription>
               </DialogHeader>
               <PatientSearch onSelect={setPatient} />
             </>

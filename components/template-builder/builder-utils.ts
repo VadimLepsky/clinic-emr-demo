@@ -26,41 +26,41 @@ export type TemplateMeta = Pick<
 >
 
 export const kindOptions: { value: TemplateKind; label: string }[] = [
-  { value: 'consultation', label: 'Консультація' },
-  { value: 'ultrasound', label: 'УЗД' },
-  { value: 'lab', label: 'Аналізи' },
-  { value: 'certificate', label: 'Довідка' },
-  { value: 'other', label: 'Інше' },
+  { value: 'consultation', label: 'Consultation' },
+  { value: 'ultrasound', label: 'Ultrasound' },
+  { value: 'lab', label: 'Lab results' },
+  { value: 'certificate', label: 'Certificate' },
+  { value: 'other', label: 'Other' },
 ]
 
 export const kindLabels = Object.fromEntries(kindOptions.map((k) => [k.value, k.label])) as Record<TemplateKind, string>
 
 export const serviceCategoryOptions: { value: ServicesBlock['category']; label: string }[] = [
-  { value: 'lab', label: 'Аналізи' },
-  { value: 'instrumental', label: 'Інструментальна діагностика' },
-  { value: 'consultation', label: 'Консультації' },
+  { value: 'lab', label: 'Lab tests' },
+  { value: 'instrumental', label: 'Instrumental diagnostics' },
+  { value: 'consultation', label: 'Consultations' },
 ]
 
 export const templateVariables: { key: TemplateVariable; label: string }[] = [
-  { key: 'patient.full_name', label: 'ПІБ пацієнта' },
-  { key: 'patient.age', label: 'Вік' },
-  { key: 'patient.birth_date', label: 'Дата народження' },
-  { key: 'patient.crm_client_id', label: 'Номер медкарти' },
-  { key: 'document.date', label: 'Дата прийому' },
-  { key: 'document.number', label: 'Номер документа' },
-  { key: 'doctor.full_name', label: 'ПІБ лікаря' },
-  { key: 'doctor.specialty', label: 'Спеціалізація' },
+  { key: 'patient.full_name', label: "Patient's name" },
+  { key: 'patient.age', label: 'Age' },
+  { key: 'patient.birth_date', label: 'Date of birth' },
+  { key: 'patient.crm_client_id', label: 'Record No.' },
+  { key: 'document.date', label: 'Visit date' },
+  { key: 'document.number', label: 'Document No.' },
+  { key: 'doctor.full_name', label: "Doctor's name" },
+  { key: 'doctor.specialty', label: 'Specialty' },
 ]
 
-// The patient block of a printed document (DocumentSheet, view): Дата, Медкарта №, Пацієнт, День народження;
-// Документ №, Спеціаліст.
+// The patient block of a printed document (DocumentSheet, view): Date, Record No., Patient, Date of birth;
+// Document No., Doctor.
 export const autoFilledInfo = [
-  'Дата прийому',
-  'Номер медкарти',
-  'ПІБ пацієнта',
-  'Дата народження',
-  'Номер документа',
-  'ПІБ лікаря',
+  'Visit date',
+  'Record No.',
+  "Patient's name",
+  'Date of birth',
+  'Document No.',
+  "Doctor's name",
 ]
 
 export function collectIds(schema: TemplateSchema): string[] {
@@ -83,30 +83,30 @@ export function createId(prefix: 'sec' | 'f', schema: TemplateSchema): string {
 export type BlockKindChoice = 'text' | 'select' | 'checkbox' | 'group' | 'static' | 'services' | 'image'
 
 export const blockChoices: { value: BlockKindChoice; label: string }[] = [
-  { value: 'text', label: 'Текстове поле' },
-  { value: 'select', label: 'Випадаючий список' },
-  { value: 'checkbox', label: 'Чекбокс' },
-  { value: 'group', label: 'Секція' },
-  { value: 'static', label: 'Текст зі змінними' },
-  { value: 'services', label: 'Рекомендовані послуги' },
-  { value: 'image', label: 'Зображення' },
+  { value: 'text', label: 'Text field' },
+  { value: 'select', label: 'Dropdown' },
+  { value: 'checkbox', label: 'Checkbox' },
+  { value: 'group', label: 'Group' },
+  { value: 'static', label: 'Text with variables' },
+  { value: 'services', label: 'Recommended services' },
+  { value: 'image', label: 'Image' },
 ]
 
 export const imageWidthOptions: { value: ImageBlock['width']; label: string }[] = [
-  { value: 'auto', label: 'Авто' },
+  { value: 'auto', label: 'Auto' },
   { value: 'third', label: '⅓' },
   { value: 'half', label: '½' },
-  { value: 'full', label: 'Вся ширина' },
+  { value: 'full', label: 'Full width' },
 ]
 
 export const imageAlignOptions: { value: ImageBlock['align']; label: string }[] = [
-  { value: 'left', label: 'Ліворуч' },
-  { value: 'center', label: 'По центру' },
-  { value: 'right', label: 'Праворуч' },
+  { value: 'left', label: 'Left' },
+  { value: 'center', label: 'Centre' },
+  { value: 'right', label: 'Right' },
 ]
 
 export function createField(choice: 'text' | 'select' | 'checkbox', id: string): FieldBlock {
-  if (choice === 'select') return { kind: 'field', id, type: 'select', label: '', description: '', options: ['Варіант 1'] }
+  if (choice === 'select') return { kind: 'field', id, type: 'select', label: '', description: '', options: ['Option 1'] }
   if (choice === 'checkbox') return { kind: 'field', id, type: 'checkbox', label: '', description: '', defaultValue: false }
   return { kind: 'field', id, type: 'text', label: '', description: '' }
 }
@@ -118,7 +118,7 @@ export function createBlock(choice: BlockKindChoice, id: string): Block {
     case 'static':
       return { kind: 'static', id, text: '' }
     case 'services':
-      return { kind: 'services', id, label: 'Аналізи', category: 'lab' }
+      return { kind: 'services', id, label: 'Lab tests', category: 'lab' }
     case 'image':
       return { kind: 'image', id, src: '', alt: '', width: 'auto', align: 'center' }
     default:
@@ -126,8 +126,8 @@ export function createBlock(choice: BlockKindChoice, id: string): Block {
   }
 }
 
-// rec_external (free text «поза клінікою») exists only in old templates: such services are now chips in the
-// services fields («Додати «…» як послугу поза клінікою»). It stays here so an old section is still recognised.
+// rec_external (free «External» text) exists only in old templates: such services are now chips in the
+// services fields («Add «…» as an External service»). It stays here so an old section is still recognised.
 export const RECOMMENDATION_IDS = [
   'rec_lab',
   'rec_instrumental',
@@ -141,13 +141,13 @@ export const RECOMMENDATION_IDS = [
 export function createRecommendationsSection(sectionId: string): Section {
   return {
     id: sectionId,
-    title: 'Рекомендації',
+    title: 'Recommendations',
     blocks: [
-      { kind: 'services', id: 'rec_lab', label: 'Аналізи', category: 'lab' },
-      { kind: 'services', id: 'rec_instrumental', label: 'Інструментальна діагностика', category: 'instrumental' },
-      { kind: 'services', id: 'rec_consultation', label: 'Консультації спеціалістів', category: 'consultation' },
-      { kind: 'field', id: 'rec_lifestyle', type: 'textarea', label: 'Спосіб життя', description: 'Харчування, режим, фізична активність' },
-      { kind: 'field', id: 'rec_drugs', type: 'textarea', label: 'Медикаментозне лікування', description: 'Препарати, дозування, тривалість' },
+      { kind: 'services', id: 'rec_lab', label: 'Lab tests', category: 'lab' },
+      { kind: 'services', id: 'rec_instrumental', label: 'Instrumental diagnostics', category: 'instrumental' },
+      { kind: 'services', id: 'rec_consultation', label: 'Specialist consultations', category: 'consultation' },
+      { kind: 'field', id: 'rec_lifestyle', type: 'textarea', label: 'Lifestyle', description: 'Diet, routine, physical activity' },
+      { kind: 'field', id: 'rec_drugs', type: 'textarea', label: 'Medication', description: 'Drugs, doses, duration' },
     ],
   }
 }
@@ -161,11 +161,11 @@ export const sectionAnchorId = (sectionId: string) => `tb-section-${sectionId}`
 /** Returned in document order, so the first key is the first error on the page. */
 export function validateTemplate(meta: TemplateMeta, schema: TemplateSchema): BuilderErrors {
   const errors: BuilderErrors = {}
-  if (!meta.name.trim()) errors.name = 'Вкажіть назву шаблону'
+  if (!meta.name.trim()) errors.name = 'Enter a template name'
 
   const seen = new Set<string>()
   const checkId = (id: string) => {
-    if (seen.has(id)) errors[errorKey(id, 'id')] = 'Ідентифікатор блоку повторюється'
+    if (seen.has(id)) errors[errorKey(id, 'id')] = 'The block id is used twice'
     seen.add(id)
   }
   const checkField = (field: FieldBlock) => {
@@ -173,9 +173,9 @@ export function validateTemplate(meta: TemplateMeta, schema: TemplateSchema): Bu
     // The name is optional: without it the sheet prints only the value.
     if (field.type === 'select' || field.type === 'multiselect') {
       const options = (field.options ?? []).map((o) => o.trim())
-      if (!options.length) errors[errorKey(field.id, 'options')] = 'Додайте хоча б один варіант'
-      else if (options.some((o) => !o)) errors[errorKey(field.id, 'options')] = 'Заповніть усі варіанти'
-      else if (new Set(options).size !== options.length) errors[errorKey(field.id, 'options')] = 'Варіанти повторюються'
+      if (!options.length) errors[errorKey(field.id, 'options')] = 'Add at least one option'
+      else if (options.some((o) => !o)) errors[errorKey(field.id, 'options')] = 'Fill in every option'
+      else if (new Set(options).size !== options.length) errors[errorKey(field.id, 'options')] = 'Options repeat'
     }
   }
 
@@ -188,8 +188,8 @@ export function validateTemplate(meta: TemplateMeta, schema: TemplateSchema): Bu
         block.blocks.forEach(checkField)
       } else {
         checkId(block.id)
-        if (block.kind === 'services' && !block.label.trim()) errors[errorKey(block.id, 'label')] = 'Вкажіть назву блоку'
-        if (block.kind === 'image' && !block.src) errors[errorKey(block.id, 'src')] = 'Завантажте зображення'
+        if (block.kind === 'services' && !block.label.trim()) errors[errorKey(block.id, 'label')] = 'Enter the block title'
+        if (block.kind === 'image' && !block.src) errors[errorKey(block.id, 'src')] = 'Upload an image'
       }
     }
   }

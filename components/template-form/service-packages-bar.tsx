@@ -4,13 +4,9 @@ import { PlusIcon } from 'lucide-react'
 import type { DocumentValues, FieldValue, Service, ServiceSelection, ServicesBlock, TemplateSchema } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import type { ServicesEditContext } from './services-context'
+import { formatMoney, plural } from '@/lib/format'
 import { asServiceSelections, getSelectedServices } from './utils'
 
-const priceFormatter = new Intl.NumberFormat('uk-UA', {
-  style: 'currency',
-  currency: 'UAH',
-  maximumFractionDigits: 0,
-})
 
 type ServicePackagesBarProps = {
   blocks: ServicesBlock[]
@@ -42,7 +38,7 @@ export function ServicePackagesBar({ blocks, values, onChange, context, classNam
   return (
     <div
       role="group"
-      aria-label="Пакети послуг"
+      aria-label="Service bundles"
       className={className ?? 'flex flex-wrap items-center gap-1.5 print:hidden'}
     >
       {context.packages.map((pkg) => (
@@ -61,15 +57,7 @@ type ServicesTotalProps = {
   catalog: Map<string, Service>
 }
 
-function servicesWord(n: number) {
-  const mod10 = n % 10
-  const mod100 = n % 100
-  if (mod10 === 1 && mod100 !== 11) return 'послуга'
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'послуги'
-  return 'послуг'
-}
-
-// Every service counts; the sum is of the clinic's prices (a service outside the clinic has none).
+// Every service counts; the sum is of the clinic's prices (an External service has none).
 export function ServicesTotal({ schema, values, catalog }: ServicesTotalProps) {
   const selected = getSelectedServices(schema, values)
   const total = selected.reduce(
@@ -78,7 +66,7 @@ export function ServicesTotal({ schema, values, catalog }: ServicesTotalProps) {
   )
   return (
     <p className="text-sm text-muted-foreground tabular-nums print:hidden" aria-live="polite">
-      {`Призначення: ${selected.length} ${servicesWord(selected.length)} на суму ${priceFormatter.format(total)}`}
+      {`Care plan: ${plural(selected.length, 'service')}, ${formatMoney(total)}`}
     </p>
   )
 }

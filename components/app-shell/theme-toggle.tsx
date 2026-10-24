@@ -14,8 +14,8 @@ export function ThemeToggle({ className }: { className?: string }) {
       variant="ghost"
       size="icon"
       className={className}
-      aria-label="Перемкнути тему"
-      title="Перемкнути тему"
+      aria-label="Toggle theme"
+      title="Toggle theme"
       onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
     >
       <SunIcon className="hidden size-4 dark:block" />

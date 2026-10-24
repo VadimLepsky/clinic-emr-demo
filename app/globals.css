@@ -34,7 +34,7 @@
   --destructive: #e85f5c;
   --destructive-foreground: #fefefe;
   --border: #eae9ed;
-  /* Borders and dividers on the A4 sheet (висновок, призначення); independent of the interface --border. */
+  /* Borders and dividers on the A4 sheet (consultation note, care plan); independent of the interface --border. */
   --sheet-border: #eae9ed;
   /* Section bars and table headers on the A4 sheet; the sheet is always paper (.paper), in print too. */
   --sheet-bar: #f4f4f6;

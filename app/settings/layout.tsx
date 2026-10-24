@@ -7,7 +7,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
   return (
     <ManagerOnly>
       <SettingsPage>
-        <PageHeader title="Налаштування" />
+        <PageHeader title="Settings" />
         <div className="@container">
           <div className="flex flex-col gap-6 @5xl:flex-row">
             <SettingsNav />

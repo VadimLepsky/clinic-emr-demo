@@ -38,7 +38,7 @@ export function EditTemplatePage({ templateId }: { templateId: string }) {
   if (!data) {
     return (
       <Page>
-        <PageHeader back={{ href: '/templates', label: 'Шаблони' }} title="Шаблон не знайдено" />
+        <PageHeader back={{ href: '/templates', label: 'Templates' }} title="Template not found" />
       </Page>
     )
   }

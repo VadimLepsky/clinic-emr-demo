@@ -28,7 +28,7 @@ export function RequisitesCard({ meta, onChange }: RequisitesCardProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Реквізити</CardTitle>
+        <CardTitle>Letterhead and print</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
         <LetterheadSelect
@@ -39,15 +39,15 @@ export function RequisitesCard({ meta, onChange }: RequisitesCardProps) {
         />
 
         <ImageUploadField
-          label="Банер праворуч від заголовка"
+          label="Banner to the right of the title"
           value={meta.banner_image_url}
           onChange={(banner_image_url) => onChange({ banner_image_url })}
-          hint="Реклама, запис на прийом, QR-код. Займає ~40% ширини праворуч від заголовка; дані пацієнта тоді друкуються рядками."
+          hint="Promo, online booking, a QR code. Takes ~40% of the width to the right of the title; patient details then print as lines."
         />
 
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium">Дані пацієнта та лікаря</p>
-          <p className="text-sm text-muted-foreground">Завжди друкуються під шапкою та заповнюються автоматично:</p>
+          <p className="text-sm font-medium">Patient and doctor details</p>
+          <p className="text-sm text-muted-foreground">Always printed under the header and filled in automatically:</p>
           <ul className="flex flex-wrap gap-1.5">
             {autoFilledInfo.map((item) => (
               <li
@@ -69,22 +69,22 @@ export function RequisitesCard({ meta, onChange }: RequisitesCardProps) {
         />
 
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="tb-footer">Текст підвалу</Label>
+          <Label htmlFor="tb-footer">Footer text</Label>
           <VariableInput
             id="tb-footer"
             multiline
             rows={3}
-            placeholder="Напр., УЗ-діагностику проведено на апараті…"
+            placeholder="E.g. Scan performed on an ultrasound system…"
             value={meta.footer_text ?? ''}
             onChange={(v) => onChange({ footer_text: v || null })}
           />
         </div>
 
         <ImageUploadField
-          label="Логотип у підвалі"
+          label="Footer logo"
           value={meta.footer_image_url}
           onChange={(footer_image_url) => onChange({ footer_image_url })}
-          hint="Праворуч від тексту підвалу, висота ~12 мм. Напр., логотип апарата."
+          hint="To the right of the footer text, ~12 mm high. E.g. the device logo."
           previewClassName="h-20 w-full"
         />
 
@@ -94,7 +94,7 @@ export function RequisitesCard({ meta, onChange }: RequisitesCardProps) {
             checked={meta.show_signature}
             onCheckedChange={(v) => onChange({ show_signature: v })}
           />
-          <Label htmlFor="tb-signature">Рядок підпису лікаря</Label>
+          <Label htmlFor="tb-signature">Doctor&apos;s signature line</Label>
         </div>
       </CardContent>
     </Card>
@@ -102,11 +102,11 @@ export function RequisitesCard({ meta, onChange }: RequisitesCardProps) {
 }
 
 const selectCopy: Record<LetterheadKind, { label: string; none: string }> = {
-  header: { label: 'Шапка', none: 'Без шапки' },
-  footer: { label: 'Підвал', none: 'Без підвалу' },
+  header: { label: 'Header', none: 'No header' },
+  footer: { label: 'Footer', none: 'No footer' },
 }
 
-/** «Шапка» / «Підвал»: a letterhead from the library (Налаштування → Шапки і підвали) or none, with its preview. */
+/** «Header» / «Footer»: a letterhead from the library (Settings → Headers & footers) or none, with its preview. */
 function LetterheadSelect({
   kind,
   value,
@@ -130,7 +130,7 @@ function LetterheadSelect({
   }
   const options = letterheads.filter((l) => l.kind === kind)
   const items = [
-    ...options.map((l) => ({ value: l.id, label: l.is_default ? `${l.name} (за замовчуванням)` : l.name })),
+    ...options.map((l) => ({ value: l.id, label: l.is_default ? `${l.name} (default)` : l.name })),
     { value: NONE, label: copy.none },
   ]
   const selected = options.find((l) => l.id === value)
@@ -152,10 +152,10 @@ function LetterheadSelect({
       </Select>
       {selected && <LetterheadPreview src={selected.image_url} alt={selected.name} />}
       <p className="text-sm text-muted-foreground">
-        {kind === 'footer' && options.length === 0 ? 'Підвалів ще немає. ' : ''}
-        Бланки завантажуються в{' '}
+        {kind === 'footer' && options.length === 0 ? 'No footers yet. ' : ''}
+        Letterheads are uploaded in{' '}
         <Link href="/settings/letterheads" className="text-primary underline-offset-4 hover:underline">
-          Налаштування → Шапки і підвали
+          Settings → Headers &amp; footers
         </Link>
         .
       </p>

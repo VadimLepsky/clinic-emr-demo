@@ -8,22 +8,25 @@ import './globals.css'
 import './print.css'
 
 const manrope = Manrope({
-  subsets: ['latin', 'cyrillic', 'cyrillic-ext'],
+  subsets: ['latin', 'latin-ext'],
   weight: ['400', '500', '600', '700'],
   variable: '--font-manrope',
 })
 
 // Documents (A4 sheets, print) are set in IBM Plex Sans; the interface stays on Manrope.
 const plex = IBM_Plex_Sans({
-  subsets: ['latin', 'cyrillic', 'cyrillic-ext'],
+  subsets: ['latin', 'latin-ext'],
   weight: ['400', '500', '600', '700'],
   display: 'swap',
   variable: '--font-plex',
 })
 
 export const metadata: Metadata = {
-  title: 'Медична інформаційна система',
-  description: 'Внутрішня система електронних медичних карток',
+  title: {
+    default: 'Linden Medical Center — EMR demo',
+    template: '%s · Linden EMR',
+  },
+  description: 'Demo of an electronic medical record for a private outpatient clinic. All data is fictional.',
 }
 
 export const viewport: Viewport = {
@@ -45,7 +48,7 @@ export default async function RootLayout({
   const forcedTheme = user.role === 'manager' ? undefined : 'light'
 
   return (
-    <html lang="uk" className={`${manrope.variable} ${plex.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${manrope.variable} ${plex.variable}`} suppressHydrationWarning>
       <body className="font-sans antialiased">
         <ThemeProvider
           attribute="class"

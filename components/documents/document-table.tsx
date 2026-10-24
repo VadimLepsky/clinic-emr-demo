@@ -33,11 +33,11 @@ export function DocumentTable({ patientId, documents, folders, staff, files }: D
     <Table>
       <TableHeader className="[&_tr]:border-b-0">
         <TableRow className="border-b-0 hover:bg-transparent">
-          <TableHead>Тип документа</TableHead>
-          <TableHead>Дата</TableHead>
-          <TableHead>Дата створення</TableHead>
-          <TableHead>Створено</TableHead>
-          <TableHead>Папка</TableHead>
+          <TableHead>Document</TableHead>
+          <TableHead>Date</TableHead>
+          <TableHead>Created on</TableHead>
+          <TableHead>Created by</TableHead>
+          <TableHead>Folder</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -52,12 +52,12 @@ export function DocumentTable({ patientId, documents, folders, staff, files }: D
                 {doc.kind === 'template' ? (
                   <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-accent text-sidebar-accent-foreground">
                     <FileTextIcon className="size-4" aria-hidden="true" />
-                    <span className="sr-only">Заповнена форма</span>
+                    <span className="sr-only">Filled-in form</span>
                   </span>
                 ) : (
                   <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-accent text-sidebar-accent-foreground">
                     <PaperclipIcon className="size-4" aria-hidden="true" />
-                    <span className="sr-only">Завантажений файл</span>
+                    <span className="sr-only">Uploaded file</span>
                   </span>
                 )}
                 {doc.kind === 'template' ? (
@@ -105,7 +105,7 @@ function UploadTitle({ doc, files }: { doc: MedDocument; files: FileRecord[] | u
     return (
       <span className="flex flex-wrap items-baseline gap-x-2">
         <span className="font-medium">{doc.title}</span>
-        {files && <span className="text-sm text-muted-foreground">немає файлів</span>}
+        {files && <span className="text-sm text-muted-foreground">no files</span>}
       </span>
     )
   }

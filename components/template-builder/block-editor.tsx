@@ -29,9 +29,9 @@ type BlockEditorProps<T extends Block = Block> = {
 }
 
 const groupFieldChoices = [
-  { value: 'text', label: 'Текстове поле' },
-  { value: 'select', label: 'Випадаючий список' },
-  { value: 'checkbox', label: 'Чекбокс' },
+  { value: 'text', label: 'Text field' },
+  { value: 'select', label: 'Dropdown' },
+  { value: 'checkbox', label: 'Checkbox' },
 ] as const
 
 function DeleteButton({ label, onClick }: { label: string; onClick: () => void }) {
@@ -47,10 +47,10 @@ function GroupEditor({ block, onChange, errors, createId }: BlockEditorProps<Gro
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`tb-group-${block.id}`}>Назва секції</Label>
+        <Label htmlFor={`tb-group-${block.id}`}>Group title</Label>
         <Input
           id={`tb-group-${block.id}`}
-          placeholder="Напр., Розміри"
+          placeholder="E.g. Vitals"
           value={block.title}
           onChange={(e) => onChange({ ...block, title: e.target.value })}
         />
@@ -63,10 +63,10 @@ function GroupEditor({ block, onChange, errors, createId }: BlockEditorProps<Gro
               invalid={Boolean(errors[errorKey(field.id, 'id')])}
               className="bg-muted/40"
               title={<FieldTitle field={field} />}
-              handle={<DragHandle {...handle} label={`Перемістити: ${fieldTitleText(field)}`} />}
+              handle={<DragHandle {...handle} label={`Move: ${fieldTitleText(field)}`} />}
               actions={
                 <DeleteButton
-                  label={`Видалити: ${fieldTitleText(field)}`}
+                  label={`Delete: ${fieldTitleText(field)}`}
                   onClick={() => setFields(block.blocks.filter((f) => f.id !== field.id))}
                 />
               }
@@ -80,12 +80,12 @@ function GroupEditor({ block, onChange, errors, createId }: BlockEditorProps<Gro
           )}
         </SortableList>
       ) : (
-        <p className="text-sm text-muted-foreground">У секції ще немає полів.</p>
+        <p className="text-sm text-muted-foreground">The group has no fields yet.</p>
       )}
       <DropdownMenu>
         <DropdownMenuTrigger render={<Button type="button" variant="outline" size="sm" className="self-start" />}>
           <PlusIcon aria-hidden="true" />
-          Поле
+          Field
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-auto">
           {groupFieldChoices.map((choice) => (
@@ -105,7 +105,7 @@ function ServicesEditor({ block, onChange, errors }: BlockEditorProps<ServicesBl
     <div className="grid gap-3 sm:grid-cols-2">
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={errorElementId(key)}>
-          Назва блоку <span className="text-destructive">*</span>
+          Block title <span className="text-destructive">*</span>
         </Label>
         <Input
           id={errorElementId(key)}
@@ -116,7 +116,7 @@ function ServicesEditor({ block, onChange, errors }: BlockEditorProps<ServicesBl
         {errors[key] && <p className="text-sm text-destructive">{errors[key]}</p>}
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`tb-cat-${block.id}`}>Категорія</Label>
+        <Label htmlFor={`tb-cat-${block.id}`}>Category</Label>
         <Select
           items={serviceCategoryOptions}
           value={block.category}
@@ -144,7 +144,7 @@ function ImageEditor({ block, onChange, errors }: BlockEditorProps<ImageBlock>) 
     <div className="flex flex-col gap-4">
       <div id={errorElementId(srcKey)} tabIndex={-1} className="flex flex-col gap-1.5 outline-none">
         <ImageUploadField
-          label="Зображення"
+          label="Image"
           value={block.src || null}
           onChange={(src) => onChange({ ...block, src: src ?? '' })}
           previewClassName="h-40 w-full"
@@ -152,17 +152,17 @@ function ImageEditor({ block, onChange, errors }: BlockEditorProps<ImageBlock>) 
         {errors[srcKey] && <p className="text-sm text-destructive">{errors[srcKey]}</p>}
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={`tb-img-alt-${block.id}`}>Опис для друку / доступності</Label>
+        <Label htmlFor={`tb-img-alt-${block.id}`}>Description for print / accessibility</Label>
         <Input
           id={`tb-img-alt-${block.id}`}
-          placeholder="Напр., Схема розташування вузлів"
+          placeholder="E.g. Diagram of the nodule locations"
           value={block.alt}
           onChange={(e) => onChange({ ...block, alt: e.target.value })}
         />
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor={`tb-img-width-${block.id}`}>Ширина</Label>
+          <Label htmlFor={`tb-img-width-${block.id}`}>Width</Label>
           <Select
             items={imageWidthOptions}
             value={block.width}
@@ -181,7 +181,7 @@ function ImageEditor({ block, onChange, errors }: BlockEditorProps<ImageBlock>) 
           </Select>
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor={`tb-img-align-${block.id}`}>Вирівнювання</Label>
+          <Label htmlFor={`tb-img-align-${block.id}`}>Alignment</Label>
           <Select
             items={imageAlignOptions}
             value={block.align}
@@ -210,13 +210,13 @@ export function blockTitle(block: Block) {
     case 'field':
       return fieldTitleText(block)
     case 'group':
-      return `Секція${block.title ? ` · ${block.title}` : ''}`
+      return `Group${block.title ? ` · ${block.title}` : ''}`
     case 'static':
-      return 'Текст зі змінними'
+      return 'Text with variables'
     case 'services':
-      return `Рекомендовані послуги · ${block.label}`
+      return `Recommended services · ${block.label}`
     case 'image':
-      return `Зображення${block.alt ? ` · ${block.alt}` : ''}`
+      return `Image${block.alt ? ` · ${block.alt}` : ''}`
   }
 }
 
@@ -233,7 +233,7 @@ export function BlockEditor({ block, onChange, errors, createId }: BlockEditorPr
     case 'static':
       return (
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor={`tb-static-${block.id}`}>Текст</Label>
+          <Label htmlFor={`tb-static-${block.id}`}>Text</Label>
           <VariableInput
             id={`tb-static-${block.id}`}
             multiline

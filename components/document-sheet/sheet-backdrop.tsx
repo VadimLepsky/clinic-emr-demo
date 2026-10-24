@@ -1,10 +1,10 @@
 import { cn } from '@/lib/utils'
 
-// «Підкладка + аркуш»: аркуш A4 по центру на підкладці кольору полотна сторінки (bg-sheet-backdrop).
-// Одна обгортка для перегляду висновку, редактора, друку призначення та попередніх переглядів у діалогах,
-// щоб вони не розходились.
+// «Backdrop + sheet»: the A4 sheet centered on a backdrop the colour of the page canvas (bg-sheet-backdrop).
+// One wrapper for the consultation note view, the editor, care plan printing and the previews in dialogs,
+// so they never drift apart.
 type SheetBackdropProps = React.ComponentProps<'div'> & {
-  /** page — блок у потоці сторінки з тихою рамкою; dialog — займає все тіло діалогу й прокручується сам. */
+  /** page — a block in the page flow with a quiet border; dialog — fills the whole dialog body and scrolls itself. */
   variant?: 'page' | 'dialog'
 }
 

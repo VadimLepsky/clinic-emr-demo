@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button'
 import { DocumentSheet } from '@/components/document-sheet/document-sheet'
 import { SheetBackdrop } from '@/components/document-sheet/sheet-backdrop'
 import { formatDate } from '@/components/documents/format'
+import { formatMoney } from '@/lib/format'
 import { ConsultationEditor } from './consultation-editor'
 import { FormSkeleton } from '@/components/documents/new-document'
 import { useSelectedServices } from './use-selected-services'
@@ -58,12 +59,12 @@ export function ConsultationDocument({ patient, documentId }: ConsultationDocume
     window.print()
   }
 
-  const back = { href: `/patients/${patient.id}`, label: 'До документів пацієнта' }
+  const back = { href: `/patients/${patient.id}`, label: 'Back to patient documents' }
 
   if (document === null || (document && (document.patient_id !== patient.id || document.kind !== 'template'))) {
     return (
       <Page>
-        <PageHeader back={back} title="Документ не знайдено" />
+        <PageHeader back={back} title="Document not found" />
       </Page>
     )
   }
@@ -72,7 +73,7 @@ export function ConsultationDocument({ patient, documentId }: ConsultationDocume
   const doctor = author ?? currentUser
   // The template (or null for a lost one) gives the editor its type, for the wording of its messages.
   const ready = document && version && doctor && template !== undefined && letterheads
-  // Editing takes the same right as creating a document of this type (canCreateKind): reception and the contact
+  // Editing takes the same right as creating a document of this type (canCreateKind): front desk and the contact
   // centre only view and print.
   const mayEdit = Boolean(template && currentUser && canCreateKind(currentUser.role, template.kind))
 
@@ -92,21 +93,21 @@ export function ConsultationDocument({ patient, documentId }: ConsultationDocume
           document && (
             <dl className="mt-1 flex flex-wrap gap-x-5 gap-y-1 text-sm">
               <div className="flex gap-1">
-                <dt>Пацієнт:</dt>
+                <dt>Patient:</dt>
                 <dd className="text-foreground">{patient.full_name}</dd>
               </div>
               <div className="flex gap-1">
-                <dt>Дата:</dt>
+                <dt>Date:</dt>
                 <dd className="text-foreground tabular-nums">{formatDate(document.document_date)}</dd>
               </div>
               {document.number && (
                 <div className="flex gap-1">
-                  <dt>Номер:</dt>
+                  <dt>Number:</dt>
                   <dd className="text-foreground tabular-nums">{document.number}</dd>
                 </div>
               )}
               <div className="flex gap-1">
-                <dt>Автор:</dt>
+                <dt>Author:</dt>
                 <dd className="text-foreground">{author?.full_name ?? '—'}</dd>
               </div>
             </dl>
@@ -120,12 +121,12 @@ export function ConsultationDocument({ patient, documentId }: ConsultationDocume
               {mayEdit && (
                 <Button onClick={() => setMode('edit')} disabled={!ready}>
                   <PencilIcon className="size-4" aria-hidden="true" />
-                  Редагувати
+                  Edit
                 </Button>
               )}
               <Button variant="outline" onClick={handlePrint} disabled={!ready}>
                 <PrinterIcon className="size-4" aria-hidden="true" />
-                Друк
+                Print
               </Button>
             </>
           )
@@ -134,7 +135,7 @@ export function ConsultationDocument({ patient, documentId }: ConsultationDocume
 
       {document && document.template_version_id && version === null ? (
         <div className="rounded-2xl bg-card px-8 py-12 text-center text-muted-foreground dark:border dark:border-border">
-          Не вдалося завантажити версію шаблону цього документа.
+          Could not load the template version of this document.
         </div>
       ) : !ready ? (
         <FormSkeleton />
@@ -169,8 +170,8 @@ export function ConsultationDocument({ patient, documentId }: ConsultationDocume
               className="flex items-center gap-3 rounded-2xl bg-card px-8 py-5 text-card-foreground transition-colors hover:bg-muted print:hidden dark:border dark:border-border"
             >
               <span className="min-w-0 flex-1 truncate">
-                <span className="font-semibold">Призначення:</span>
-                {` ${prescription.title} · ${new Intl.NumberFormat('uk-UA').format(prescription.total_amount)} ₴ · виконано ${prescription.completion_pct}%`}
+                <span className="font-semibold">Care plan:</span>
+                {` ${prescription.title} · ${formatMoney(prescription.total_amount)} · ${prescription.completion_pct}% completed`}
               </span>
               <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
             </Link>

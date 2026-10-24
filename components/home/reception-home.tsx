@@ -27,9 +27,9 @@ export function ReceptionHome() {
     refreshInterval: REFRESH_INTERVAL_MS,
   })
 
-  // Reception and the contact centre see only how many prescriptions there are today: no day totals or payments
-  // (docs/CONTEXT.md). The amount of each prescription stays in its row.
-  const summary = prescriptions ? [{ label: 'Призначень', value: String(prescriptions.length) }] : undefined
+  // Front desk and the contact centre see only how many care plans there are today: no day totals or payments.
+  // The amount of each care plan stays in its row.
+  const summary = prescriptions ? [{ label: 'Care plans', value: String(prescriptions.length) }] : undefined
 
   return (
     <div className="grid items-start gap-6 xl:grid-cols-3">
@@ -38,7 +38,7 @@ export function ReceptionHome() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Призначення за сьогодні</CardTitle>
+            <CardTitle>Today&apos;s care plans</CardTitle>
           </CardHeader>
           {!prescriptions ? (
             <div className="flex flex-col gap-3 px-8 py-6" aria-busy="true">
@@ -49,29 +49,29 @@ export function ReceptionHome() {
           ) : prescriptions.length === 0 ? (
             <div className="flex flex-col items-center gap-2 px-8 py-12 text-center text-muted-foreground">
               <ClipboardListIcon className="size-6" aria-hidden="true" />
-              Сьогодні призначень ще не створювали.
+              No care plans have been created today yet.
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead>Час</TableHead>
-                  <TableHead>Пацієнт</TableHead>
-                  <TableHead>Лікар</TableHead>
-                  <TableHead className="text-right">Сума</TableHead>
-                  <TableHead>Статус</TableHead>
-                  <TableHead className="text-right">Дії</TableHead>
+                  <TableHead>Time</TableHead>
+                  <TableHead>Patient</TableHead>
+                  <TableHead>Doctor</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {prescriptions.map((rx) => (
-                  // The whole row opens the prescription; the patient name is its keyboard path, the card is in «Дії».
+                  // The whole row opens the care plan; the patient name is its keyboard path, the record is in «Actions».
                   <TableRow key={rx.id} className="cursor-pointer" onClick={() => openPrescription(rx)}>
                     <TableCell className="tabular-nums">{formatTime(rx.created_at)}</TableCell>
                     <TableCell className="font-semibold whitespace-normal">
                       <button
                         type="button"
-                        aria-label={`Відкрити призначення: ${rx.patient_name}`}
+                        aria-label={`Open care plan: ${rx.patient_name}`}
                         onClick={(e) => {
                           e.stopPropagation()
                           openPrescription(rx)
@@ -94,11 +94,11 @@ export function ReceptionHome() {
                           nativeButton={false}
                           render={<Link href={`/patients/${rx.patient_id}`} />}
                         >
-                          Карта пацієнта
+                          Patient record
                         </Button>
                         <Button variant="ghost" size="sm" onClick={() => print(rx.id)} disabled={printing}>
                           {printingId === rx.id && <Loader2Icon className="animate-spin" aria-hidden="true" />}
-                          Друк
+                          Print
                         </Button>
                       </div>
                     </TableCell>
@@ -110,7 +110,7 @@ export function ReceptionHome() {
         </Card>
       </div>
 
-      <SummaryCard title="Сьогодні" items={summary} loadingRows={1} />
+      <SummaryCard title="Today" items={summary} loadingRows={1} />
 
       <PrescriptionDialog
         patientId={selected?.patientId ?? ''}

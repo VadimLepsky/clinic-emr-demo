@@ -6,24 +6,17 @@ import { countTodayDocuments, listTodayPrescriptions, listTodayVisits } from '@/
 import type { Staff } from '@/lib/types'
 import { ThemeToggle } from '@/components/app-shell/theme-toggle'
 import { monthLabel } from '@/components/prescriptions/period'
+import { plural } from '@/lib/format'
 
 function greetingFor(hour: number) {
-  if (hour >= 5 && hour < 12) return 'Доброго ранку'
-  if (hour >= 12 && hour < 18) return 'Доброго дня'
-  return 'Доброго вечора'
+  if (hour >= 5 && hour < 12) return 'Good morning'
+  if (hour >= 12 && hour < 18) return 'Good afternoon'
+  return 'Good evening'
 }
 
-function plural(n: number, [one, few, many]: [string, string, string]) {
-  const mod10 = n % 10
-  const mod100 = n % 100
-  if (mod10 === 1 && mod100 !== 11) return one
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few
-  return many
-}
-
+/** First name: «Emily Carter» → «Emily». */
 function addressName(fullName: string) {
-  const words = fullName.trim().split(/\s+/)
-  return words.length > 1 ? words.slice(1).join(' ') : words[0]
+  return fullName.trim().split(/\s+/)[0]
 }
 
 function useHour() {
@@ -38,19 +31,18 @@ function DoctorSummary({ userId }: { userId: string }) {
   if (!visits || documents === undefined) return <>&nbsp;</>
   return (
     <>
-      Сьогодні {visits.length} {plural(visits.length, ['запис', 'записи', 'записів'])} · {documents}{' '}
-      {plural(documents, ['висновок', 'висновки', 'висновків'])} створено
+      Today: {plural(visits.length, 'appointment')} · {plural(documents, 'note')} created
     </>
   )
 }
 
-// Count only: reception and the contact centre don't see the day's total (docs/CONTEXT.md).
+// Count only: front desk and the contact centre don't see the day's total.
 function ReceptionSummary() {
   const { data: prescriptions } = useSWR(['prescriptions', 'today'], () => listTodayPrescriptions())
   if (!prescriptions) return <>&nbsp;</>
   return (
     <>
-      Сьогодні {prescriptions.length} {plural(prescriptions.length, ['призначення', 'призначення', 'призначень'])}
+      Today: {plural(prescriptions.length, 'care plan')}
     </>
   )
 }
@@ -73,7 +65,7 @@ export function HomeGreeting({ user }: { user: Staff }) {
         </h1>
         <p className="min-h-6 truncate text-base text-muted-foreground">
           {user.role === 'manager' ? (
-            <>Огляд за {monthLabel('current')}</>
+            <>Overview for {monthLabel('current')}</>
           ) : user.role === 'reception' || user.role === 'contact_center' ? (
             <ReceptionSummary />
           ) : (

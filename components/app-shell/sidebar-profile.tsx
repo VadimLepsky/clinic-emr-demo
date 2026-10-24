@@ -34,9 +34,9 @@ export function SidebarProfile({ user: initialUser }: { user: Staff }) {
       const updated = await updateStaffPhoto(user.id, photoUrl)
       await mutate('current-user', updated, { revalidate: false })
       await mutate('staff')
-      toast.success(photoUrl ? 'Фото оновлено' : 'Фото видалено')
+      toast.success(photoUrl ? 'Photo updated' : 'Photo removed')
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Не вдалося зберегти фото')
+      toast.error(err instanceof Error ? err.message : 'Could not save the photo')
     }
   }
 
@@ -64,7 +64,7 @@ export function SidebarProfile({ user: initialUser }: { user: Staff }) {
               size="lg"
               tooltip={user.full_name}
               onClick={() => setOpen(true)}
-              aria-label={`Профіль: ${user.full_name}`}
+              aria-label={`Profile: ${user.full_name}`}
             >
               {profileButton}
             </SidebarMenuButton>
@@ -81,7 +81,7 @@ export function SidebarProfile({ user: initialUser }: { user: Staff }) {
           <StaffPhotoControl staff={user} onChange={changePhoto} />
           <DialogFooter>
             <Button type="button" onClick={() => setOpen(false)}>
-              Готово
+              Done
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -90,7 +90,7 @@ export function SidebarProfile({ user: initialUser }: { user: Staff }) {
   )
 }
 
-// Demo only (NEXT_PUBLIC_DEMO=1): the profile button opens a menu with «Увійти як…» to show the app from
+// Demo only (NEXT_PUBLIC_DEMO=1): the profile button opens a menu with «Sign in as…» to show the app from
 // another role. The choice is a cookie, so server components and client data switch together.
 function DemoProfileMenu({
   user,
@@ -112,29 +112,29 @@ function DemoProfileMenu({
       await loginAsDemoUser(member.id)
       await mutate(() => true)
       router.refresh()
-      toast.success(`Ви увійшли як ${member.full_name}`)
+      toast.success(`Signed in as ${member.full_name}`)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Не вдалося змінити користувача')
+      toast.error(err instanceof Error ? err.message : 'Could not switch the user')
     }
   }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        render={<SidebarMenuButton size="lg" tooltip={user.full_name} aria-label={`Профіль: ${user.full_name}`} />}
+        render={<SidebarMenuButton size="lg" tooltip={user.full_name} aria-label={`Profile: ${user.full_name}`} />}
       >
         {children}
       </DropdownMenuTrigger>
       <DropdownMenuContent side="top" align="start" className="w-64">
         <DropdownMenuItem onClick={onOpenPhoto}>
           <ImageIcon aria-hidden="true" />
-          Фото профілю…
+          Profile photo…
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
             <UsersIcon aria-hidden="true" />
-            Увійти як…
+            Sign in as…
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent className="w-80">
             {members.map((member) => (
@@ -144,7 +144,7 @@ function DemoProfileMenu({
                   <span className="truncate font-medium">{member.full_name}</span>
                   <span className="truncate text-sm text-muted-foreground">{roleLabels[member.role]}</span>
                 </span>
-                {member.id === user.id && <CheckIcon className="ml-auto text-muted-foreground" aria-label="Поточний" />}
+                {member.id === user.id && <CheckIcon className="ml-auto text-muted-foreground" aria-label="Current" />}
               </DropdownMenuItem>
             ))}
           </DropdownMenuSubContent>

@@ -39,9 +39,9 @@ export function DocumentStructure({ sections }: { sections: Section[] }) {
   }
 
   return (
-    <nav aria-label="Структура документа" className="rounded-2xl bg-card p-4 dark:border dark:border-border">
+    <nav aria-label="Document outline" className="rounded-2xl bg-card p-4 dark:border dark:border-border">
       <p className="px-3 pb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-        Структура документа
+        Document outline
       </p>
       <ol className="flex flex-col gap-0.5">
         {sections.map((section, index) => {

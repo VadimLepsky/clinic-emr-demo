@@ -28,14 +28,14 @@ export function ImportUploadStep({ labName, labNames, onLabNameChange, onParsed,
 
   const handleFile = async (file: File | undefined) => {
     if (!file) return
-    if (!labName.trim()) return setError('Спочатку вкажіть лабораторію.')
-    if (!/\.(xlsx|xls|csv)$/i.test(file.name)) return setError('Дозволені файли Excel (.xlsx, .xls) або CSV.')
+    if (!labName.trim()) return setError('Enter the laboratory first.')
+    if (!/\.(xlsx|xls|csv)$/i.test(file.name)) return setError('Excel (.xlsx, .xls) or CSV files are allowed.')
     setError(null)
     setParsing(true)
     try {
       onParsed(await parseSpreadsheet(file))
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Не вдалося прочитати файл.')
+      setError(e instanceof Error ? e.message : 'Could not read the file.')
       setParsing(false)
     }
   }
@@ -43,19 +43,19 @@ export function ImportUploadStep({ labName, labNames, onLabNameChange, onParsed,
   return (
     <div className="flex flex-col gap-6">
       <DialogHeader>
-        <DialogTitle>Імпорт прайсу лабораторії</DialogTitle>
-        <DialogDescription>Завантажте Excel або CSV: код послуги, назва, ціна.</DialogDescription>
+        <DialogTitle>Import a lab price list</DialogTitle>
+        <DialogDescription>Upload Excel or CSV: service code, name, price.</DialogDescription>
       </DialogHeader>
 
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
-          <Label htmlFor={`${id}-lab`}>Лабораторія</Label>
+          <Label htmlFor={`${id}-lab`}>Laboratory</Label>
           <Input
             id={`${id}-lab`}
             list={`${id}-labs`}
             value={labName}
             onChange={(e) => onLabNameChange(e.target.value)}
-            placeholder="Оберіть зі списку або введіть нову назву"
+            placeholder="Pick from the list or type a new name"
             autoComplete="off"
           />
           <datalist id={`${id}-labs`}>
@@ -86,17 +86,17 @@ export function ImportUploadStep({ labName, labNames, onLabNameChange, onParsed,
           ) : (
             <UploadCloudIcon className="size-6 text-muted-foreground" aria-hidden="true" />
           )}
-          <p>Перетягніть файл сюди або</p>
+          <p>Drop the file here or</p>
           <Button type="button" disabled={parsing} onClick={() => fileInputRef.current?.click()}>
             <FileSpreadsheetIcon aria-hidden="true" />
-            Обрати файл
+            Choose file
           </Button>
           <input
             ref={fileInputRef}
             type="file"
             accept={ACCEPT}
             className="sr-only"
-            aria-label="Файл прайсу"
+            aria-label="Price list file"
             onChange={(e) => {
               handleFile(e.target.files?.[0])
               e.target.value = ''
@@ -113,7 +113,7 @@ export function ImportUploadStep({ labName, labNames, onLabNameChange, onParsed,
 
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel}>
-          Скасувати
+          Cancel
         </Button>
       </DialogFooter>
     </div>

@@ -2,6 +2,7 @@
 
 import useSWR from 'swr'
 import { listServicePackages } from '@/lib/data'
+import { plural } from '@/lib/format'
 import {
   Combobox,
   ComboboxChip,
@@ -18,7 +19,7 @@ import {
 // Not the package itself: Base UI takes objects with an `items` array for groups of items.
 type PackageOption = { id: string; name: string; size: number }
 
-/** «Пакети послуг у цьому шаблоні»: any number of packages out of all of them (there can be 20+), with search. */
+/** «Service bundles in this template»: any number of bundles out of all of them (there can be 20+), with search. */
 export function PackagesField({ id, value, onChange }: { id: string; value: string[]; onChange: (ids: string[]) => void }) {
   const anchor = useComboboxAnchor()
   const { data: packages = [] } = useSWR('service-packages', listServicePackages)
@@ -43,7 +44,7 @@ export function PackagesField({ id, value, onChange }: { id: string; value: stri
               ))}
               <ComboboxChipsInput
                 id={id}
-                placeholder={chosen.length === 0 ? 'Не обрано — пошук за назвою пакета' : undefined}
+                placeholder={chosen.length === 0 ? 'None chosen — search by bundle name' : undefined}
                 className="placeholder:text-muted-foreground"
               />
             </>
@@ -51,12 +52,12 @@ export function PackagesField({ id, value, onChange }: { id: string; value: stri
         </ComboboxValue>
       </ComboboxChips>
       <ComboboxContent anchor={anchor}>
-        <ComboboxEmpty>Пакетів не знайдено</ComboboxEmpty>
+        <ComboboxEmpty>No bundles found</ComboboxEmpty>
         <ComboboxList>
           {(option: PackageOption) => (
             <ComboboxItem key={option.id} value={option}>
               <span className="min-w-0 flex-1 truncate">{option.name}</span>
-              <span className="shrink-0 text-sm text-muted-foreground tabular-nums">{`${option.size} послуг`}</span>
+              <span className="shrink-0 text-sm text-muted-foreground tabular-nums">{plural(option.size, 'service')}</span>
             </ComboboxItem>
           )}
         </ComboboxList>

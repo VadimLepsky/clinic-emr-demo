@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { PlusIcon, Trash2Icon } from 'lucide-react'
 import type { Block, Section } from '@/lib/types'
+import { plural } from '@/lib/format'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -33,11 +34,11 @@ export function SectionCard({ section, onChange, onDelete, errors, createId }: S
     >
       <div className="flex items-center gap-3 border-b border-border px-8 py-5">
         <Label htmlFor={titleId} className="shrink-0">
-          Розділ:
+          Section:
         </Label>
         <Input
           id={titleId}
-          placeholder="Назва розділу"
+          placeholder="Section title"
           value={section.title}
           className="font-medium"
           onChange={(e) => onChange({ ...section, title: e.target.value })}
@@ -46,7 +47,7 @@ export function SectionCard({ section, onChange, onDelete, errors, createId }: S
           type="button"
           variant="ghost"
           size="icon-sm"
-          aria-label={`Видалити розділ ${section.title}`.trim()}
+          aria-label={`Delete section ${section.title}`.trim()}
           onClick={() => (section.blocks.length ? setConfirmOpen(true) : onDelete())}
         >
           <Trash2Icon aria-hidden="true" />
@@ -61,10 +62,10 @@ export function SectionCard({ section, onChange, onDelete, errors, createId }: S
                 id={errorElementId(errorKey(block.id, 'id'))}
                 invalid={Boolean(errors[errorKey(block.id, 'id')])}
                 title={block.kind === 'field' ? <FieldTitle field={block} /> : blockTitle(block)}
-                handle={<DragHandle {...handle} label={`Перемістити: ${blockTitle(block)}`} />}
+                handle={<DragHandle {...handle} label={`Move: ${blockTitle(block)}`} />}
                 actions={
                   <DeleteButton
-                    label={`Видалити: ${blockTitle(block)}`}
+                    label={`Delete: ${blockTitle(block)}`}
                     onClick={() => setBlocks(section.blocks.filter((b) => b.id !== block.id))}
                   />
                 }
@@ -83,12 +84,12 @@ export function SectionCard({ section, onChange, onDelete, errors, createId }: S
           </SortableList>
         ) : (
           <p className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-muted-foreground">
-            Додайте перший блок у розділ.
+            Add the first block to the section.
           </p>
         )}
 
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium text-muted-foreground">Додати:</span>
+          <span className="text-sm font-medium text-muted-foreground">Add:</span>
           {blockChoices.map((choice) => (
             <Button
               key={choice.value}
@@ -107,14 +108,14 @@ export function SectionCard({ section, onChange, onDelete, errors, createId }: S
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Видалити розділ?</DialogTitle>
+            <DialogTitle>Delete section?</DialogTitle>
             <DialogDescription>
-              {`Розділ «${section.title || 'Без назви'}» містить блоків: ${section.blocks.length}. Їх буде видалено разом із розділом.`}
+              {`Section «${section.title || 'Untitled'}» has ${plural(section.blocks.length, 'block')}. They will be deleted with the section.`}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmOpen(false)}>
-              Скасувати
+              Cancel
             </Button>
             <Button
               variant="destructive"
@@ -123,7 +124,7 @@ export function SectionCard({ section, onChange, onDelete, errors, createId }: S
                 onDelete()
               }}
             >
-              Видалити
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>

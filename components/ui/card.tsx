@@ -67,10 +67,10 @@ function CardAction({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-/** «Переглянути всі →» in the right corner of a card header. */
+/** «View all →» in the right corner of a card header. */
 function CardHeaderLink({
   className,
-  children = "Переглянути всі",
+  children = "View all",
   ...props
 }: React.ComponentProps<typeof Link>) {
   return (

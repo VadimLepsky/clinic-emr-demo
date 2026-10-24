@@ -75,7 +75,7 @@ function FieldLabel({ field, name, htmlFor, id }: { field: FieldBlock; name: str
 
 type InlineFieldProps = {
   field: FieldBlock
-  /** The label, or «поле в розділі «…»» when the field has none. */
+  /** The label, or «field in section «…»» when the field has none. */
   name: string
   value: FieldValue | undefined
   onChange: (value: FieldValue) => void
@@ -142,7 +142,7 @@ function InlineControl({ field, name, value, onChange, invalid }: InlineFieldPro
               )}
               {...a11y}
             >
-              <SelectValue placeholder={field.description ?? 'оберіть'} />
+              <SelectValue placeholder={field.description ?? 'choose'} />
             </SelectTrigger>
             <SelectContent alignItemWithTrigger={false} align="start">
               {items.map((item) => (
@@ -179,7 +179,7 @@ function InlineControl({ field, name, value, onChange, invalid }: InlineFieldPro
                   </span>
                 ))
               ) : (
-                <span className="text-muted-foreground">{field.description ?? 'оберіть'}</span>
+                <span className="text-muted-foreground">{field.description ?? 'choose'}</span>
               )}
               <ChevronDownIcon className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
             </DropdownMenuTrigger>

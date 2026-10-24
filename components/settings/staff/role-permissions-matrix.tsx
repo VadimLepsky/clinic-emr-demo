@@ -5,61 +5,61 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { roleLabels } from '@/components/app-shell/labels'
 
 const columns = [
-  'Перегляд карток',
-  'Створення висновків',
-  'Завантаження файлів',
-  'Створення та редагування призначень',
-  'Видалення призначень',
-  'Шаблони',
-  'Налаштування',
+  'View records',
+  'Create consultation notes',
+  'Upload files',
+  'Create and edit care plans',
+  'Delete care plans',
+  'Templates',
+  'Settings',
 ] as const
 
 const yes = { state: 'yes' } as const
 const no = { state: 'no' } as const
 
-// Відображає те, що реально дозволяє застосунок: меню «Додати документ», створення, редагування й видалення призначень
-// (canEditPrescriptions у lib/data.ts), розділи бічного меню.
+// Mirrors what the app really allows: the «Add document» menu, creating, editing and deleting care plans
+// (canEditPrescriptions in lib/data.ts), the sidebar sections.
 const permissions = [
   {
     role: 'manager',
-    cells: [yes, yes, { state: 'yes', note: 'Усі типи' }, yes, yes, yes, yes],
+    cells: [yes, yes, { state: 'yes', note: 'All kinds' }, yes, yes, yes, yes],
   },
   {
     role: 'doctor',
-    cells: [yes, yes, { state: 'yes', note: 'Усі типи' }, yes, no, no, no],
+    cells: [yes, yes, { state: 'yes', note: 'All kinds' }, yes, no, no, no],
   },
   {
     role: 'medical_staff',
-    cells: [yes, no, { state: 'yes', note: 'УЗД, аналізи, інші' }, yes, no, no, no],
+    cells: [yes, no, { state: 'yes', note: 'Ultrasound, lab results, other' }, yes, no, no, no],
   },
   {
     role: 'reception',
-    cells: [yes, no, { state: 'partial', note: 'Лише «Інші файли»' }, no, no, no, no],
+    cells: [yes, no, { state: 'partial', note: 'Only «Other files»' }, no, no, no, no],
   },
   {
     role: 'contact_center',
-    cells: [yes, no, { state: 'partial', note: 'Лише «Інші файли»' }, no, no, no, no],
+    cells: [yes, no, { state: 'partial', note: 'Only «Other files»' }, no, no, no, no],
   },
 ] satisfies {
   role: StaffRole
   cells: readonly { state: 'yes' | 'no' | 'partial'; note?: string }[]
 }[]
 
-const stateLabels = { yes: 'Так', no: 'Ні', partial: 'Частково' }
+const stateLabels = { yes: 'Yes', no: 'No', partial: 'Partly' }
 
 export function RolePermissionsMatrix() {
   return (
     <Card>
       <CardHeader>
         <div className="flex min-w-0 flex-col gap-1">
-          <CardTitle>Права ролей</CardTitle>
-          <CardDescription>Лише для перегляду: відображає поточні правила застосунку.</CardDescription>
+          <CardTitle>Role permissions</CardTitle>
+          <CardDescription>View only: shows the app&apos;s current rules.</CardDescription>
         </div>
       </CardHeader>
       <Table className="[&_td]:px-2 [&_th]:px-2">
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <TableHead>Роль</TableHead>
+            <TableHead>Role</TableHead>
             {columns.map((c) => (
               <TableHead key={c} className="text-center whitespace-normal">
                 {c}

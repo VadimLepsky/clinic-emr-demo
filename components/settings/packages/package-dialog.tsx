@@ -67,8 +67,8 @@ function PackageForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name.trim()) return setError('Вкажіть назву пакета.')
-    if (!lines.length) return setError('Додайте хоча б одну послугу.')
+    if (!name.trim()) return setError('Enter a bundle name.')
+    if (!lines.length) return setError('Add at least one service.')
     setSaving(true)
     setError(null)
     try {
@@ -77,10 +77,10 @@ function PackageForm({
         name,
         items: lines.map((l) => ({ service_id: l.service.id, quantity: l.quantity })),
       })
-      toast.success(pkg ? 'Пакет оновлено' : 'Пакет створено')
+      toast.success(pkg ? 'Bundle updated' : 'Bundle created')
       await onSaved()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не вдалося зберегти пакет.')
+      setError(err instanceof Error ? err.message : 'Could not save the bundle.')
       setSaving(false)
     }
   }
@@ -88,18 +88,18 @@ function PackageForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6" noValidate>
       <DialogHeader>
-        <DialogTitle>{pkg ? 'Редагувати пакет' : 'Новий пакет послуг'}</DialogTitle>
-        <DialogDescription>Додайте послуги, які мають потрапляти до призначення разом.</DialogDescription>
+        <DialogTitle>{pkg ? 'Edit bundle' : 'New service bundle'}</DialogTitle>
+        <DialogDescription>Add the services that should go into a care plan together.</DialogDescription>
       </DialogHeader>
 
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
-          <Label htmlFor={`${id}-name`}>Назва</Label>
+          <Label htmlFor={`${id}-name`}>Name</Label>
           <Input id={`${id}-name`} value={name} onChange={(e) => setName(e.target.value)} autoComplete="off" />
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor={`${id}-search`}>Додати послугу</Label>
+          <Label htmlFor={`${id}-search`}>Add service</Label>
           <ServiceAddSearch inputId={`${id}-search`} onAdd={addService} />
         </div>
 
@@ -109,7 +109,7 @@ function PackageForm({
               <li key={line.service.id} className="flex items-center gap-3 px-3 py-2 text-sm">
                 <span className="flex-1">
                   {line.service.name}
-                  {!line.service.is_active && <span className="ml-2 text-muted-foreground">(неактивна)</span>}
+                  {!line.service.is_active && <span className="ml-2 text-muted-foreground">(inactive)</span>}
                 </span>
                 <span className="text-muted-foreground tabular-nums">{formatMoney(line.service.price)}</span>
                 <Input
@@ -119,14 +119,14 @@ function PackageForm({
                   inputMode="numeric"
                   value={line.quantity}
                   onChange={(e) => setQuantity(line.service.id, e.target.value)}
-                  aria-label={`Кількість: ${line.service.name}`}
+                  aria-label={`Quantity: ${line.service.name}`}
                   className="w-16"
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon-sm"
-                  aria-label={`Прибрати: ${line.service.name}`}
+                  aria-label={`Remove: ${line.service.name}`}
                   onClick={() => setLines((prev) => prev.filter((l) => l.service.id !== line.service.id))}
                 >
                   <XIcon aria-hidden="true" />
@@ -137,7 +137,7 @@ function PackageForm({
         )}
 
         <p className="text-sm text-muted-foreground">
-          Сума пакета: <span className="font-medium text-foreground tabular-nums">{formatMoney(total)}</span>
+          Bundle total: <span className="font-medium text-foreground tabular-nums">{formatMoney(total)}</span>
         </p>
 
         {error && (
@@ -149,11 +149,11 @@ function PackageForm({
 
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel} disabled={saving}>
-          Скасувати
+          Cancel
         </Button>
         <Button type="submit" disabled={saving}>
           {saving && <Loader2Icon className="animate-spin" aria-hidden="true" />}
-          Зберегти
+          Save
         </Button>
       </DialogFooter>
     </form>

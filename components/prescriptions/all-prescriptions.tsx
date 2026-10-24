@@ -27,13 +27,13 @@ import { usePrintPrescription } from './print-prescription'
 const ALL = 'all'
 
 const periodItems: { value: Period; label: string }[] = [
-  { value: 'all', label: 'Увесь час' },
-  { value: 'current', label: 'Поточний місяць' },
-  { value: 'previous', label: 'Попередній місяць' },
+  { value: 'all', label: 'All time' },
+  { value: 'current', label: 'This month' },
+  { value: 'previous', label: 'Last month' },
 ]
 
 const statusItems = [
-  { value: ALL, label: 'Усі статуси' },
+  { value: ALL, label: 'All statuses' },
   ...(Object.keys(prescriptionStatusMeta) as PrescriptionDisplayStatus[]).map((value) => ({
     value,
     label: prescriptionStatusMeta[value].shortLabel,
@@ -53,12 +53,12 @@ export function AllPrescriptions({ initialPeriod, initialDoctorId }: Props) {
   const { data: staff } = useSWR('staff', () => listStaff())
   const { data: currentUser } = useSWR('current-user', getCurrentUser)
   const isManager = currentUser?.role === 'manager'
-  // Reception and the contact centre work with the prescription itself: the row (and the patient name) opens it,
-  // and «Карта пацієнта» takes the place of «Переглянути». Other roles keep the name as the link to the card.
+  // Front desk and the contact centre work with the care plan itself: the row (and the patient name) opens it,
+  // and «Patient record» takes the place of «View». Other roles keep the name as the link to the record.
   const rowOpensPrescription = currentUser?.role === 'reception' || currentUser?.role === 'contact_center'
   const openPrescription = (rx: { patient_id: string; id: string }) => setSelected({ patientId: rx.patient_id, id: rx.id })
   const doctorItems = [
-    { value: ALL, label: 'Усі лікарі' },
+    { value: ALL, label: 'All doctors' },
     ...(staff ?? []).filter((s) => s.role === 'doctor').map((s) => ({ value: s.id, label: s.full_name })),
   ]
 
@@ -71,14 +71,14 @@ export function AllPrescriptions({ initialPeriod, initialDoctorId }: Props) {
 
   return (
     <Page width="wide">
-      <PageHeader title="Призначення" />
+      <PageHeader title="Care plans" />
 
       <Card>
         <CardHeader className="border-b-0">
-          <CardTitle>Усі призначення</CardTitle>
+          <CardTitle>All care plans</CardTitle>
           <CardAction>
             <Select items={periodItems} value={period} onValueChange={(v) => v && setPeriod(v as Period)}>
-              <SelectTrigger aria-label="Період" className="w-48">
+              <SelectTrigger aria-label="Period" className="w-48">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -90,7 +90,7 @@ export function AllPrescriptions({ initialPeriod, initialDoctorId }: Props) {
               </SelectContent>
             </Select>
             <Select items={doctorItems} value={doctorId} onValueChange={(v) => v && setDoctorId(v as string)}>
-              <SelectTrigger aria-label="Лікар" className="w-56">
+              <SelectTrigger aria-label="Doctor" className="w-56">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -102,7 +102,7 @@ export function AllPrescriptions({ initialPeriod, initialDoctorId }: Props) {
               </SelectContent>
             </Select>
             <Select items={statusItems} value={status} onValueChange={(v) => v && setStatus(v as string)}>
-              <SelectTrigger aria-label="Статус" className="w-64">
+              <SelectTrigger aria-label="Status" className="w-64">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -125,19 +125,19 @@ export function AllPrescriptions({ initialPeriod, initialDoctorId }: Props) {
         ) : rows.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-8 py-12 text-center text-muted-foreground">
             <ClipboardListIcon className="size-6" aria-hidden="true" />
-            За обраними фільтрами призначень немає.
+            No care plans match the selected filters.
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead>Дата</TableHead>
-                <TableHead>Пацієнт</TableHead>
-                <TableHead>Лікар</TableHead>
-                <TableHead className="text-right">Сума</TableHead>
-                <TableHead className="w-24">Виконання</TableHead>
-                <TableHead>Статус</TableHead>
-                <TableHead className="w-px text-right">Дії</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Patient</TableHead>
+                <TableHead>Doctor</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+                <TableHead className="w-24">Completion</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="w-px text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -152,7 +152,7 @@ export function AllPrescriptions({ initialPeriod, initialDoctorId }: Props) {
                     {rowOpensPrescription ? (
                       <button
                         type="button"
-                        aria-label={`Відкрити призначення: ${rx.patient_name}`}
+                        aria-label={`Open care plan: ${rx.patient_name}`}
                         onClick={(e) => {
                           e.stopPropagation()
                           openPrescription(rx)
@@ -173,7 +173,7 @@ export function AllPrescriptions({ initialPeriod, initialDoctorId }: Props) {
                   <TableCell className="min-w-32 whitespace-normal">{rx.doctor_name}</TableCell>
                   <TableCell className="text-right tabular-nums">{formatMoney(rx.total_amount)}</TableCell>
                   <TableCell>
-                    <CompletionBar pct={rx.completion_pct} label={`Виконання: ${rx.patient_name}`} />
+                    <CompletionBar pct={rx.completion_pct} label={`Completion: ${rx.patient_name}`} />
                   </TableCell>
                   <TableCell className="min-w-32 whitespace-normal">
                     <PrescriptionStatusBadge summary={rx} />

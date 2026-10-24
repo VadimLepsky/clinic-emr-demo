@@ -53,7 +53,7 @@ function ImportFlow({
     const result = await applyPriceImport(labName, rows, { defaultCategory, deactivateIds })
     await onApplied()
     toast.success(
-      `Прайс оновлено: додано ${result.added}, змінено ціни ${result.updated}, деактивовано ${result.deactivated}`,
+      `Price list updated: ${result.added} added, ${result.updated} price changes, ${result.deactivated} deactivated`,
     )
     onClose()
   }

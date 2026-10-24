@@ -17,7 +17,7 @@ type VariableInputProps = {
   placeholder?: string
 }
 
-/** Text input with a "Вставити змінну" menu that inserts at the cursor position. */
+/** Text input with an «Insert variable» menu that inserts at the cursor position. */
 export function VariableInput({ id, value, onChange, multiline, rows = 3, placeholder }: VariableInputProps) {
   const inputRef = useRef<HTMLInputElement & HTMLTextAreaElement>(null)
   const selectionRef = useRef<[number, number]>([value.length, value.length])
@@ -58,7 +58,7 @@ export function VariableInput({ id, value, onChange, multiline, rows = 3, placeh
           render={<Button type="button" variant="ghost" size="xs" className="self-start text-muted-foreground" />}
         >
           <BracesIcon aria-hidden="true" />
-          Вставити змінну
+          Insert variable
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-auto min-w-56">
           {templateVariables.map((v) => (

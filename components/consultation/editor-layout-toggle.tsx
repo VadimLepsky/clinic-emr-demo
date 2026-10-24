@@ -5,8 +5,8 @@ import { cn } from '@/lib/utils'
 import type { EditorLayout } from './use-editor-layout'
 
 const options = [
-  { value: 'document', label: 'Документ', icon: FileTextIcon },
-  { value: 'form', label: 'Форма', icon: LayoutListIcon },
+  { value: 'document', label: 'Document', icon: FileTextIcon },
+  { value: 'form', label: 'Form', icon: LayoutListIcon },
 ] as const
 
 type EditorLayoutToggleProps = {
@@ -16,7 +16,7 @@ type EditorLayoutToggleProps = {
 
 export function EditorLayoutToggle({ value, onChange }: EditorLayoutToggleProps) {
   return (
-    <div role="group" aria-label="Вигляд редактора" className="inline-flex h-10 w-fit items-center rounded-lg bg-muted p-0.5">
+    <div role="group" aria-label="Editor view" className="inline-flex h-10 w-fit items-center rounded-lg bg-muted p-0.5">
       {options.map(({ value: option, label, icon: Icon }) => {
         const active = option === value
         return (

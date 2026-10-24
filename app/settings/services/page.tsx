@@ -1,6 +1,6 @@
 import { ServiceList } from '@/components/settings/services/service-list'
 
-export const metadata = { title: 'Послуги' }
+export const metadata = { title: 'Services' }
 
 export default async function ServicesSettingsPage({
   searchParams,

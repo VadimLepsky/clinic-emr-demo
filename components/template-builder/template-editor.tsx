@@ -92,7 +92,7 @@ export function TemplateEditor({ templateId, version, initialMeta, initialSchema
     const firstKey = Object.keys(found)[0]
     if (firstKey) {
       setShowErrors(true)
-      toast.error('Виправте помилки в шаблоні')
+      toast.error('Fix the errors in the template')
       requestAnimationFrame(() => {
         const el = document.getElementById(errorElementId(firstKey))
         el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -101,7 +101,7 @@ export function TemplateEditor({ templateId, version, initialMeta, initialSchema
       return
     }
     if (!folderId) {
-      toast.error('Оберіть папку')
+      toast.error('Choose a folder')
       return
     }
 
@@ -129,10 +129,10 @@ export function TemplateEditor({ templateId, version, initialMeta, initialSchema
           (typeof key === 'string' && key.startsWith('templates')) ||
           (Array.isArray(key) && typeof key[0] === 'string' && key[0].startsWith('template')),
       )
-      toast.success('Шаблон збережено як нову версію')
+      toast.success('Template saved as a new version')
       if (!templateId) router.replace(`/templates/${saved.id}`)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Не вдалося зберегти шаблон')
+      toast.error(error instanceof Error ? error.message : 'Could not save the template')
     } finally {
       setSaving(false)
     }
@@ -141,19 +141,19 @@ export function TemplateEditor({ templateId, version, initialMeta, initialSchema
   return (
     <Page>
       <PageHeader
-        back={{ href: '/templates', label: 'Шаблони' }}
+        back={{ href: '/templates', label: 'Templates' }}
         title={
           <span className="flex flex-wrap items-center gap-3">
-            {templateId ? 'Редагування шаблону' : 'Новий шаблон'}
-            <Badge variant="secondary">{`Версія ${version ?? 1}`}</Badge>
+            {templateId ? 'Edit template' : 'New template'}
+            <Badge variant="secondary">{`Version ${version ?? 1}`}</Badge>
           </span>
         }
         description={
           <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            Вже створені документи не зміняться
+            Existing documents won&apos;t change
             {dirty && (
               <span className="rounded-md bg-status-warning-bg px-2 py-0.5 text-xs font-medium text-status-warning-fg">
-                Є незбережені зміни
+                Unsaved changes
               </span>
             )}
           </span>
@@ -162,15 +162,15 @@ export function TemplateEditor({ templateId, version, initialMeta, initialSchema
           <>
             <Button variant="outline" onClick={() => setVersionsOpen(true)}>
               <HistoryIcon aria-hidden="true" />
-              Історія версій
+              Version history
             </Button>
             <Button variant="outline" onClick={() => setPreviewOpen(true)}>
               <EyeIcon aria-hidden="true" />
-              Попередній перегляд
+              Preview
             </Button>
             <Button onClick={handleSave} disabled={saving}>
               <SaveIcon aria-hidden="true" />
-              {saving ? 'Збереження…' : 'Зберегти'}
+              {saving ? 'Saving…' : 'Save'}
             </Button>
           </>
         }
@@ -178,13 +178,13 @@ export function TemplateEditor({ templateId, version, initialMeta, initialSchema
 
       <Card>
         <CardHeader>
-          <CardTitle>Параметри шаблону</CardTitle>
+          <CardTitle>Template settings</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-x-4 gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
             <div className="flex flex-col gap-1.5 sm:col-span-2">
               <Label htmlFor={errorElementId('name')}>
-                Назва шаблону <span className="text-destructive">*</span>
+                Template name <span className="text-destructive">*</span>
               </Label>
               <Input
                 id={errorElementId('name')}
@@ -195,7 +195,7 @@ export function TemplateEditor({ templateId, version, initialMeta, initialSchema
               {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="tb-kind">Тип</Label>
+              <Label htmlFor="tb-kind">Kind</Label>
               <Select items={kindOptions} value={meta.kind} onValueChange={(v) => v && changeKind(v as TemplateKind)}>
                 <SelectTrigger id="tb-kind" className="w-full">
                   <SelectValue />
@@ -210,19 +210,19 @@ export function TemplateEditor({ templateId, version, initialMeta, initialSchema
               </Select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="tb-specialty">Спеціальність</Label>
+              <Label htmlFor="tb-specialty">Specialty</Label>
               <Input
                 id="tb-specialty"
-                placeholder="Напр., Терапевт"
+                placeholder="E.g. General practitioner"
                 value={meta.specialty ?? ''}
                 onChange={(e) => patchMeta({ specialty: e.target.value || null })}
               />
             </div>
             <div className="flex flex-col gap-1.5 sm:col-span-2 lg:col-span-1">
-              <Label htmlFor="tb-folder">Папка</Label>
+              <Label htmlFor="tb-folder">Folder</Label>
               <Select items={folderItems} value={folderId} onValueChange={(v) => v && pickFolder(v as string)}>
                 <SelectTrigger id="tb-folder" className="w-full">
-                  <SelectValue placeholder="Оберіть папку" />
+                  <SelectValue placeholder="Choose a folder" />
                 </SelectTrigger>
                 <SelectContent>
                   {folderItems.map((f) => (
@@ -232,13 +232,13 @@ export function TemplateEditor({ templateId, version, initialMeta, initialSchema
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-sm text-muted-foreground">Куди потраплять документи за цим шаблоном</p>
+              <p className="text-sm text-muted-foreground">Where documents from this template go</p>
             </div>
             <div className="flex flex-col gap-1.5 sm:col-span-2 lg:col-span-3">
-              <Label htmlFor="tb-packages">Пакети послуг у цьому шаблоні</Label>
+              <Label htmlFor="tb-packages">Service bundles in this template</Label>
               <PackagesField id="tb-packages" value={meta.package_ids} onChange={(package_ids) => patchMeta({ package_ids })} />
               <p className="text-sm text-muted-foreground">
-                Кнопки пакетів при заповненні документа. Якщо не обрано жодного, рядка з пакетами немає.
+                Bundle buttons while filling in a document. If none is chosen, there is no bundle row.
               </p>
             </div>
           </div>
@@ -287,15 +287,15 @@ export function TemplateEditor({ templateId, version, initialMeta, initialSchema
       <Dialog open={isPromptOpen} onOpenChange={(open) => !open && cancelLeave()}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Незбережені зміни</DialogTitle>
-            <DialogDescription>Зміни у шаблоні не збережено. Вийти без збереження?</DialogDescription>
+            <DialogTitle>Unsaved changes</DialogTitle>
+            <DialogDescription>Changes to the template are not saved. Leave without saving?</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={cancelLeave}>
-              Залишитися
+              Stay
             </Button>
             <Button variant="destructive" onClick={confirmLeave}>
-              Вийти без збереження
+              Leave without saving
             </Button>
           </DialogFooter>
         </DialogContent>

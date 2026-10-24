@@ -1,10 +1,10 @@
 import type { ServiceCategory } from '@/lib/types'
 
 export const serviceCategories: { value: ServiceCategory; label: string }[] = [
-  { value: 'lab', label: 'Аналізи' },
-  { value: 'instrumental', label: 'Інструментальна діагностика' },
-  { value: 'consultation', label: 'Консультації' },
-  { value: 'other', label: 'Інше' },
+  { value: 'lab', label: 'Lab tests' },
+  { value: 'instrumental', label: 'Instrumental diagnostics' },
+  { value: 'consultation', label: 'Consultations' },
+  { value: 'other', label: 'Other' },
 ]
 
 export const serviceCategoryLabels = Object.fromEntries(

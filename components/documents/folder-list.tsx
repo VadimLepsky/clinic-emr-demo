@@ -15,10 +15,10 @@ export function FolderList({ folders, counts, activeFolderId, onSelect }: Folder
   const total = Object.values(counts).reduce((sum, n) => sum + n, 0)
 
   return (
-    <nav aria-label="Папки документів">
+    <nav aria-label="Document folders">
       <ul className="flex gap-1 overflow-x-auto @5xl:flex-col @5xl:overflow-visible">
         <FolderItem
-          label="Усі документи"
+          label="All documents"
           count={total}
           active={activeFolderId === null}
           onClick={() => onSelect(null)}

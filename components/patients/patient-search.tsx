@@ -25,7 +25,7 @@ function useDebouncedValue(value: string, delay = 250) {
 const rowClass =
   'grid w-full grid-cols-2 gap-x-4 gap-y-0.5 px-8 py-4 text-left transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-none sm:grid-cols-[1fr_9rem_7rem_6rem] sm:items-center'
 
-/** Rows link to the patient card, or call onSelect instead when it is given («Новий прийом»). */
+/** Rows link to the patient card, or call onSelect instead when it is given («New visit»). */
 export function PatientSearch({ onSelect }: { onSelect?: (patient: Patient) => void }) {
   const [query, setQuery] = useState('')
   const debouncedQuery = useDebouncedValue(query.trim())
@@ -45,18 +45,18 @@ export function PatientSearch({ onSelect }: { onSelect?: (patient: Patient) => v
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Пошук за ПІБ або CRM ID"
-          aria-label="Пошук пацієнта за ПІБ або CRM ID"
+          placeholder="Search by name or CRM ID"
+          aria-label="Search patients by name or CRM ID"
           autoFocus
           className="h-12 rounded-xl bg-card pl-12 dark:border-border"
         />
       </div>
 
-      {/* У діалозі картка лежить на білому — там їй потрібна рамка. */}
+      {/* In a dialog the card sits on white, so it needs a border there. */}
       <Card plain={!isSearchable} aria-live="polite" className="in-data-[slot=dialog-content]:rounded-xl in-data-[slot=dialog-content]:border">
         {!isSearchable ? (
           <p className="px-8 py-6 text-muted-foreground">
-            Введіть щонайменше {MIN_QUERY_LENGTH} символи: ПІБ або CRM ID пацієнта.
+            Type at least {MIN_QUERY_LENGTH} characters of the patient&apos;s name or CRM ID.
           </p>
         ) : isLoading || !patients ? (
           <div className="flex flex-col gap-2 px-8 py-6">
@@ -66,14 +66,14 @@ export function PatientSearch({ onSelect }: { onSelect?: (patient: Patient) => v
           </div>
         ) : patients.length === 0 ? (
           <p className="px-8 py-6 text-muted-foreground">
-            За запитом «{debouncedQuery}» нікого не знайдено.
+            Nobody matches «{debouncedQuery}».
           </p>
         ) : (
           <>
             <div className="hidden grid-cols-[1fr_9rem_7rem_6rem] gap-4 border-b border-border px-8 py-3 text-sm font-medium text-accent-foreground sm:grid">
-              <span>ПІБ</span>
-              <span>Дата народж.</span>
-              <span>Вік</span>
+              <span>Name</span>
+              <span>Date of birth</span>
+              <span>Age</span>
               <span className="text-right">CRM ID</span>
             </div>
             <ul className="divide-y divide-border">
