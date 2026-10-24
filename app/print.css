@@ -1,0 +1,68 @@
+@page {
+  size: A4;
+  margin: 0;
+}
+
+/* Prescription printing (usePrintPrescription): the sheet is rendered into body > .print-root.
+   It is never shown on screen; in print it is the only thing on the page, even over an open dialog. */
+.print-root {
+  display: none;
+}
+
+@media print {
+  .print-root {
+    display: block;
+  }
+
+  body:has(> .print-root) > :not(.print-root) {
+    display: none !important;
+  }
+
+  /* An open dialog locks scrolling on html/body; that must not clip or shift the printed sheet. */
+  html:has(> body > .print-root),
+  body:has(> .print-root) {
+    position: static !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+}
+
+@media print {
+  html,
+  body {
+    background: white !important;
+  }
+
+  [data-slot='sidebar'],
+  [data-slot='sidebar-gap'],
+  [data-sonner-toaster] {
+    display: none !important;
+  }
+
+  [data-slot='sidebar-wrapper'] {
+    display: block !important;
+    min-height: 0 !important;
+  }
+
+  [data-slot='sidebar-inset'] {
+    background: transparent !important;
+  }
+
+  /* Paper is always white: pin the sheet's theme tokens to print colors, regardless of dark mode. */
+  .document-sheet {
+    --card: white;
+    --card-foreground: black;
+    --foreground: black;
+    --muted: color-mix(in srgb, black 8%, white);
+    --muted-foreground: color-mix(in srgb, black 70%, white);
+    --border: color-mix(in srgb, black 50%, white);
+    --sheet-border: color-mix(in srgb, black 50%, white);
+    width: 210mm !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

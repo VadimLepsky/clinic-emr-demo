@@ -1,0 +1,245 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* dark: never applies inside .paper — the paper keeps the light palette in both themes. */
+@custom-variant dark (&:is(.dark *):not(.paper, .paper *));
+
+/* Palette is shared with the commission dashboard (same clinic).
+   Status tokens keep the dashboard colors but use generic names:
+   success  = dashboard "accrued"   (fulfilled, paid, saved)
+   neutral  = dashboard "skipped"   (not started, no data)
+   warning  = dashboard "pending"   (partially fulfilled, awaiting)
+   danger   = dashboard "unmatched" (error, overdue, failed sync)
+   info     = dashboard "info"      (locked after payment, notices) */
+
+/* .paper scopes the light palette onto a document sheet (template preview): it stays paper-light in dark theme. */
+:root,
+.paper {
+  --radius: 0.625rem;
+
+  --background: #fefefe;
+  --foreground: #05070f;
+  --card: #fefefe;
+  --card-foreground: #05070f;
+  --popover: #ffffff;
+  --popover-foreground: #05070f;
+  --primary: #24316b;
+  --primary-foreground: #fefefe;
+  --secondary: #f0f8fe;
+  --secondary-foreground: #24316b;
+  --muted: #f0f8fe;
+  --muted-foreground: #5a6478;
+  --accent: #f0f8fe;
+  --accent-foreground: #24316b;
+  --destructive: #e85f5c;
+  --destructive-foreground: #fefefe;
+  --border: #eae9ed;
+  /* Borders and dividers on the A4 sheet (висновок, призначення); independent of the interface --border. */
+  --sheet-border: #eae9ed;
+  /* Section bars and table headers on the A4 sheet; the sheet is always paper (.paper), in print too. */
+  --sheet-bar: #f4f4f6;
+  /* Line under tab lists (variant="line"): a touch stronger than --border in light theme. */
+  --tabs-line: #d1d8f0;
+  --input: #dfe8f4;
+  --ring: #24316b;
+
+  --chart-1: #24316b;
+  --chart-2: #e46468;
+  --chart-3: #5b74c4;
+  --chart-4: #7a93d8;
+  --chart-5: #94a9e2;
+
+  /* Content area behind the cards (AGENTS.md → Visual scale). */
+  --canvas: #eae9ed;
+  /* Backdrop around the A4 sheet (SheetBackdrop): the page canvas color, so a dialog preview
+     looks exactly like the document page. */
+  --sheet-backdrop: var(--canvas);
+
+  --sidebar: #FEFEFE;
+  --sidebar-foreground: #05070f;
+  --sidebar-primary: #24316b;
+  --sidebar-primary-foreground: #fefefe;
+  --sidebar-accent: #F0F2FA;
+  --sidebar-accent-foreground: #24316b;
+  --sidebar-border: #D1D8F0;
+  --sidebar-ring: #24316b;
+
+  --status-success-bg: #e7f6ee;
+  --status-success-fg: #0e7a46;
+  --status-neutral-bg: #f0f8fe;
+  --status-neutral-fg: #5a6478;
+  --status-warning-bg: #fdf3dc;
+  --status-warning-fg: #92600a;
+  --status-danger-bg: #fbeaea;
+  --status-danger-fg: #e85f5c;
+  --status-info-bg: #e8eefc;
+  --status-info-fg: #2c4bc4;
+}
+
+.dark {
+  --background: #05070f;
+  --foreground: #eef2fb;
+  --card: #0a0e1f;
+  --card-foreground: #eef2fb;
+  --popover: #121735;
+  --popover-foreground: #eef2fb;
+  --primary: #9fb0e8;
+  --primary-foreground: #05070f;
+  --secondary: #1a2142;
+  --secondary-foreground: #c8d2ee;
+  --muted: #1a2142;
+  --muted-foreground: #8c96b8;
+  --accent: #1a2142;
+  --accent-foreground: #c8d2ee;
+  --destructive: #e85f5c;
+  --destructive-foreground: #05070f;
+  --border: #05070F;
+  --tabs-line: #152251;
+  --sheet-border: #252d52;
+  --input: #252d52;
+  --ring: #9fb0e8;
+
+  --chart-1: #9fb0e8;
+  --chart-2: #e46468;
+  --chart-3: #6e88d6;
+  --chart-4: #8ca2e0;
+  --chart-5: #7A94E1;
+
+  --canvas: var(--background);
+  --sheet-backdrop: var(--canvas);
+
+  --sidebar: #05070F;
+  --sidebar-foreground: #eef2fb;
+  --sidebar-primary: #9fb0e8;
+  --sidebar-primary-foreground: #05070f;
+  --sidebar-accent: #192142;
+  --sidebar-accent-foreground: #c8d2ee;
+  --sidebar-border: #152251;
+  --sidebar-ring: #9fb0e8;
+
+  --status-success-bg: #17432c;
+  --status-success-fg: #4ade80;
+  --status-neutral-bg: #1a2142;
+  --status-neutral-fg: #8c96b8;
+  --status-warning-bg: #3a2e0e;
+  --status-warning-fg: #fbbf24;
+  --status-danger-bg: #3a1414;
+  --status-danger-fg: #e85f5c;
+  --status-info-bg: #16234a;
+  --status-info-fg: #7d9cf5;
+}
+
+/* Typography: Manrope (app/layout.tsx), body text 15px. Rules: AGENTS.md → Visual scale. */
+@theme {
+  --text-body: 0.9375rem;
+  --text-body--line-height: calc(1.375 / 0.9375);
+
+  /* A4 sheet margins (view and print; AGENTS.md → Document grid): the header right at the top, the footer as far
+     from the bottom as the header is from the top. */
+  --spacing-sheet-top: 6mm;
+  --spacing-sheet-x: 12mm;
+  --spacing-sheet-bottom: 6mm;
+}
+
+/* Document grid (A4 sheets; AGENTS.md → Document grid): three type sizes on one 16pt line, 12 columns. */
+:root {
+  --doc-font: 10pt;
+  --doc-line: 14pt;
+  --doc-title: 13pt;
+  --doc-small: 8pt;
+  --doc-cols: 12;
+  --doc-gutter: 4mm;
+}
+
+/* Sheet utilities: text-doc / text-doc-title / text-doc-small (all on the --doc-line), spacing in lines. */
+@theme inline {
+  --text-doc: var(--doc-font);
+  --text-doc--line-height: var(--doc-line);
+  --text-doc-title: var(--doc-title);
+  --text-doc-title--line-height: var(--doc-line);
+  --text-doc-small: var(--doc-small);
+  --text-doc-small--line-height: var(--doc-line);
+  --spacing-line: var(--doc-line);
+  --spacing-half-line: calc(var(--doc-line) / 2);
+  --spacing-gutter: var(--doc-gutter);
+}
+
+@theme inline {
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  /* Documents: A4 sheets and print (AGENTS.md → the A4 sheet). */
+  --font-document: var(--font-plex), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-tabs-line: var(--tabs-line);
+  --color-sheet-border: var(--sheet-border);
+  --color-sheet-bar: var(--sheet-bar);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-canvas: var(--canvas);
+  --color-sheet-backdrop: var(--sheet-backdrop);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-status-success-bg: var(--status-success-bg);
+  --color-status-success-fg: var(--status-success-fg);
+  --color-status-neutral-bg: var(--status-neutral-bg);
+  --color-status-neutral-fg: var(--status-neutral-fg);
+  --color-status-warning-bg: var(--status-warning-bg);
+  --color-status-warning-fg: var(--status-warning-fg);
+  --color-status-danger-bg: var(--status-danger-bg);
+  --color-status-danger-fg: var(--status-danger-fg);
+  --color-status-info-bg: var(--status-info-bg);
+  --color-status-info-fg: var(--status-info-fg);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-body text-foreground;
+  }
+  .paper {
+    color-scheme: light;
+  }
+  /* Everything on the sheet inherits the document font; form controls inherit it through preflight
+     (font: inherit), while popovers opened from the sheet are portaled out and keep the interface font. */
+  .document-sheet {
+    font-family: var(--font-document);
+  }
+}
