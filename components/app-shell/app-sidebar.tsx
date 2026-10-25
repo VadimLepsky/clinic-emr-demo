@@ -70,7 +70,7 @@ export function AppSidebar({ user }: { user: Staff }) {
     <Sidebar collapsible="icon">
       <SidebarHeader className="px-5 pt-10 pb-10 group-data-[collapsible=icon]:px-3.5">
         <div className="flex items-center gap-1">
-          <Image src="/logo-placeholder.png" alt="" width={36} height={36} className="size-9 shrink-0 rounded-lg" />
+          <Image src="/logo.svg" alt="" width={36} height={36} className="size-9 shrink-0 rounded-lg" />
           {/* text-box trims the line to x-height (the label is lowercase), so items-center lines the letters up with the logo. */}
           <span className="font-document text-2xl leading-none font-semibold tracking-tight whitespace-nowrap text-sidebar-foreground [text-box:trim-both_ex_alphabetic] group-data-[collapsible=icon]:hidden">
             med.cabinet
