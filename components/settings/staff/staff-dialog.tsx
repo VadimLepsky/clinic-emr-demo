@@ -105,7 +105,7 @@ function StaffForm({
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor={`${id}-crm`}>Doctor ID in the CRM</Label>
+          <Label htmlFor={`${id}-crm`}>Provider ID in the CRM</Label>
           <Input
             id={`${id}-crm`}
             type="number"

@@ -1,7 +1,7 @@
 # Project rules
 
 EMR web app for a private outpatient clinic (public demo: the fictional «Linden Medical Center»). UI language: English
-(British spelling).
+(US spelling: License, LLC, edema, color).
 Stack: Next.js App Router, TypeScript, Tailwind CSS v4, shadcn/ui.
 
 1. Types come only from lib/types.ts. Do not invent new types.
@@ -22,8 +22,9 @@ Stack: Next.js App Router, TypeScript, Tailwind CSS v4, shadcn/ui.
 7. The template form renderer (components/template-form) is a pure component:
    data in via props, no lib/data calls inside.
 8. Dates, times, money and counts go through `lib/format.ts` (pure, usable everywhere): `formatDate` — interface,
-   «24 Oct 2026»; `formatSheetDate` — A4 sheets and print, «24/10/2026»; `formatTime` — 24-hour «09:30»;
-   `formatMoney` — EUR via `Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' })`, «€1,234.50»
+   «Apr 27, 2026»; `formatSheetDate` — A4 sheets and print, «04/27/2026»; `formatTime` — 12-hour «2:24 PM»;
+   `formatDateTime` — «Apr 27, 2026, 2:24 PM»; `formatMonthYear` — «October 2026»;
+   `formatMoney` — USD via `Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })`, «$1,234.50»
    (`formatMoneyWhole` for KPI figures); `plural` / `formatAge` — English plurals («1 file», «42 years»).
    No `toLocaleString` / ad-hoc `Intl` formatters in components. Sorting by name uses `localeCompare(…, 'en')`.
 9. Never add real people, clinics, addresses, licence numbers, letterheads or API endpoints: all demo data is
@@ -31,20 +32,24 @@ Stack: Next.js App Router, TypeScript, Tailwind CSS v4, shadcn/ui.
 
 ## Terms
 
-Use the same words everywhere — UI, toasts, sheets, code comments: consultation note (not «report»/«conclusion»),
-care plan (the cost estimate built from a note's recommended services; `Prescription` in code), External
-(a service not provided at the clinic: no code, no price), Clinic manager, Doctor, Nurse (`medical_staff`),
-Front desk (`reception`), Contact centre, Template, Template builder, Header / Footer (letterheads),
-Service bundle (`ServicePackage`), «Start visit», «Today's patients», «Activity log», «Estimated cost»,
-«Services at the clinic», «External referrals». The care plan footer text is fixed: «This document is an estimate
-of the cost of services available at the clinic. Medical recommendations are given in the doctor's consultation
-note.»
+Use the same words everywhere — UI, toasts, sheets, code comments (US English): visit note (not
+«report»/«conclusion»/«visit note»; the general template is «Office visit note», specialist ones
+«… consult note», e.g. «Cardiology consult note»), Orders (the cost estimate built from a note's recommended services;
+one entity, a plural word: «Orders saved», «Orders from the visit on Apr 27, 2026»; `Prescription` in code), External
+(a service not provided at the clinic: no code, no price), Practice manager (`manager`), Provider (`doctor`: the
+role label and the doctor on documents and lists), Nurse (`medical_staff`), Front desk (`reception`), Contact center, MRN (not «Record No.»),
+Template, Template builder, Header / Footer (letterheads), Service bundle (`ServicePackage`), «Start visit»,
+«Today's patients», «Activity log», «Estimated cost», «Services at the clinic», «External referrals».
+Note sections: «Chief complaint», «History of present illness», «Physical exam», «Assessment», «Plan».
+Folders: «Visit notes», «In-house lab results», «Letters & forms». Temperature is in °F (98.2 °F).
+The orders footer text is fixed: «This document is an estimate of the cost of services available at the clinic.
+Medical recommendations are given in the provider's visit note.»
 
 ## Demo data
 
 `lib/mock-data.ts` only calls `generateDemoData()` from `lib/demo/generate.ts`: a fixed seed, every date counted
 from today, so the demo always looks current and the server and the browser build identical data (no
-`Math.random`, no current time other than the date in the generator). Reference data (staff, services in EUR,
+`Math.random`, no current time other than the date in the generator). Reference data (staff, services in USD,
 bundles, folders, letterheads) is in `lib/demo/catalog.ts`, template schemas and versions in `lib/demo/templates.ts`,
 clinical scenarios and episodes in `lib/demo/scenarios.ts`, names in `lib/demo/people.ts`. Types declared in
 `lib/demo/*` describe generator input only (scenarios, episodes), never entities — entities stay in `lib/types.ts`.
@@ -85,14 +90,14 @@ Reference: Remote dashboard — large type, white borderless cards on a soft can
   Cards use `Card` from `components/ui/card.tsx`: `bg-card` (`#fefefe` in light theme) `rounded-2xl`, a 1px `border-border`
   in both themes, no shadow; `Card plain` has no border (the patient info strip, the documents list, the «Today»
   summary, the patient-search hint). Card header `px-8 py-6` with `border-b` (dropped with `border-b-0` where the
-  content follows the title directly: documents, «Today», all care plans), title on the left,
+  content follows the title directly: documents, «Today», all orders), title on the left,
   optional `CardHeaderLink` («View all →») on the right. List rows `px-8 py-5` with
   `divide-y`. Section titles go inside the card header, not above the card.
   Tables sit directly in the card without an outer border (cell padding aligns to `px-8`).
 - Sidebar: 18rem; header (`pt-10 pb-10`) is the 36px logo + label «med.chart» (`gap-2`;
   `font-document text-2xl font-semibold tracking-tight`, trimmed with `text-box` to x-height for lowercase text
   — cap height for all-caps — so it centers on the logo); items `h-11`, 15px, icons `size-5`, `gap-3`, `rounded-lg`. «Home» sits on top outside the groups,
-  then WORK (Patients, Care plans) and MANAGEMENT (clinic manager only) with small uppercase labels;
+  then WORK (Patients, Orders) and MANAGEMENT (practice manager only) with small uppercase labels;
   profile at the bottom on `bg-sidebar-accent/35`, no top border. The sidebar's edge is `border-sidebar-border`
   (`#D1D8F0` in light theme).
 - Controls: buttons and inputs `h-10`, 15px (`size="sm"` is for compact row actions).
@@ -123,16 +128,16 @@ Reference: Remote dashboard — large type, white borderless cards on a soft can
   print — view, print, filling in (inline fields included) and the template preview — because headers and footers
   are images made for a white sheet. The interface around it stays dark; popovers and dropdowns opened from the
   sheet are portaled out and keep the interface theme.
-  Borders and dividers on the sheet (patient table, clinic header rule, care plan table, footer rules, chips) use
+  Borders and dividers on the sheet (patient table, clinic header rule, orders table, footer rules, chips) use
   only `border-sheet-border` / `divide-sheet-border` (a hairline drawn as a pseudo-element: `bg-sheet-border`;
   `--sheet-border`: `#eae9ed` light — also in `.paper` — `#252d52` dark, 50% black in print), never `border-border`:
   the interface border can change without touching documents.
-  The consultation note in view and print is A4 pages on screen too (`PagedSheet`): every page 210 × 297 mm, the next page a
+  The visit note in view and print is A4 pages on screen too (`PagedSheet`): every page 210 × 297 mm, the next page a
   separate sheet 8mm below (as in a print preview), so it is visible whether it fits one page; the pieces (`SheetAtom`:
   header, patient block, title, each section bar and field) are measured and laid out page by page, and printing
   prints the same pages, one per sheet. The footer sits at the bottom of the last page, on screen and in print.
-  Exception — the care plan sheet: as tall as its content, no pages, the footer right after the information
-  text. The consultation note edit mode (`DocumentSheet mode="edit"`) keeps its own padding, sizes and bordered patient table.
+  Exception — the orders sheet: as tall as its content, no pages, the footer right after the information
+  text. The visit note edit mode (`DocumentSheet mode="edit"`) keeps its own padding, sizes and bordered patient table.
   Section bars (`templatePageAtoms`): the title as written in the template plus a colon, left, semibold at
   `--doc-font`, `bg-sheet-bar` bleeding half a gutter past the columns, one and a half lines high with the text
   centered vertically (`sectionBarClass`). A section whose only field is labelled like the section prints the text
@@ -145,19 +150,19 @@ Reference: Remote dashboard — large type, white borderless cards on a soft can
   Headers and footers are only images across the content width — there is no text header. Templates take them from
   the letterhead library (`Letterhead`, Settings → Headers & footers; files in `public/letterheads/`, new uploads
   as data URLs): the template picks `header_id` / `footer_id` (null — none), a document without a template gets the
-  default header, always through `resolveLetterheads` (`lib/data.ts`). Care plans have their own pair, separate
-  from the library: «Care plan letterhead», `ClinicSettings.prescription_header_image_url` /
+  default header, always through `resolveLetterheads` (`lib/data.ts`). Orders have their own pair, separate
+  from the library: «Orders letterhead», `ClinicSettings.prescription_header_image_url` /
   `prescription_footer_image_url` (null — none). Draw them only with `SheetHeader` / `SheetFooterImage`
   (`components/document-sheet/letterhead.tsx`, `src` + `alt`); a scaled strip of the sheet is `LetterheadPreview`.
-  A care plan is drawn only through
+  Orders are drawn only through
   `PrescriptionSheet` (`components/prescriptions/prescription-sheet.tsx`) — the dialog and printing share it;
-  its edit mode uses the consultation note inline fields (`inlineControl`), and anything that must not print is
-  `print:hidden`. Its title is as in the consultation note — centered, `text-doc-title`, `font-medium`, under the patient block.
+  its edit mode uses the visit note inline fields (`inlineControl`), and anything that must not print is
+  `print:hidden`. Its title is as in the visit note — centered, `text-doc-title`, `font-medium`, under the patient block.
   It has two blocks — «Services at the clinic» (price, amount, «Estimated cost») and «External referrals» (only name
   and quantity; shown only when it has rows) — and ends with the information text, then the footer image; no
   signatures, no «Valid until». The «Disc., %» column appears only on «Add discount» (edit) or when a row has a
-  discount (view, print). Modes: `view`, `edit`, `discount` (front desk, contact centre: discount only).
-  A care plan is printed only through `usePrintPrescription` (`components/prescriptions/print-prescription.tsx`):
+  discount (view, print). Modes: `view`, `edit`, `discount` (front desk, contact center: discount only).
+  Orders are printed only through `usePrintPrescription` (`components/prescriptions/print-prescription.tsx`):
   it renders the sheet into `body > .print-root` and calls `window.print()`; `app/print.css` prints only that root.
   There are no separate print pages.
 - Document grid (A4 sheets: `DocumentSheet` view/print, `PrescriptionSheet`; Müller-Brockmann). Tokens (globals.css):
@@ -169,22 +174,22 @@ Reference: Remote dashboard — large type, white borderless cards on a soft can
      from the top), sides 12mm (`px-sheet-x`). Never hard-code sheet padding.
   2. Vertical: every offset and height on the sheet is lines or half lines (`var(--doc-line)`). Save room at the top,
      not in the text: header → patient block 1 line, patient block → title 1.5 lines, title → first section 1.5 lines,
-     the patient block without gaps between its rows. Care plan: patient block → title 1.5 lines, title → «Services at
+     the patient block without gaps between its rows. Orders: patient block → title 1.5 lines, title → «Services at
      the clinic» 1.5 lines, that heading → its table 1 line, the subtitle «services not provided at the clinic» → its
      table half a line, 1 line before «Estimated cost». In the text: 1 line before a section bar, the bar 1.5 lines, half a
      line after it and between fields. The header and image blocks are `SnapImage` — the box is rounded up to half
      lines, the picture fits without stretching; the footer image keeps its height, pinned 6mm from the bottom, at
-     least half a line below the text. No arbitrary `mt-3` / `py-2` inside the sheet. Care plan table rows are at
+     least half a line below the text. No arbitrary `mt-3` / `py-2` inside the sheet. Orders table rows are at
      least 1.5 lines with the text centered vertically, a 1px hairline under each (`after:` `bg-sheet-border`,
      bleeding half a gutter past the columns, like the bars), not bordered boxes; the header row is the same height,
      `font-medium`, on `bg-sheet-bar` bleeding half a gutter.
   3. Columns: the sheet is a 12-column grid with the gutter (`sheetGridClass`; rows pass the columns on with
      `subgridClass` / `grid-cols-subgrid`). Patient block (`SheetInfoGrid`): label 2 columns + value 4 columns, twice.
-     Care plan table: Service 7, Qty 1, Price 2, Amount 2 (the discount, when shown, takes 1 from Service;
+     Orders table: Service 7, Qty 1, Price 2, Amount 2 (the discount, when shown, takes 1 from Service;
      External: Service 11, Qty 1). A future lab table: Test 5, Result 2, Units 2, Reference range 3.
      Column edges are the same in every document; one-column numbers (Qty, Discount) are centered.
   4. Type: only `--doc-font`, `--doc-title`, `--doc-small` on the sheet (no `text-xs/sm/base/lg`, controls included);
-     the document title (consultation note and care plan) is centered, `text-doc-title`, `font-medium`;
+     the document title (visit note and orders) is centered, `text-doc-title`, `font-medium`;
      hierarchy by weight. `cn()` knows `text-doc*` as font sizes (`lib/utils.ts`), so they merge correctly.
   5. One left edge: bar text, field labels and tables start at the first column.
   6. Debug (development only): G or `?grid=1` shows the lines and columns over every sheet (`DocGridOverlay`);

@@ -29,11 +29,11 @@ export function PrescriptionsTab({ patientId }: { patientId: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Care plans</CardTitle>
+        <CardTitle>Orders</CardTitle>
         {canCreate && (
           <Button onClick={() => setTarget('new')}>
             <PlusIcon className="size-4" aria-hidden="true" />
-            New care plan
+            New orders
           </Button>
         )}
       </CardHeader>
@@ -47,14 +47,14 @@ export function PrescriptionsTab({ patientId }: { patientId: string }) {
       ) : prescriptions.length === 0 ? (
         <div className="flex flex-col items-center gap-2 px-8 py-12 text-center text-muted-foreground">
           <ClipboardListIcon className="size-6" aria-hidden="true" />
-          No care plans yet.
+          No orders yet.
         </div>
       ) : (
         <Table className="[&_th]:h-auto [&_th]:py-3 [&_th]:whitespace-normal">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead>Title</TableHead>
-              <TableHead>Doctor</TableHead>
+              <TableHead>Provider</TableHead>
               <TableHead>Created on</TableHead>
               <TableHead className="text-right">Estimated</TableHead>
               <TableHead className="text-right">Used</TableHead>
@@ -75,7 +75,7 @@ export function PrescriptionsTab({ patientId }: { patientId: string }) {
                         href={`/patients/${patientId}/documents/${rx.source_document_id}`}
                         className="text-sm text-primary underline-offset-4 hover:underline"
                       >
-                        Consultation note
+                        Visit note
                       </Link>
                     )}
                   </TableCell>

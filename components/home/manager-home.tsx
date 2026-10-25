@@ -75,19 +75,19 @@ export function ManagerHome() {
         <div className="flex min-w-0 flex-col gap-6 xl:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>Care plans by doctor</CardTitle>
+              <CardTitle>Orders by provider</CardTitle>
               <CardHeaderLink href={`/prescriptions?period=${period}`} />
             </CardHeader>
             {!stats ? (
               <Skeleton className="m-8 h-32" />
             ) : stats.by_doctor.length === 0 ? (
-              <p className="px-8 py-10 text-center text-muted-foreground">No care plans in this period.</p>
+              <p className="px-8 py-10 text-center text-muted-foreground">No orders in this period.</p>
             ) : (
               <Table className="[&_th]:whitespace-normal">
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
-                    <TableHead>Doctor</TableHead>
-                    <TableHead className="text-right">Care plans</TableHead>
+                    <TableHead>Provider</TableHead>
+                    <TableHead className="text-right">Orders</TableHead>
                     <TableHead className="text-right">Estimated</TableHead>
                     <TableHead className="text-right">Paid</TableHead>
                     <TableHead className="min-w-32">Completion</TableHead>
@@ -135,7 +135,7 @@ export function ManagerHome() {
             {!stale ? (
               <Skeleton className="m-8 h-12" />
             ) : stale.length === 0 ? (
-              <p className="px-8 py-6 text-muted-foreground">All care plans are in progress.</p>
+              <p className="px-8 py-6 text-muted-foreground">All orders are in progress.</p>
             ) : (
               <ul className="divide-y divide-border">
                 {stale.map((rx) => (
@@ -162,7 +162,7 @@ export function ManagerHome() {
         </div>
 
         <div className="flex min-w-0 flex-col gap-6">
-          <section aria-label="Care plan figures">
+          <section aria-label="Order figures">
             {!stats ? (
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 xl:grid-cols-2" aria-busy="true">
                 {Array.from({ length: 4 }).map((_, i) => (
@@ -171,7 +171,7 @@ export function ManagerHome() {
               </div>
             ) : (
               <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4 xl:grid-cols-2">
-                <Kpi label="Care plans" value={String(stats.count)} />
+                <Kpi label="Orders" value={String(stats.count)} />
                 <Kpi label="Estimated total" value={formatMoneyWhole(stats.total_amount)} />
                 <Kpi label="Paid" value={formatMoneyWhole(stats.paid_amount)} />
                 <Kpi label="Average completion" value={`${stats.completion_pct}%`} />

@@ -41,9 +41,9 @@ export function CompletionBar({ pct, label }: { pct: number; label: string }) {
 type PrescriptionRowActionsProps = {
   /** Who/what the row is about, for the accessible names («View: …»). */
   subject: string
-  /** «View»: opens the care plan dialog. */
+  /** «View»: opens the orders dialog. */
   onView?: () => void
-  /** «Patient record»: where the row itself opens the care plan (front desk, contact centre), this link replaces
+  /** «Patient record»: where the row itself opens the orders (front desk, contact center), this link replaces
    *  «View». */
   patientHref?: string
   /** Prints in place (usePrintPrescription), no separate print page. */

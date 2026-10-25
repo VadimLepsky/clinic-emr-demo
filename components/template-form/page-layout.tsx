@@ -159,7 +159,7 @@ function MockServices({ block }: { block: ServicesBlock }) {
 export function templatePageAtoms({ schema, values, context, services, mock = false }: PageLayoutProps): SheetAtom[] {
   const servicesById = new Map(services.map((s) => [s.id, s]))
 
-  // hideLabel: the section's only field, labelled like the section — the bar already says it.
+  // hideLabel: the section's only field, labeled like the section — the bar already says it.
   const renderField = (field: FieldBlock, hideLabel = false): ReactNode => {
     if (mock) return <MockField key={field.id} field={field} hideLabel={hideLabel} />
     const entry = getFieldEntry(field, values[field.id])

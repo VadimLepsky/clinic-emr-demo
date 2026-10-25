@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils'
 
-// «Backdrop + sheet»: the A4 sheet centered on a backdrop the colour of the page canvas (bg-sheet-backdrop).
-// One wrapper for the consultation note view, the editor, care plan printing and the previews in dialogs,
+// «Backdrop + sheet»: the A4 sheet centered on a backdrop the color of the page canvas (bg-sheet-backdrop).
+// One wrapper for the visit note view, the editor, orders printing and the previews in dialogs,
 // so they never drift apart.
 type SheetBackdropProps = React.ComponentProps<'div'> & {
   /** page — a block in the page flow with a quiet border; dialog — fills the whole dialog body and scrolls itself. */

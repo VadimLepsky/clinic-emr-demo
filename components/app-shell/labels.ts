@@ -4,10 +4,10 @@ import { formatDate as formatIsoDate } from '@/lib/format'
 export { formatAge } from '@/lib/format'
 
 export const roleLabels: Record<StaffRole, string> = {
-  manager: 'Clinic manager',
-  doctor: 'Doctor',
+  manager: 'Practice manager',
+  doctor: 'Provider',
   medical_staff: 'Nurse',
-  contact_center: 'Contact centre',
+  contact_center: 'Contact center',
   reception: 'Front desk',
 }
 

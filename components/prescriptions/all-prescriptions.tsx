@@ -53,12 +53,12 @@ export function AllPrescriptions({ initialPeriod, initialDoctorId }: Props) {
   const { data: staff } = useSWR('staff', () => listStaff())
   const { data: currentUser } = useSWR('current-user', getCurrentUser)
   const isManager = currentUser?.role === 'manager'
-  // Front desk and the contact centre work with the care plan itself: the row (and the patient name) opens it,
+  // Front desk and the contact center work with the orders themselves: the row (and the patient name) opens them,
   // and «Patient record» takes the place of «View». Other roles keep the name as the link to the record.
   const rowOpensPrescription = currentUser?.role === 'reception' || currentUser?.role === 'contact_center'
   const openPrescription = (rx: { patient_id: string; id: string }) => setSelected({ patientId: rx.patient_id, id: rx.id })
   const doctorItems = [
-    { value: ALL, label: 'All doctors' },
+    { value: ALL, label: 'All providers' },
     ...(staff ?? []).filter((s) => s.role === 'doctor').map((s) => ({ value: s.id, label: s.full_name })),
   ]
 
@@ -71,11 +71,11 @@ export function AllPrescriptions({ initialPeriod, initialDoctorId }: Props) {
 
   return (
     <Page width="wide">
-      <PageHeader title="Care plans" />
+      <PageHeader title="Orders" />
 
       <Card>
         <CardHeader className="border-b-0">
-          <CardTitle>All care plans</CardTitle>
+          <CardTitle>All orders</CardTitle>
           <CardAction>
             <Select items={periodItems} value={period} onValueChange={(v) => v && setPeriod(v as Period)}>
               <SelectTrigger aria-label="Period" className="w-48">
@@ -90,7 +90,7 @@ export function AllPrescriptions({ initialPeriod, initialDoctorId }: Props) {
               </SelectContent>
             </Select>
             <Select items={doctorItems} value={doctorId} onValueChange={(v) => v && setDoctorId(v as string)}>
-              <SelectTrigger aria-label="Doctor" className="w-56">
+              <SelectTrigger aria-label="Provider" className="w-56">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -125,7 +125,7 @@ export function AllPrescriptions({ initialPeriod, initialDoctorId }: Props) {
         ) : rows.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-8 py-12 text-center text-muted-foreground">
             <ClipboardListIcon className="size-6" aria-hidden="true" />
-            No care plans match the selected filters.
+            No orders match the selected filters.
           </div>
         ) : (
           <Table>
@@ -133,7 +133,7 @@ export function AllPrescriptions({ initialPeriod, initialDoctorId }: Props) {
               <TableRow className="hover:bg-transparent">
                 <TableHead>Date</TableHead>
                 <TableHead>Patient</TableHead>
-                <TableHead>Doctor</TableHead>
+                <TableHead>Provider</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
                 <TableHead className="w-24">Completion</TableHead>
                 <TableHead>Status</TableHead>
@@ -152,7 +152,7 @@ export function AllPrescriptions({ initialPeriod, initialDoctorId }: Props) {
                     {rowOpensPrescription ? (
                       <button
                         type="button"
-                        aria-label={`Open care plan: ${rx.patient_name}`}
+                        aria-label={`Open orders: ${rx.patient_name}`}
                         onClick={(e) => {
                           e.stopPropagation()
                           openPrescription(rx)

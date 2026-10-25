@@ -81,9 +81,9 @@ export function ConsultationEditor({
   const services = useSelectedServices(schema, values, packageServiceIds)
   const { isPromptOpen, requestLeave, confirmLeave, cancelLeave } = useUnsavedChanges(dirty && !saving)
   useEffect(() => onDirtyChange?.(dirty), [dirty, onDirtyChange])
-  // Any template type is edited here; only a consultation is a «consultation note».
+  // Any template type is edited here; only a consultation is a «visit note».
   const isConsultation = !template || template.kind === 'consultation'
-  const savedLabel = isConsultation ? 'Consultation note saved' : 'Document saved'
+  const savedLabel = isConsultation ? 'Visit note saved' : 'Document saved'
 
   const handleChange = (blockId: string, value: FieldValue) => {
     setValues((prev) => ({ ...prev, [blockId]: value }))
@@ -122,13 +122,13 @@ export function ConsultationEditor({
 
       // With a paid prescription the services were read-only, so there is nothing to warn about.
       if (!result.prescriptionLocked && result.prescriptionId && getSelectedServices(schema, values).length > 0) {
-        toast.success(`${savedLabel}. Care plan created`)
+        toast.success(`${savedLabel}. Orders created`)
       } else {
         toast.success(savedLabel)
       }
       onSaved(result.document)
     } catch {
-      toast.error(`Could not save the ${isConsultation ? 'consultation note' : 'document'}. Please try again.`)
+      toast.error(`Could not save the ${isConsultation ? 'visit note' : 'document'}. Please try again.`)
       setSaving(false)
     }
   }
@@ -206,7 +206,7 @@ export function ConsultationEditor({
           <DialogHeader>
             <DialogTitle>Unsaved changes</DialogTitle>
             <DialogDescription>
-              Changes to the {isConsultation ? 'consultation note' : 'document'} are not saved. Leave without saving?
+              Changes to the {isConsultation ? 'visit note' : 'document'} are not saved. Leave without saving?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

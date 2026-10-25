@@ -108,10 +108,10 @@ export function ServiceAddSearch({
         {onAddCustom && (!canSearch || pending || results.length === 0) && (
           <p className="px-3 pt-2 text-sm text-muted-foreground">
             {!canSearch
-              ? `Catalogue search — ${MIN_QUERY_LENGTH} characters or more`
+              ? `Catalog search — ${MIN_QUERY_LENGTH} characters or more`
               : pending
                 ? 'Searching…'
-                : 'Nothing found in the catalogue'}
+                : 'Nothing found in the catalog'}
           </p>
         )}
         <ComboboxList>

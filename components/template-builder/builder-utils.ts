@@ -26,10 +26,10 @@ export type TemplateMeta = Pick<
 >
 
 export const kindOptions: { value: TemplateKind; label: string }[] = [
-  { value: 'consultation', label: 'Consultation' },
+  { value: 'consultation', label: 'Visit note' },
   { value: 'ultrasound', label: 'Ultrasound' },
   { value: 'lab', label: 'Lab results' },
-  { value: 'certificate', label: 'Certificate' },
+  { value: 'certificate', label: 'Letter or form' },
   { value: 'other', label: 'Other' },
 ]
 
@@ -45,22 +45,22 @@ export const templateVariables: { key: TemplateVariable; label: string }[] = [
   { key: 'patient.full_name', label: "Patient's name" },
   { key: 'patient.age', label: 'Age' },
   { key: 'patient.birth_date', label: 'Date of birth' },
-  { key: 'patient.crm_client_id', label: 'Record No.' },
+  { key: 'patient.crm_client_id', label: 'MRN' },
   { key: 'document.date', label: 'Visit date' },
   { key: 'document.number', label: 'Document No.' },
-  { key: 'doctor.full_name', label: "Doctor's name" },
+  { key: 'doctor.full_name', label: "Provider's name" },
   { key: 'doctor.specialty', label: 'Specialty' },
 ]
 
-// The patient block of a printed document (DocumentSheet, view): Date, Record No., Patient, Date of birth;
-// Document No., Doctor.
+// The patient block of a printed document (DocumentSheet, view): Date, MRN, Patient, Date of birth;
+// Document No., Provider.
 export const autoFilledInfo = [
   'Visit date',
-  'Record No.',
+  'MRN',
   "Patient's name",
   'Date of birth',
   'Document No.',
-  "Doctor's name",
+  "Provider's name",
 ]
 
 export function collectIds(schema: TemplateSchema): string[] {
@@ -101,7 +101,7 @@ export const imageWidthOptions: { value: ImageBlock['width']; label: string }[] 
 
 export const imageAlignOptions: { value: ImageBlock['align']; label: string }[] = [
   { value: 'left', label: 'Left' },
-  { value: 'center', label: 'Centre' },
+  { value: 'center', label: 'Center' },
   { value: 'right', label: 'Right' },
 ]
 
@@ -127,7 +127,7 @@ export function createBlock(choice: BlockKindChoice, id: string): Block {
 }
 
 // rec_external (free «External» text) exists only in old templates: such services are now chips in the
-// services fields («Add «…» as an External service»). It stays here so an old section is still recognised.
+// services fields («Add «…» as an External service»). It stays here so an old section is still recognized.
 export const RECOMMENDATION_IDS = [
   'rec_lab',
   'rec_instrumental',
@@ -141,7 +141,7 @@ export const RECOMMENDATION_IDS = [
 export function createRecommendationsSection(sectionId: string): Section {
   return {
     id: sectionId,
-    title: 'Recommendations',
+    title: 'Plan',
     blocks: [
       { kind: 'services', id: 'rec_lab', label: 'Lab tests', category: 'lab' },
       { kind: 'services', id: 'rec_instrumental', label: 'Instrumental diagnostics', category: 'instrumental' },

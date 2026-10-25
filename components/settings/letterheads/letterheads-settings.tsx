@@ -102,11 +102,11 @@ export function LetterheadsSettings() {
 }
 
 const blankSlots = [
-  { key: 'prescription_header_image_url', label: 'Header', alt: 'Care plan header' },
-  { key: 'prescription_footer_image_url', label: 'Footer', alt: 'Care plan footer' },
+  { key: 'prescription_header_image_url', label: 'Header', alt: 'Orders header' },
+  { key: 'prescription_footer_image_url', label: 'Footer', alt: 'Orders footer' },
 ] as const
 
-/** «Care plan letterhead»: the care plans' own header and footer — just images, separate from the library. */
+/** «Orders letterhead»: the orders' own header and footer — just images, separate from the library. */
 function PrescriptionBlank({ clinicSettings }: { clinicSettings: ClinicSettings | undefined }) {
   const { mutate } = useSWRConfig()
   const fileRef = useRef<HTMLInputElement>(null)
@@ -137,8 +137,8 @@ function PrescriptionBlank({ clinicSettings }: { clinicSettings: ClinicSettings 
     <Card>
       <CardHeader>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <CardTitle>Care plan letterhead</CardTitle>
-          <CardDescription>Header and footer of printed care plans — separate from the template letterheads.</CardDescription>
+          <CardTitle>Orders letterhead</CardTitle>
+          <CardDescription>Header and footer of printed orders — separate from the template letterheads.</CardDescription>
         </div>
       </CardHeader>
       {!clinicSettings ? (

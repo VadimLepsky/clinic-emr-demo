@@ -6,10 +6,10 @@ import { roleLabels } from '@/components/app-shell/labels'
 
 const columns = [
   'View records',
-  'Create consultation notes',
+  'Create visit notes',
   'Upload files',
-  'Create and edit care plans',
-  'Delete care plans',
+  'Create and edit orders',
+  'Delete orders',
   'Templates',
   'Settings',
 ] as const
@@ -17,7 +17,7 @@ const columns = [
 const yes = { state: 'yes' } as const
 const no = { state: 'no' } as const
 
-// Mirrors what the app really allows: the «Add document» menu, creating, editing and deleting care plans
+// Mirrors what the app really allows: the «Add document» menu, creating, editing and deleting orders
 // (canEditPrescriptions in lib/data.ts), the sidebar sections.
 const permissions = [
   {

@@ -1,9 +1,9 @@
 // Demo data generator. Fixed seed, every date counted from today, so the demo always looks current and the server
 // and the browser build exactly the same data. lib/mock-data.ts calls it once; lib/data.ts reads the result.
 //
-// The story: 60 patients go through clinical episodes (lib/demo/scenarios.ts) over the last six months — a GP visit,
+// The story: 60 patients go through clinical episodes (lib/demo/scenarios.ts) over the last six months — a PCP visit,
 // a scan, a specialist, a follow-up — and every visit leaves a document from the template version of its day,
-// a care plan from the recommended services, payments that lock the plan, lab results uploaded as files, and an
+// orders from the recommended services, payments that lock the orders, lab results uploaded as files, and an
 // activity log. Today every doctor has a list of appointments; the morning ones already have notes.
 import type {
   AuditEntry, ClinicSettings, CrmVisit, DocumentValues, FieldBlock, FieldValue, FileRecord, Folder, Letterhead,
@@ -25,7 +25,7 @@ import { buildTemplates } from './templates'
 
 export const DEMO_SEED = 20_261_024
 const HISTORY_DAYS = 182
-/** Care plans older than this with nothing done show up in «Needs attention» (manager home). */
+/** Orders older than this with nothing done show up in «Needs attention» (manager home). */
 const STALE_DAYS = 14
 
 export type DemoData = {
@@ -209,7 +209,7 @@ export function generateDemoData(today = new Date().toISOString().slice(0, 10), 
   }
 
   // ============ 2. Today's appointments ============
-  // Continuations due soon come first (the endocrinologist sees the patient the GP referred), then new patients.
+  // Continuations due soon come first (the endocrinologist sees the patient the PCP referred), then new patients.
 
   const seenToday = new Set<string>()
   const todayVisits: Visit[] = []
@@ -259,7 +259,7 @@ export function generateDemoData(today = new Date().toISOString().slice(0, 10), 
     (a, b) => a.date.localeCompare(b.date) || a.minutes - b.minutes,
   )
 
-  // ============ 3. Documents and care plans ============
+  // ============ 3. Documents and orders ============
 
   const documents: MedDocument[] = []
   const prescriptions: Prescription[] = []
@@ -315,11 +315,11 @@ export function generateDemoData(today = new Date().toISOString().slice(0, 10), 
     plans.push({ rx, items, scenario: visit.scenario, patient: visit.patient, manual: false })
     log({
       at: created, actor_type: 'system', actor_id: null, action: 'create', entity_type: 'prescription', entity_id: rx.id, patient_id: rx.patient_id,
-      description: `Created a care plan from the ${template.kind === 'consultation' ? 'consultation note' : 'document'}`,
+      description: `Created orders from the ${template.kind === 'consultation' ? 'visit note' : 'document'}`,
     })
   }
 
-  // Manual care plans: repeat tests and courses a doctor adds between visits, without a note.
+  // Manual orders: repeat tests and courses a doctor adds between visits, without a note.
   const MANUAL: Record<string, [title: string, items: [code: string, qty: number][]][]> = {
     'st-2': [['Vitamin B12 injections', [['4002', 5], ['NL-102', 1]]], ['Repeat blood count and ferritin', [['4001', 1], ['3001', 1], ['3011', 1]]]],
     'st-3': [['Repeat liver function tests', [['4001', 1], ['3007', 1]]], ['Repeat blood count and ferritin', [['4001', 1], ['3001', 1], ['3011', 1]]]],
@@ -348,18 +348,18 @@ export function generateDemoData(today = new Date().toISOString().slice(0, 10), 
       return item
     })
     prescriptions.push(rx)
-    log({ at: created, actor_id: source.doctorId, action: 'create', entity_type: 'prescription', entity_id: rx.id, patient_id: rx.patient_id, description: `Created care plan «${title}»` })
-    // One was created twice by mistake; the clinic manager deleted the copy.
+    log({ at: created, actor_id: source.doctorId, action: 'create', entity_type: 'prescription', entity_id: rx.id, patient_id: rx.patient_id, description: `Created «${title}»` })
+    // One was created twice by mistake; the practice manager deleted the copy.
     if (i === 3) {
       rx.deleted_at = addMinutes(created, 95)
       rx.deleted_by = MANAGER_ID
-      log({ at: rx.deleted_at, actor_id: MANAGER_ID, action: 'delete', entity_type: 'prescription', entity_id: rx.id, patient_id: rx.patient_id, description: `Deleted care plan «${title}»` })
+      log({ at: rx.deleted_at, actor_id: MANAGER_ID, action: 'delete', entity_type: 'prescription', entity_id: rx.id, patient_id: rx.patient_id, description: `Deleted «${title}»` })
       continue
     }
     plans.push({ rx, items, scenario: null, patient: source.patient, manual: true })
   }
 
-  // ============ 4. Discounts, payments and fulfilment ============
+  // ============ 4. Discounts, payments and fulfillment ============
 
   const prescriptionFulfillments: PrescriptionFulfillment[] = []
   const ageDays = (plan: PlanMeta) => daysBetween(plan.rx.created_at.slice(0, 10), today)
@@ -372,7 +372,7 @@ export function generateDemoData(today = new Date().toISOString().slice(0, 10), 
     if (plan) abandoned.add(plan.rx.id)
   }
 
-  // Today: for three of today's care plans the nurse already took the blood tests (and they were paid).
+  // Today: for three of today's orders the nurse already took the blood tests (and they were paid).
   const paidToday = new Set(
     plans
       .filter((p) => ageDays(p) === 0 && p.items.some((i) => i.section === 'lab' && i.service_id))
@@ -390,10 +390,10 @@ export function generateDemoData(today = new Date().toISOString().slice(0, 10), 
       const pct = rng.pick([5, 10, 10, 15])
       const onlyConsultation = rng.chance(0.3) ? items.find((i) => i.section === 'consultation' && i.service_id) : undefined
       for (const item of items) if (item.service_id && (!onlyConsultation || item === onlyConsultation)) item.discount_pct = onlyConsultation ? 20 : pct
-      log({ at: addMinutes(created, rng.int(8, 35)), actor_id: FRONT_DESK_ID, action: 'update', entity_type: 'prescription', entity_id: rx.id, patient_id: rx.patient_id, description: `Changed the discount in care plan «${rx.title}»` })
+      log({ at: addMinutes(created, rng.int(8, 35)), actor_id: FRONT_DESK_ID, action: 'update', entity_type: 'prescription', entity_id: rx.id, patient_id: rx.patient_id, description: `Changed the discount in «${rx.title}»` })
     }
     if (rng.chance(0.45)) {
-      log({ at: addMinutes(created, rng.int(10, 45)), actor_id: FRONT_DESK_ID, action: 'print', entity_type: 'prescription', entity_id: rx.id, patient_id: rx.patient_id, description: `Printed care plan «${rx.title}»` })
+      log({ at: addMinutes(created, rng.int(10, 45)), actor_id: FRONT_DESK_ID, action: 'print', entity_type: 'prescription', entity_id: rx.id, patient_id: rx.patient_id, description: `Printed orders «${rx.title}»` })
     }
 
     const fulfil = (item: PrescriptionItem, datetime: string) => {
@@ -419,7 +419,7 @@ export function generateDemoData(today = new Date().toISOString().slice(0, 10), 
           (section === 'lab' || section === 'other' ? rng.int(0, 2) : section === 'instrumental' ? rng.int(0, 7) : rng.int(2, 12)) /
             doctorFactor,
         )
-      // About p of the items, not a coin per item: a doctor's rate stays recognisable even over a few plans.
+      // About p of the items, not a coin per item: a doctor's rate stays recognizable even over a few plans.
       const count = clamp(Math.round(p * clinicItems.length + rng.float(-0.6, 0.6, 2)), 0, clinicItems.length)
       const done = rng.shuffle(clinicItems).slice(0, count)
       const forced = !done.length && age >= STALE_DAYS && clinicItems.length > 0
@@ -436,7 +436,7 @@ export function generateDemoData(today = new Date().toISOString().slice(0, 10), 
     const own = prescriptionFulfillments.filter((f) => items.some((i) => i.id === f.prescription_item_id))
     if (own.length) {
       rx.locked_at = own.map((f) => f.fulfilled_at).sort()[0]
-      log({ at: rx.locked_at, actor_type: 'system', actor_id: null, action: 'update', entity_type: 'prescription', entity_id: rx.id, patient_id: rx.patient_id, description: 'Payment recorded, the care plan is locked' })
+      log({ at: rx.locked_at, actor_type: 'system', actor_id: null, action: 'update', entity_type: 'prescription', entity_id: rx.id, patient_id: rx.patient_id, description: 'Payment recorded, the orders are locked' })
     }
     if (clinicItems.length && clinicItems.every((i) => own.some((f) => f.prescription_item_id === i.id))) rx.status = 'completed'
   }
@@ -487,7 +487,7 @@ export function generateDemoData(today = new Date().toISOString().slice(0, 10), 
       const ready = addDays(taken.slice(0, 10), lab === 'clinic' ? 1 : rng.int(2, 4))
       if (ready >= today || weekday(ready) === 0) continue
       const folder = lab === 'Northlab' ? 'f-4' : lab === 'CityLab' ? 'f-5' : 'f-3'
-      const title = lab === 'clinic' ? 'Clinic lab results' : `${lab} results`
+      const title = lab === 'clinic' ? 'In-house lab results' : `${lab} results`
       upload({
         patientId: plan.patient.id, folderId: folder, title, date: taken.slice(0, 10), created: at(ready, 9 * 60 + 15 * rng.int(0, 28)),
         authorId: rng.pick(uploaderPool), files: [pdf(`${lab.toLowerCase()}_${plan.patient.crm_client_id}_${compact(taken)}.pdf`)],
@@ -502,7 +502,7 @@ export function generateDemoData(today = new Date().toISOString().slice(0, 10), 
       const endoscopy = /endoscopy|gastroscopy|colonoscopy/i.test(name)
       const title = endoscopy
         ? /colonoscopy/i.test(name) ? 'Colonoscopy report' : 'Gastroscopy report'
-        : /consultation/i.test(name) ? `${name} letter` : `${name.replace(/\s*\(.*\)$/, '')} report`
+        : /consult/i.test(name) ? `${name} letter` : `${name.replace(/\s*\(.*\)$/, '')} report`
       upload({
         patientId: plan.patient.id, folderId: endoscopy ? 'f-7' : 'f-9', title, date: addDays(day, -rng.int(1, 4)),
         created: at(day, 10 * 60 + 15 * rng.int(0, 24)), authorId: FRONT_DESK_ID,
@@ -598,7 +598,7 @@ export function generateDemoData(today = new Date().toISOString().slice(0, 10), 
 
 type Selection = { serviceId?: string; customName?: string; category: PrescriptionItem['section'] }
 
-const MEDICAL_HISTORY = ['No chronic conditions.', 'Appendicectomy in childhood.', 'Seasonal hay fever.', 'Asthma in childhood, no symptoms now.']
+const MEDICAL_HISTORY = ['No chronic conditions.', 'Appendectomy in childhood.', 'Seasonal hay fever.', 'Asthma in childhood, no symptoms now.']
 const ALLERGIES = ['penicillin — rash', 'NSAIDs — urticaria', 'house dust mite — rhinitis', 'latex — contact dermatitis']
 
 function buildNote(rng: Rng, visit: Visit, schema: TemplateSchema) {
@@ -640,7 +640,7 @@ function buildNote(rng: Rng, visit: Visit, schema: TemplateSchema) {
     general_state: () => say(scenario.generalState) ?? 'good',
     bp: () => (child ? undefined : `${range(vitals.bp?.[0], [112, 132])}/${range(vitals.bp?.[1], [70, 84])}`),
     hr: () => (child ? rng.int(92, 116) : range(vitals.hr, [62, 80])),
-    temp: () => range(vitals.temp, [36.4, 36.8], 1),
+    temp: () => range(vitals.temp, [97.5, 98.2], 1),
     spo2: () => range(vitals.spo2, [97, 99]),
     weight: () => (child ? Math.round(age * 2.6 + 9) : sex === 'male' ? rng.int(72, 98) : rng.int(56, 84)),
     height: () => (child ? undefined : sex === 'male' ? rng.int(168, 188) : rng.int(156, 172)),

@@ -1,8 +1,12 @@
-// Dates, times, money and counts for the interface and the A4 sheets (en-GB, EUR). Pure: no data access, so the
+// Dates, times, money and counts for the interface and the A4 sheets (en-US, USD). Pure: no data access, so the
 // template form renderer can use it too. Month names are spelled out here rather than taken from Intl, so the
-// server and the browser always agree (ICU versions differ on «Sep» vs «Sept»).
+// server and the browser always agree.
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
 
 /** A date-only ISO string is a calendar date; a datetime is read in local time. */
 function dateParts(iso: string): [number, number, number] {
@@ -16,51 +20,59 @@ function dateParts(iso: string): [number, number, number] {
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
-/** Interface: 24 Oct 2026. */
+/** Interface: Apr 27, 2026. */
 export function formatDate(iso: string): string {
   const [y, m, d] = dateParts(iso)
-  return `${d} ${MONTHS[m - 1]} ${y}`
+  return `${MONTHS[m - 1]} ${d}, ${y}`
 }
 
-/** A4 sheets and print: 24/10/2026. */
+/** A4 sheets and print: 04/27/2026. */
 export function formatSheetDate(iso: string): string {
   const [y, m, d] = dateParts(iso)
-  return `${pad(d)}/${pad(m)}/${y}`
+  return `${pad(m)}/${pad(d)}/${y}`
 }
 
-/** 24-hour clock: 09:30. */
+/** 12-hour clock: 9:30 AM, 2:24 PM. */
 export function formatTime(iso: string): string {
   const date = new Date(iso)
-  return `${pad(date.getHours())}:${pad(date.getMinutes())}`
+  const hours = date.getHours()
+  return `${hours % 12 || 12}:${pad(date.getMinutes())} ${hours < 12 ? 'AM' : 'PM'}`
 }
 
+/** Apr 27, 2026, 2:24 PM */
 export function formatDateTime(iso: string): string {
   return `${formatDate(iso)}, ${formatTime(iso)}`
 }
 
-/** Stored title of a care plan created on `iso` (a date or a datetime). */
-export function carePlanTitle(iso: string): string {
-  return `Care plan from the visit on ${formatDate(iso.slice(0, 10))}`
+/** October 2026 — `month` is 0-based, as in Date. */
+export function formatMonthYear(year: number, month: number): string {
+  const date = new Date(year, month, 1)
+  return `${MONTH_NAMES[date.getMonth()]} ${date.getFullYear()}`
 }
 
-const moneyFormatter = new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' })
-const wholeMoneyFormatter = new Intl.NumberFormat('en-IE', {
+/** Stored title of orders created on `iso` (a date or a datetime). */
+export function carePlanTitle(iso: string): string {
+  return `Orders from the visit on ${formatDate(iso.slice(0, 10))}`
+}
+
+const moneyFormatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
+const wholeMoneyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
-  currency: 'EUR',
+  currency: 'USD',
   maximumFractionDigits: 0,
 })
 
-/** €1,234.50 */
+/** $1,234.50 */
 export function formatMoney(amount: number): string {
   return moneyFormatter.format(amount)
 }
 
-/** €1,235 — KPI figures, where cents are noise. */
+/** $1,235 — KPI figures, where cents are noise. */
 export function formatMoneyWhole(amount: number): string {
   return wholeMoneyFormatter.format(amount)
 }
 
-const numberFormatter = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 })
+const numberFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 })
 
 export function formatNumber(value: number): string {
   return numberFormatter.format(value)

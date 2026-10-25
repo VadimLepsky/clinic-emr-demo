@@ -31,7 +31,7 @@ function sourceLabel(service: Service) {
   return service.source === 'crm' ? 'Clinic' : (service.lab_name ?? 'Laboratory')
 }
 
-/** A dropdown item and a chip: a catalogue service, or an External one (only the typed name). */
+/** A dropdown item and a chip: a catalog service, or an External one (only the typed name). */
 type PickerOption = { key: string; service: Service; customName?: undefined } | { key: string; customName: string; service?: undefined }
 
 const serviceOption = (service: Service): PickerOption => ({ key: service.id, service })
@@ -148,10 +148,10 @@ export function ServicesPicker({
         {(!canSearch || pending || results.length === 0) && (
           <p className="px-3 pt-2 text-sm text-muted-foreground">
             {!canSearch
-              ? `Catalogue search — ${MIN_QUERY_LENGTH} characters or more`
+              ? `Catalog search — ${MIN_QUERY_LENGTH} characters or more`
               : pending
                 ? 'Searching…'
-                : 'Nothing found in the catalogue'}
+                : 'Nothing found in the catalog'}
           </p>
         )}
         <ComboboxList>

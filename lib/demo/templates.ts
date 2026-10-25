@@ -26,7 +26,7 @@ const section = (id: string, title: string, blocks: Block[]): Section => ({ id, 
 
 const bp = text('bp', 'BP', 'Blood pressure', { unit: 'mmHg' })
 const hr = number('hr', 'Heart rate', 'Heart rate at rest', { unit: 'bpm' })
-const temp = number('temp', 'Temperature', 'Body temperature', { unit: '°C' })
+const temp = number('temp', 'Temperature', 'Body temperature', { unit: '°F' })
 const spo2 = number('spo2', 'SpO₂', 'Oxygen saturation at rest', { unit: '%' })
 const weight = number('weight', 'Weight', 'Body weight', { unit: 'kg' })
 const height = number('height', 'Height', 'Height', { unit: 'cm' })
@@ -40,7 +40,7 @@ const allergies = text('allergies', 'Allergies', 'Allergen and reaction, e.g. pe
 const examNotes = textarea('exam_notes', '', 'Other examination findings')
 
 const complaints = () =>
-  section('sec_complaints', 'Complaints', [
+  section('sec_complaints', 'Chief complaint', [
     textarea('complaints', '', 'All the symptoms the patient reports, starting with the main reason for the visit'),
   ])
 
@@ -49,15 +49,15 @@ const prevTreatment = (label = 'Previous treatment') =>
   text('prev_treatment', label, 'Medicines, doses and duration, self-prescribed or prescribed')
 const medicalHistory = text('medical_history', 'Past medical history', 'Chronic conditions, operations, hospital stays')
 
-// The only field, labelled like its section: the sheet prints the text right under the bar (AGENTS.md → section bars).
+// The only field, labeled like its section: the sheet prints the text right under the bar (AGENTS.md → section bars).
 const assessment = () =>
   section('sec_assessment', 'Assessment', [
     textarea('diagnosis', 'Assessment', 'Main and secondary diagnoses', { required: true }),
   ])
 
-// The services fields feed the care plan, so their ids are fixed (builder-utils → RECOMMENDATION_IDS).
+// The services fields feed the orders, so their ids are fixed (builder-utils → RECOMMENDATION_IDS).
 const recommendations = ({ external = false, lifestyle = true, followUp = true } = {}) =>
-  section('sec_recommendations', 'Recommendations', [
+  section('sec_recommendations', 'Plan', [
     { kind: 'services', id: 'rec_lab', label: 'Lab tests', category: 'lab' },
     { kind: 'services', id: 'rec_instrumental', label: 'Instrumental diagnostics', category: 'instrumental' },
     { kind: 'services', id: 'rec_consultation', label: 'Specialist consultations', category: 'consultation' },
@@ -79,14 +79,14 @@ function generalSchema(version: 1 | 2 | 3): TemplateSchema {
   return {
     sections: [
       complaints(),
-      section('sec_history', 'History', [
+      section('sec_history', 'History of present illness', [
         diseaseHistory, prevTreatment(), medicalHistory,
         group('allergies_habits', 'Allergies and habits', [
           allergies,
           multiselect('habits', 'Habits', 'Smoking, alcohol, vaping', ['smoking', 'alcohol', 'vaping']),
         ]),
       ]),
-      section('sec_exam', 'Examination', [
+      section('sec_exam', 'Physical exam', [
         generalState,
         group('vitals', 'Vitals', version === 3 ? [bp, hr, temp, spo2, weight] : [bp, hr, temp]),
         examNotes,
@@ -102,13 +102,13 @@ function endoSchema(version: 1 | 2): TemplateSchema {
   return {
     sections: [
       complaints(),
-      section('sec_history', 'History', [
+      section('sec_history', 'History of present illness', [
         diseaseHistory,
         prevTreatment('Current treatment'),
         ...(version === 2 ? [text('family_history', 'Family history', 'Diabetes, thyroid and other endocrine disease in relatives')] : []),
         medicalHistory, allergies,
       ]),
-      section('sec_exam', 'Examination', [
+      section('sec_exam', 'Physical exam', [
         generalState,
         group('vitals', 'Vitals', version === 2 ? [bp, hr, weight, height, waist] : [bp, hr, weight, height]),
         select('thyroid_palpation', 'Thyroid on palpation', 'Size, consistency, nodules', ['not enlarged', 'diffusely enlarged', 'nodular']),
@@ -124,21 +124,21 @@ function cardioSchema(): TemplateSchema {
   return {
     sections: [
       complaints(),
-      section('sec_history', 'History', [
+      section('sec_history', 'History of present illness', [
         diseaseHistory, prevTreatment('Current treatment'), medicalHistory,
         multiselect('risk_factors', 'Risk factors', 'Cardiovascular risk factors', [
-          'hypertension', 'diabetes', 'dyslipidaemia', 'smoking', 'family history', 'obesity',
+          'hypertension', 'diabetes', 'dyslipidemia', 'smoking', 'family history', 'obesity',
         ]),
         allergies,
       ]),
-      section('sec_exam', 'Examination', [
+      section('sec_exam', 'Physical exam', [
         generalState,
         group('vitals', 'Vitals', [bp, hr, spo2, weight]),
         group('cardiac', 'Heart', [
           select('heart_sounds', 'Heart sounds', 'Rhythm and murmurs on auscultation', [
             'regular, no murmurs', 'irregular', 'systolic murmur', 'diastolic murmur',
           ]),
-          select('oedema', 'Peripheral oedema', 'Pitting oedema of the legs', ['none', 'ankles', 'lower legs']),
+          select('edema', 'Peripheral edema', 'Pitting edema of the legs', ['none', 'ankles', 'lower legs']),
         ]),
         examNotes,
         text('ecg', 'ECG', 'Rhythm, rate, axis, intervals, ST–T changes'),
@@ -154,7 +154,7 @@ function gynSchema(): TemplateSchema {
   return {
     sections: [
       complaints(),
-      section('sec_history', 'History', [
+      section('sec_history', 'History of present illness', [
         diseaseHistory,
         group('menstrual', 'Menstrual history', [
           text('lmp', 'Last period', 'First day of the last menstrual period'),
@@ -164,7 +164,7 @@ function gynSchema(): TemplateSchema {
         text('obstetric', 'Pregnancies and births', 'Number, year, mode of delivery'),
         medicalHistory, allergies,
       ]),
-      section('sec_exam', 'Examination', [
+      section('sec_exam', 'Physical exam', [
         generalState,
         group('vitals', 'Vitals', [bp, hr, weight]),
         select('breasts', 'Breasts', 'Breast examination', ['no abnormalities', 'changes found']),
@@ -181,8 +181,8 @@ function neuroSchema(): TemplateSchema {
   return {
     sections: [
       complaints(),
-      section('sec_history', 'History', [diseaseHistory, prevTreatment(), medicalHistory, allergies]),
-      section('sec_exam', 'Neurological examination', [
+      section('sec_history', 'History of present illness', [diseaseHistory, prevTreatment(), medicalHistory, allergies]),
+      section('sec_exam', 'Physical exam', [
         generalState,
         group('vitals', 'Vitals', [bp, hr]),
         group('neuro_status', 'Neurological status', [
@@ -269,18 +269,18 @@ function usAbdoSchema(): TemplateSchema {
 function certificateSchema(): TemplateSchema {
   return {
     sections: [
-      section('sec_certificate', 'Certificate', [
+      section('sec_certificate', 'Letter', [
         {
           kind: 'static', id: 'cert_intro',
-          text: 'This is to certify that {patient.full_name}, date of birth {patient.birth_date}, was examined at the clinic on {document.date}.',
+          text: 'This is to confirm that {patient.full_name}, date of birth {patient.birth_date}, was examined at the practice on {document.date}.',
         },
-        text('purpose', 'Issued for', 'Where the certificate is to be presented', { defaultValue: 'Presentation to the employer' }),
+        text('purpose', 'Addressed to', 'Who the letter is addressed to', { defaultValue: 'Employer' }),
         text('occupation', 'Occupation', 'Job title and type of work'),
       ]),
       section('sec_fitness', 'Conclusion', [
-        select('fitness', 'Fitness to work', 'Conclusion of the examination', ['fit for work', 'fit with restrictions', 'temporarily unfit'], { required: true }),
+        select('fitness', 'Fitness for duty', 'Conclusion of the examination', ['fit for full duty', 'fit with restrictions', 'temporarily unfit for duty'], { required: true }),
         textarea('restrictions', 'Restrictions', 'Work restrictions, if any'),
-        text('valid_until', 'Valid until', 'Date the certificate expires'),
+        text('valid_until', 'Valid until', 'Date the letter expires'),
       ]),
     ],
   }
@@ -303,29 +303,29 @@ type TemplateDef = {
 }
 
 const consultation = { kind: 'consultation' as const, folder_id: 'f-1' }
-const ultrasound = { kind: 'ultrasound' as const, folder_id: 'f-6', specialty: 'Ultrasound doctor' }
+const ultrasound = { kind: 'ultrasound' as const, folder_id: 'f-6', specialty: 'Radiologist' }
 
 const DEFS: TemplateDef[] = [
   {
-    key: 'general', name: 'General consultation note', ...consultation, specialty: 'General practitioner',
+    key: 'general', name: 'Office visit note', ...consultation, specialty: 'Family medicine',
     package_ids: ['pk-annual', 'pk-presurgery', 'pk-cardio'],
     versions: [[210, generalSchema(1)], [125, generalSchema(2)], [42, generalSchema(3)]],
   },
   {
-    key: 'endo', name: 'Endocrinology consultation note', ...consultation, specialty: 'Endocrinologist',
+    key: 'endo', name: 'Endocrinology consult note', ...consultation, specialty: 'Endocrinologist',
     package_ids: ['pk-thyroid', 'pk-diabetes'],
     versions: [[200, endoSchema(1)], [75, endoSchema(2)]],
   },
   {
-    key: 'cardio', name: 'Cardiology consultation note', ...consultation, specialty: 'Cardiologist',
+    key: 'cardio', name: 'Cardiology consult note', ...consultation, specialty: 'Cardiologist',
     package_ids: ['pk-cardio', 'pk-presurgery'], versions: [[190, cardioSchema()]],
   },
   {
-    key: 'gyn', name: 'Gynaecology consultation note', ...consultation, specialty: 'Gynaecologist',
+    key: 'gyn', name: 'Gynecology consult note', ...consultation, specialty: 'Gynecologist',
     package_ids: ['pk-women'], versions: [[185, gynSchema()]],
   },
   {
-    key: 'neuro', name: 'Neurology consultation note', ...consultation, specialty: 'Neurologist',
+    key: 'neuro', name: 'Neurology consult note', ...consultation, specialty: 'Neurologist',
     package_ids: [], versions: [[185, neuroSchema()]],
   },
   {
@@ -339,8 +339,8 @@ const DEFS: TemplateDef[] = [
     versions: [[195, usAbdoSchema()]],
   },
   {
-    key: 'certificate', name: 'Fitness to work certificate', kind: 'certificate', folder_id: 'f-8',
-    specialty: 'General practitioner', package_ids: [], versions: [[200, certificateSchema()]],
+    key: 'certificate', name: 'Fitness for duty letter', kind: 'certificate', folder_id: 'f-8',
+    specialty: 'Family medicine', package_ids: [], versions: [[200, certificateSchema()]],
   },
 ]
 

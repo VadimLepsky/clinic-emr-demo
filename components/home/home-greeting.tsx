@@ -36,13 +36,13 @@ function DoctorSummary({ userId }: { userId: string }) {
   )
 }
 
-// Count only: front desk and the contact centre don't see the day's total.
+// Count only: front desk and the contact center don't see the day's total.
 function ReceptionSummary() {
   const { data: prescriptions } = useSWR(['prescriptions', 'today'], () => listTodayPrescriptions())
   if (!prescriptions) return <>&nbsp;</>
   return (
     <>
-      Today: {plural(prescriptions.length, 'care plan')}
+      Today: {plural(prescriptions.length, 'order')}
     </>
   )
 }

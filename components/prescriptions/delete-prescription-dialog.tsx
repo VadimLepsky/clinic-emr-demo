@@ -22,10 +22,10 @@ export function DeletePrescriptionDialog({ prescriptionId, onClose }: DeletePres
     try {
       await deletePrescription(prescriptionId)
       await mutate((key) => Array.isArray(key) && (key[0] === 'prescriptions' || key[0] === 'prescription'))
-      toast.success('Care plan deleted')
+      toast.success('Orders deleted')
       onClose()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Could not delete the care plan')
+      toast.error(error instanceof Error ? error.message : 'Could not delete the orders')
     } finally {
       setPending(false)
     }
@@ -35,8 +35,8 @@ export function DeletePrescriptionDialog({ prescriptionId, onClose }: DeletePres
     <Dialog open={prescriptionId !== null} onOpenChange={(open) => !open && !pending && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete care plan?</DialogTitle>
-          <DialogDescription>The care plan will be hidden; its financial history is kept.</DialogDescription>
+          <DialogTitle>Delete these orders?</DialogTitle>
+          <DialogDescription>The orders will be hidden; their financial history is kept.</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={pending}>

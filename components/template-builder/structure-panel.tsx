@@ -61,7 +61,7 @@ export function StructurePanel({
         <DropdownMenuContent className="w-auto min-w-60">
           <DropdownMenuItem onClick={onAddEmpty}>Empty section</DropdownMenuItem>
           <DropdownMenuItem onClick={onAddRecommendations} disabled={recommendationsDisabled}>
-            {'Ready-made «Recommendations» section'}
+            {'Ready-made «Plan» section'}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

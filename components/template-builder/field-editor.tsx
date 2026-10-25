@@ -327,7 +327,7 @@ export function fieldTitleText(field: FieldBlock) {
   return `${fieldTypeLabel(field)} · ${field.label.trim() || namelessTitle(field)}`
 }
 
-/** The field's title in the builder's list; without a name — in grey «Untitled — <description>». */
+/** The field's title in the builder's list; without a name — in gray «Untitled — <description>». */
 export function FieldTitle({ field }: { field: FieldBlock }) {
   return (
     <>

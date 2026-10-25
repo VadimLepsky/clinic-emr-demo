@@ -46,7 +46,7 @@ const navGroups: NavGroup[] = [
     label: 'Work',
     items: [
       { title: 'Patients', href: '/patients', icon: UsersIcon },
-      { title: 'Care plans', href: '/prescriptions', icon: ClipboardListIcon },
+      { title: 'Orders', href: '/prescriptions', icon: ClipboardListIcon },
     ],
   },
   {

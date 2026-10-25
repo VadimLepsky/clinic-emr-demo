@@ -5,7 +5,7 @@ import { PrescriptionsTab } from '@/components/prescriptions/prescriptions-tab'
 
 const tabs = [
   { value: 'documents', label: 'Documents' },
-  { value: 'prescriptions', label: 'Care plans' },
+  { value: 'prescriptions', label: 'Orders' },
   { value: 'history', label: 'Activity log' },
 ]
 

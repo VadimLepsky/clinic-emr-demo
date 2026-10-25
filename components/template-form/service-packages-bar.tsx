@@ -66,7 +66,7 @@ export function ServicesTotal({ schema, values, catalog }: ServicesTotalProps) {
   )
   return (
     <p className="text-sm text-muted-foreground tabular-nums print:hidden" aria-live="polite">
-      {`Care plan: ${plural(selected.length, 'service')}, ${formatMoney(total)}`}
+      {`Orders: ${plural(selected.length, 'service')}, ${formatMoney(total)}`}
     </p>
   )
 }
