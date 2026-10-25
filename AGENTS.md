@@ -56,7 +56,7 @@ one A4 page (only the few `long` notes run to two).
 Reference: Remote dashboard — large type, white borderless cards on a soft canvas.
 
 - Font: Manrope (`next/font`, latin + latin-ext, weights 400–700) everywhere in the interface, except the
-  sidebar label «med.cabinet», which uses the document font (`font-document`). Documents (the A4 sheet) use
+  sidebar label «med.chart», which uses the document font (`font-document`). Documents (the A4 sheet) use
   IBM Plex Sans — see the A4 sheet below.
 - Type: body text, table cells and inputs are 15px (`text-body`, the body default).
   Secondary text is `text-sm text-muted-foreground`. Page title `text-3xl font-semibold`,
@@ -89,7 +89,7 @@ Reference: Remote dashboard — large type, white borderless cards on a soft can
   optional `CardHeaderLink` («View all →») on the right. List rows `px-8 py-5` with
   `divide-y`. Section titles go inside the card header, not above the card.
   Tables sit directly in the card without an outer border (cell padding aligns to `px-8`).
-- Sidebar: 18rem; header (`pt-10 pb-10`) is the 36px logo + label «med.cabinet» (`gap-1`;
+- Sidebar: 18rem; header (`pt-10 pb-10`) is the 36px logo + label «med.chart» (`gap-2`;
   `font-document text-2xl font-semibold tracking-tight`, trimmed with `text-box` to x-height for lowercase text
   — cap height for all-caps — so it centers on the logo); items `h-11`, 15px, icons `size-5`, `gap-3`, `rounded-lg`. «Home» sits on top outside the groups,
   then WORK (Patients, Care plans) and MANAGEMENT (clinic manager only) with small uppercase labels;
