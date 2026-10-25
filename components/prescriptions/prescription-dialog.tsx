@@ -72,8 +72,8 @@ function ExistingPrescription({
     return (
       <div className="flex flex-col gap-6" aria-busy="true">
         <DialogHeader>
-          <DialogTitle>Призначення</DialogTitle>
-          <DialogDescription className="sr-only">Завантаження призначення</DialogDescription>
+          <DialogTitle>Care plan</DialogTitle>
+          <DialogDescription className="sr-only">Loading the care plan</DialogDescription>
         </DialogHeader>
         <Skeleton className="h-5 w-2/3" />
         <Skeleton className="mx-auto h-[50svh] w-full max-w-[210mm]" />
@@ -85,12 +85,12 @@ function ExistingPrescription({
     return (
       <div className="flex flex-col gap-6">
         <DialogHeader>
-          <DialogTitle>Призначення не знайдено</DialogTitle>
-          <DialogDescription>Можливо, його вже видалено.</DialogDescription>
+          <DialogTitle>Care plan not found</DialogTitle>
+          <DialogDescription>It may have been deleted.</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => rest.onTargetChange(null)}>
-            Закрити
+            Close
           </Button>
         </DialogFooter>
       </div>
@@ -153,11 +153,11 @@ function PrescriptionEditor({
 
   const updateRow = (key: string, patch: Partial<Row>) =>
     setRows((current) => current.map((r) => (r.key === key ? { ...r, ...patch } : r)))
-  // «На всі послуги, %» and «Прибрати знижку»: one discount for every clinic service (outside ones have none).
+  // «All services, %» and «Remove discount»: one discount for every clinic service (External ones have none).
   const setDiscountAll = (pct: number) =>
     setRows((current) => current.map((r) => (r.serviceId !== null ? { ...r, discountPct: pct } : r)))
 
-  // A row added twice in this session gets +1 instead of a second row (catalog by id, outside the clinic by name).
+  // A row added twice in this session gets +1 instead of a second row (catalogue by id, External by name).
   const addRow = (row: Omit<Row, 'key' | 'quantity' | 'discountPct'>) => {
     setRows((current) => {
       const same = (r: Row) =>
@@ -193,10 +193,10 @@ function PrescriptionEditor({
         else await createPrescription({ patientId, items })
       }
       await refresh()
-      toast.success('Призначення збережено')
+      toast.success('Care plan saved')
       onTargetChange(null)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Не вдалося зберегти призначення')
+      toast.error(error instanceof Error ? error.message : 'Could not save the care plan')
     } finally {
       setSaving(false)
     }
@@ -207,10 +207,10 @@ function PrescriptionEditor({
     try {
       const copy = await duplicatePrescription(summary.id)
       await refresh()
-      toast.success('Створено копію призначення')
+      toast.success('Created a copy of the care plan')
       onTargetChange(copy.id)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Не вдалося дублювати призначення')
+      toast.error(error instanceof Error ? error.message : 'Could not duplicate the care plan')
     }
   }
 
@@ -223,7 +223,7 @@ function PrescriptionEditor({
       <DialogHeader className="flex-row flex-wrap items-start justify-between gap-x-6 gap-y-4 pr-0 pb-6">
         <div className="flex min-w-0 flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-2">
-            <DialogTitle>{summary ? prescriptionTitle(summary.created_at) : 'Нове призначення'}</DialogTitle>
+            <DialogTitle>{summary ? prescriptionTitle(summary.created_at, 'dialog') : 'New care plan'}</DialogTitle>
             {status && (
               <span className={`rounded-md px-2 py-0.5 text-xs leading-tight font-medium ${status.className}`}>
                 {status.label}
@@ -231,7 +231,7 @@ function PrescriptionEditor({
             )}
           </div>
           <DialogDescription>
-            {summary ? `${summary.doctor_name} · створено ${formatDate(summary.created_at)}` : `Лікар: ${doctorName}`}
+            {summary ? `${summary.doctor_name} · created ${formatDate(summary.created_at)}` : `Doctor: ${doctorName}`}
             {sourceDocument && summary?.source_document_id && (
               <>
                 {' · '}
@@ -257,12 +257,12 @@ function PrescriptionEditor({
                     />
                   }
                 >
-                  <Button variant="outline" disabled aria-label="Друк. Спочатку збережіть зміни">
+                  <Button variant="outline" disabled aria-label="Print. Save the changes first">
                     <PrinterIcon aria-hidden="true" />
-                    Друк
+                    Print
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Спочатку збережіть зміни</TooltipContent>
+                <TooltipContent>Save the changes first</TooltipContent>
               </Tooltip>
             ) : (
               <Button variant="outline" onClick={() => print(summary.id)} disabled={printing}>
@@ -271,21 +271,21 @@ function PrescriptionEditor({
                 ) : (
                   <PrinterIcon aria-hidden="true" />
                 )}
-                Друк
+                Print
               </Button>
             ))}
           <Button variant="outline" onClick={() => onTargetChange(null)}>
-            Закрити
+            Close
           </Button>
           {locked && summary && mayEdit && (
             <Button onClick={handleDuplicate}>
               <CopyIcon aria-hidden="true" />
-              Створити нове на основі цього
+              Create a new one from this
             </Button>
           )}
           {canEdit && (
             <Button onClick={handleSave} disabled={!canSave}>
-              {saving ? 'Збереження…' : 'Зберегти'}
+              {saving ? 'Saving…' : 'Save'}
             </Button>
           )}
         </div>
@@ -295,9 +295,9 @@ function PrescriptionEditor({
       {summary && (
         <div className="pb-6">
           <dl className="flex flex-wrap gap-x-8 gap-y-2">
-            <Figure label="Оплачено" value={formatMoney(summary.paid_amount)} />
-            <Figure label="Використано" value={formatMoney(summary.used_amount)} />
-            <Figure label="Виконання" value={`${Math.round(summary.completion_pct)}%`} />
+            <Figure label="Paid" value={formatMoney(summary.paid_amount)} />
+            <Figure label="Used" value={formatMoney(summary.used_amount)} />
+            <Figure label="Completion" value={`${Math.round(summary.completion_pct)}%`} />
           </dl>
         </div>
       )}
@@ -322,7 +322,7 @@ function PrescriptionEditor({
                 onAddCustom={addOutsideService}
                 onDismiss={close}
                 autoFocus
-                placeholder="Назва або код послуги (від 3 символів)"
+                placeholder="Service name or code (3 characters or more)"
                 className="h-line w-full rounded-sm border-0 border-b border-input bg-secondary/70 hover:bg-secondary dark:bg-secondary/70 [&_input]:h-line [&_input]:px-1 [&_input]:text-doc"
               />
             )}

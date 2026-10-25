@@ -5,18 +5,18 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
 const items = [
-  { title: 'Послуги', href: '/settings/services' },
-  { title: 'Пакети послуг', href: '/settings/packages' },
-  { title: 'Папки', href: '/settings/folders' },
-  { title: 'Шапки і підвали', href: '/settings/letterheads' },
-  { title: 'Співробітники', href: '/settings/staff' },
+  { title: 'Services', href: '/settings/services' },
+  { title: 'Service bundles', href: '/settings/packages' },
+  { title: 'Folders', href: '/settings/folders' },
+  { title: 'Headers & footers', href: '/settings/letterheads' },
+  { title: 'Staff', href: '/settings/staff' },
 ]
 
 export function SettingsNav() {
   const pathname = usePathname()
   return (
     <nav
-      aria-label="Розділи налаштувань"
+      aria-label="Settings sections"
       className="shrink-0 rounded-2xl bg-card p-3 @5xl:w-52 @5xl:self-start dark:border dark:border-border"
     >
       <ul className="flex gap-1 overflow-x-auto @5xl:flex-col">

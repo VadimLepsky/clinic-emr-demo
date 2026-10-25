@@ -11,18 +11,16 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/components/documents/format'
-import { formatMoney } from '@/components/prescriptions/format'
+import { formatMoney, formatMoneyWhole } from '@/components/prescriptions/format'
 import { periodRange } from '@/components/prescriptions/period'
 import { CompletionBar } from '@/components/prescriptions/prescription-parts'
 
 const STALE_DAYS = 14
 
 const periodOptions = [
-  { value: 'current', label: 'Поточний місяць' },
-  { value: 'previous', label: 'Попередній місяць' },
+  { value: 'current', label: 'This month' },
+  { value: 'previous', label: 'Last month' },
 ] as const
-
-const moneyNumber = new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 0 })
 
 function Kpi({ label, value, unit }: { label: string; value: string; unit?: string }) {
   return (
@@ -37,9 +35,9 @@ function Kpi({ label, value, unit }: { label: string; value: string; unit?: stri
 }
 
 const quickLinks = [
-  { href: '/templates', label: 'Шаблони документів', icon: FileTextIcon },
-  { href: '/settings/services', label: 'Послуги та ціни', icon: ListChecksIcon },
-  { href: '/settings/services?import=1', label: 'Імпорт прайсу лабораторії', icon: UploadIcon },
+  { href: '/templates', label: 'Document templates', icon: FileTextIcon },
+  { href: '/settings/services', label: 'Services and prices', icon: ListChecksIcon },
+  { href: '/settings/services?import=1', label: 'Import a lab price list', icon: UploadIcon },
 ]
 
 export function ManagerHome() {
@@ -53,7 +51,7 @@ export function ManagerHome() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex justify-end">
-        <div role="group" aria-label="Період" className="inline-flex rounded-xl bg-card p-1 dark:border dark:border-border">
+        <div role="group" aria-label="Period" className="inline-flex rounded-xl bg-card p-1 dark:border dark:border-border">
           {periodOptions.map((option) => (
             <button
               key={option.value}
@@ -77,22 +75,22 @@ export function ManagerHome() {
         <div className="flex min-w-0 flex-col gap-6 xl:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>Призначення за лікарями</CardTitle>
+              <CardTitle>Care plans by doctor</CardTitle>
               <CardHeaderLink href={`/prescriptions?period=${period}`} />
             </CardHeader>
             {!stats ? (
               <Skeleton className="m-8 h-32" />
             ) : stats.by_doctor.length === 0 ? (
-              <p className="px-8 py-10 text-center text-muted-foreground">За цей період призначень немає.</p>
+              <p className="px-8 py-10 text-center text-muted-foreground">No care plans in this period.</p>
             ) : (
               <Table className="[&_th]:whitespace-normal">
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
-                    <TableHead>Лікар</TableHead>
-                    <TableHead className="text-right">Призначень</TableHead>
-                    <TableHead className="text-right">Сума призначень</TableHead>
-                    <TableHead className="text-right">Сума оплат</TableHead>
-                    <TableHead className="min-w-32">Виконання</TableHead>
+                    <TableHead>Doctor</TableHead>
+                    <TableHead className="text-right">Care plans</TableHead>
+                    <TableHead className="text-right">Estimated</TableHead>
+                    <TableHead className="text-right">Paid</TableHead>
+                    <TableHead className="min-w-32">Completion</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -115,7 +113,7 @@ export function ManagerHome() {
                       <TableCell className="text-right tabular-nums">{formatMoney(row.total_amount)}</TableCell>
                       <TableCell className="text-right tabular-nums">{formatMoney(row.paid_amount)}</TableCell>
                       <TableCell>
-                        <CompletionBar pct={row.completion_pct} label={`Виконання: ${row.doctor_name}`} />
+                        <CompletionBar pct={row.completion_pct} label={`Completion: ${row.doctor_name}`} />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -129,15 +127,15 @@ export function ManagerHome() {
               <div className="flex min-w-0 flex-col gap-1">
                 <CardTitle className="flex items-center gap-2">
                   <AlertTriangleIcon className="size-5 shrink-0 text-status-warning-fg" aria-hidden="true" />
-                  Потребує уваги
+                  Needs attention
                 </CardTitle>
-                <CardDescription>Понад {STALE_DAYS} днів без жодного виконання</CardDescription>
+                <CardDescription>Over {STALE_DAYS} days with nothing fulfilled</CardDescription>
               </div>
             </CardHeader>
             {!stale ? (
               <Skeleton className="m-8 h-12" />
             ) : stale.length === 0 ? (
-              <p className="px-8 py-6 text-muted-foreground">Усі призначення в роботі.</p>
+              <p className="px-8 py-6 text-muted-foreground">All care plans are in progress.</p>
             ) : (
               <ul className="divide-y divide-border">
                 {stale.map((rx) => (
@@ -164,7 +162,7 @@ export function ManagerHome() {
         </div>
 
         <div className="flex min-w-0 flex-col gap-6">
-          <section aria-label="Показники призначень">
+          <section aria-label="Care plan figures">
             {!stats ? (
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 xl:grid-cols-2" aria-busy="true">
                 {Array.from({ length: 4 }).map((_, i) => (
@@ -173,17 +171,17 @@ export function ManagerHome() {
               </div>
             ) : (
               <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4 xl:grid-cols-2">
-                <Kpi label="Кількість призначень" value={String(stats.count)} />
-                <Kpi label="Сума призначень" value={moneyNumber.format(stats.total_amount)} unit="грн" />
-                <Kpi label="Сума оплат" value={moneyNumber.format(stats.paid_amount)} unit="грн" />
-                <Kpi label="Середній % виконання" value={`${stats.completion_pct}%`} />
+                <Kpi label="Care plans" value={String(stats.count)} />
+                <Kpi label="Estimated total" value={formatMoneyWhole(stats.total_amount)} />
+                <Kpi label="Paid" value={formatMoneyWhole(stats.paid_amount)} />
+                <Kpi label="Average completion" value={`${stats.completion_pct}%`} />
               </dl>
             )}
           </section>
 
           <Card>
             <CardHeader>
-              <CardTitle>Швидкі посилання</CardTitle>
+              <CardTitle>Quick links</CardTitle>
             </CardHeader>
             <ul className="divide-y divide-border">
               {quickLinks.map((link) => (

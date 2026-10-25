@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils'
 import { NewVisitDialog } from './new-visit-dialog'
 import { SummaryCard } from './summary-card'
 
-// The «Почати прийом» column is hidden on narrow screens; its fixed width keeps every row's grid lined up.
+// The «Start visit» column is hidden on narrow screens; its fixed width keeps every row's grid lined up.
 const rowClass =
   'grid grid-cols-[3.5rem_1fr_6.5rem] items-center gap-x-4 gap-y-0.5 px-8 py-5 sm:grid-cols-[4rem_1fr_7rem_9rem_9rem]'
 
@@ -25,11 +25,11 @@ function VisitRow({ visit, onStart }: { visit: TodayVisit; onStart: (patientId: 
   const time = <span className="font-medium tabular-nums">{formatTime(visit.visit_at)}</span>
   const badge = visit.has_document_today ? (
     <span className="justify-self-end rounded-md bg-status-success-bg px-2 py-1 text-xs leading-tight font-medium text-status-success-fg sm:whitespace-nowrap">
-      Висновок створено
+      Note created
     </span>
   ) : (
     <span className="justify-self-end rounded-md bg-status-neutral-bg px-2 py-1 text-xs leading-tight font-medium text-status-neutral-fg">
-      Очікує
+      Waiting
     </span>
   )
 
@@ -37,7 +37,7 @@ function VisitRow({ visit, onStart }: { visit: TodayVisit; onStart: (patientId: 
     return (
       <div className={cn(rowClass, 'text-muted-foreground')}>
         {time}
-        <span>Пацієнта з CRM ID {visit.crm_client_id} не знайдено в базі</span>
+        <span>No patient with CRM ID {visit.crm_client_id} in the records</span>
         <span className="hidden sm:block" />
         <span className="hidden sm:block" />
         {badge}
@@ -47,7 +47,7 @@ function VisitRow({ visit, onStart }: { visit: TodayVisit; onStart: (patientId: 
 
   const patient = visit.patient
 
-  // The whole row opens the patient card (the name link is stretched over it); «Почати прийом» sits on top
+  // The whole row opens the patient card (the name link is stretched over it); «Start visit» sits on top
   // and opens the template picker instead.
   return (
     <div
@@ -66,18 +66,18 @@ function VisitRow({ visit, onStart }: { visit: TodayVisit; onStart: (patientId: 
         variant="outline"
         size="sm"
         onClick={() => onStart(patient.id)}
-        aria-label={`Почати прийом: ${patient.full_name}`}
+        aria-label={`Start visit: ${patient.full_name}`}
         className="relative z-10 hidden justify-self-end sm:inline-flex"
       >
-        Почати прийом
+        Start visit
       </Button>
       {badge}
     </div>
   )
 }
 
-/** Home for doctors and medical staff. A visit starts with an explicit template choice: the picker shows the
- *  templates this user may fill in (a doctor — consultations and certificates, an ultrasound doctor — УЗД, аналізи). */
+/** Home for doctors and nurses. A visit starts with an explicit template choice: the picker shows the
+ *  templates this user may fill in (a doctor — consultations and certificates, an ultrasound doctor — ultrasound). */
 export function DoctorHome({ userId }: { userId: string }) {
   const { data: visits } = useSWR(['visits', 'today', userId], ([, , id]) => listTodayVisits(id))
   const { data: documents } = useSWR(['documents', 'today-count', userId], ([, , id]) => countTodayDocuments(id))
@@ -86,9 +86,9 @@ export function DoctorHome({ userId }: { userId: string }) {
   const summary =
     visits && documents !== undefined
       ? [
-          { label: 'Записів', value: String(visits.length) },
-          { label: 'Висновків створено', value: String(documents) },
-          { label: 'Очікують висновку', value: String(visits.filter((v) => v.patient && !v.has_document_today).length) },
+          { label: 'Appointments', value: String(visits.length) },
+          { label: 'Notes created', value: String(documents) },
+          { label: 'Awaiting a note', value: String(visits.filter((v) => v.patient && !v.has_document_today).length) },
         ]
       : undefined
 
@@ -99,7 +99,7 @@ export function DoctorHome({ userId }: { userId: string }) {
 
         <Card>
           <CardHeader>
-            <CardTitle>Прийоми на сьогодні</CardTitle>
+            <CardTitle>Today&apos;s patients</CardTitle>
             <NewVisitDialog />
           </CardHeader>
           {!visits ? (
@@ -111,7 +111,7 @@ export function DoctorHome({ userId }: { userId: string }) {
           ) : visits.length === 0 ? (
             <div className="flex flex-col items-center gap-2 px-8 py-12 text-center text-muted-foreground">
               <CalendarOffIcon className="size-6" aria-hidden="true" />
-              На сьогодні прийомів у CRM немає.
+              No appointments in the CRM for today.
             </div>
           ) : (
             <ul className="divide-y divide-border">
@@ -125,7 +125,7 @@ export function DoctorHome({ userId }: { userId: string }) {
         </Card>
       </div>
 
-      <SummaryCard title="Сьогодні" items={summary} />
+      <SummaryCard title="Today" items={summary} />
 
       <TemplatePickerDialog patientId={pickerPatientId} onClose={() => setPickerPatientId(null)} />
     </div>

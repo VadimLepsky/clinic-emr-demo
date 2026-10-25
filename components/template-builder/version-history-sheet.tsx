@@ -41,13 +41,13 @@ function VersionPreviewBody({
   return (
     <DocumentSheet
       mode="view"
-      title={meta.name.trim() || 'Без назви'}
+      title={meta.name.trim() || 'Untitled'}
       schema={info.version.schema}
       values={values}
       patient={patient}
       doctor={doctor}
       documentDate={isoDate}
-      documentNumber="КВ-000000"
+      documentNumber="CN-000000"
       letterheads={letterheads}
       requisites={meta}
       services={services}
@@ -74,13 +74,13 @@ export function VersionHistorySheet({ open, onOpenChange, templateId, meta }: Ve
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent className="sm:max-w-md">
           <SheetHeader>
-            <SheetTitle>Історія версій</SheetTitle>
-            <SheetDescription>Оберіть версію, щоб переглянути її у режимі читання.</SheetDescription>
+            <SheetTitle>Version history</SheetTitle>
+            <SheetDescription>Choose a version to view it read-only.</SheetDescription>
           </SheetHeader>
           <div className="min-h-0 flex-1 overflow-y-auto px-8 pb-8">
             {!templateId ? (
               <p className="rounded-lg border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
-                Шаблон ще не збережено — версій немає.
+                The template hasn&apos;t been saved yet — no versions.
               </p>
             ) : !versions ? (
               <div className="flex flex-col gap-2" aria-busy="true">
@@ -89,7 +89,7 @@ export function VersionHistorySheet({ open, onOpenChange, templateId, meta }: Ve
               </div>
             ) : versions.length === 0 ? (
               <p className="rounded-lg border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
-                Версій поки немає.
+                No versions yet.
               </p>
             ) : (
               <ul className="flex flex-col gap-2">
@@ -102,10 +102,10 @@ export function VersionHistorySheet({ open, onOpenChange, templateId, meta }: Ve
                     >
                       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                         <span className="flex items-center gap-2 text-sm font-semibold">
-                          {`Версія ${info.version.version}`}
+                          {`Version ${info.version.version}`}
                           {info.is_current && (
                             <span className="rounded-md bg-status-success-bg px-2 py-0.5 text-xs leading-tight font-medium text-status-success-fg">
-                              Поточна
+                              Current
                             </span>
                           )}
                         </span>
@@ -113,7 +113,7 @@ export function VersionHistorySheet({ open, onOpenChange, templateId, meta }: Ve
                           {formatDateTime(info.version.created_at)}
                         </span>
                         <span className="truncate text-sm text-muted-foreground">
-                          {`Зберіг: ${info.saved_by ?? '—'}`}
+                          {`Saved by ${info.saved_by ?? '—'}`}
                         </span>
                       </span>
                       <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
@@ -129,11 +129,11 @@ export function VersionHistorySheet({ open, onOpenChange, templateId, meta }: Ve
       <Dialog open={selected !== null} onOpenChange={(next) => !next && setSelectedId(null)}>
         <DialogContent className="flex max-h-[92svh] flex-col gap-6 sm:max-w-[min(64rem,calc(100vw-2rem))]">
           <DialogHeader>
-            <DialogTitle>{selected ? `Версія ${selected.version.version}` : 'Версія'}</DialogTitle>
+            <DialogTitle>{selected ? `Version ${selected.version.version}` : 'Version'}</DialogTitle>
             <DialogDescription>
               {selected
-                ? `${formatDateTime(selected.version.created_at)} · Зберіг: ${selected.saved_by ?? '—'}. Лише перегляд — тестові дані пацієнта.`
-                : 'Лише перегляд'}
+                ? `${formatDateTime(selected.version.created_at)} · Saved by ${selected.saved_by ?? '—'}. Read only — sample patient data.`
+                : 'Read only'}
             </DialogDescription>
           </DialogHeader>
           <SheetBackdrop variant="dialog">

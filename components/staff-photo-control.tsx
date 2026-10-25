@@ -24,7 +24,7 @@ function cropToSquareDataUrl(file: File): Promise<string> {
       const ctx = canvas.getContext('2d')
       if (!ctx) {
         URL.revokeObjectURL(objectUrl)
-        return reject(new Error('Canvas недоступний'))
+        return reject(new Error('Canvas is not available'))
       }
       const sx = (img.naturalWidth - side) / 2
       const sy = (img.naturalHeight - side) / 2
@@ -34,7 +34,7 @@ function cropToSquareDataUrl(file: File): Promise<string> {
     }
     img.onerror = () => {
       URL.revokeObjectURL(objectUrl)
-      reject(new Error('Не вдалося прочитати зображення'))
+      reject(new Error('Could not read the image'))
     }
     img.src = objectUrl
   })
@@ -54,12 +54,12 @@ export function StaffPhotoControl({ staff, onChange, disabled }: StaffPhotoContr
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
-    if (!ACCEPTED_TYPES.includes(file.type)) return void toast.error('Підтримуються лише JPEG та PNG')
-    if (file.size > MAX_BYTES) return void toast.error('Файл завеликий: максимум 2 МБ')
+    if (!ACCEPTED_TYPES.includes(file.type)) return void toast.error('Only JPEG and PNG are supported')
+    if (file.size > MAX_BYTES) return void toast.error('The file is too large: 2 MB at most')
     try {
       await onChange(await cropToSquareDataUrl(file))
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Не вдалося завантажити фото')
+      toast.error(err instanceof Error ? err.message : 'Could not upload the photo')
     }
   }
 
@@ -78,7 +78,7 @@ export function StaffPhotoControl({ staff, onChange, disabled }: StaffPhotoContr
         />
         <Button type="button" variant="outline" size="sm" disabled={disabled} onClick={() => inputRef.current?.click()}>
           <ImagePlusIcon aria-hidden="true" />
-          Завантажити фото
+          Upload photo
         </Button>
         <Button
           type="button"
@@ -88,9 +88,9 @@ export function StaffPhotoControl({ staff, onChange, disabled }: StaffPhotoContr
           onClick={() => onChange(null)}
         >
           <Trash2Icon aria-hidden="true" />
-          Видалити фото
+          Remove photo
         </Button>
-        <p className="text-sm text-muted-foreground">JPEG або PNG, до 2 МБ</p>
+        <p className="text-sm text-muted-foreground">JPEG or PNG, up to 2 MB</p>
       </div>
     </div>
   )

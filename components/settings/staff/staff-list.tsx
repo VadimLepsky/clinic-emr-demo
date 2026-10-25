@@ -24,27 +24,27 @@ export function StaffList() {
       <Card>
         <CardHeader>
           <div className="flex min-w-0 flex-col gap-1">
-            <CardTitle>Співробітники</CardTitle>
+            <CardTitle>Staff</CardTitle>
             <CardDescription>
-              Співробітників не видаляють, лише деактивують: історія зберігає автора.
+              Staff are never deleted, only deactivated: the history keeps its authors.
             </CardDescription>
           </div>
           <Button onClick={() => setEditing('new')}>
             <PlusIcon aria-hidden="true" />
-            Новий співробітник
+            New staff member
           </Button>
         </CardHeader>
 
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead>ПІБ</TableHead>
-              <TableHead>Роль</TableHead>
-              <TableHead>Спеціальність</TableHead>
-              <TableHead>ID в CRM</TableHead>
-              <TableHead>Активний</TableHead>
+              <TableHead>Full name</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Specialty</TableHead>
+              <TableHead>CRM ID</TableHead>
+              <TableHead>Active</TableHead>
               <TableHead className="w-12">
-                <span className="sr-only">Дії</span>
+                <span className="sr-only">Actions</span>
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -66,15 +66,15 @@ export function StaffList() {
                     <span className="tabular-nums">{s.crm_master_id}</span>
                   ) : needsCrmId(s) ? (
                     <span className="inline-flex items-center rounded-md bg-status-warning-bg px-2 py-0.5 text-xs font-medium whitespace-nowrap text-status-warning-fg">
-                      Немає ID в CRM
+                      No CRM ID
                     </span>
                   ) : (
                     '—'
                   )}
                 </TableCell>
-                <TableCell>{s.is_active ? 'Так' : 'Ні'}</TableCell>
+                <TableCell>{s.is_active ? 'Yes' : 'No'}</TableCell>
                 <TableCell>
-                  <Button variant="ghost" size="icon-sm" onClick={() => setEditing(s)} aria-label={`Редагувати: ${s.full_name}`}>
+                  <Button variant="ghost" size="icon-sm" onClick={() => setEditing(s)} aria-label={`Edit: ${s.full_name}`}>
                     <PencilIcon aria-hidden="true" />
                   </Button>
                 </TableCell>

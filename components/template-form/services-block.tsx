@@ -9,14 +9,9 @@ import {
   selectionKey,
   selectionText,
 } from './utils'
+import { formatMoney } from '@/lib/format'
 import { ServicesPicker } from './services-picker'
 import type { ServicesEditContext } from './services-context'
-
-const priceFormatter = new Intl.NumberFormat('uk-UA', {
-  style: 'currency',
-  currency: 'UAH',
-  maximumFractionDigits: 0,
-})
 
 type ServicesBlockProps = {
   block: ServicesBlockType
@@ -27,12 +22,12 @@ type ServicesBlockProps = {
   context?: ServicesEditContext
 }
 
-/** Shown instead of the packages bar when the document's prescription is paid (services are read-only). */
+/** Shown instead of the bundles bar when the document's care plan is paid (services are read-only). */
 export function LockedServicesNote() {
   return (
     <p className="flex items-center gap-1.5 text-sm text-muted-foreground print:hidden">
       <LockIcon className="size-3.5 shrink-0" aria-hidden="true" />
-      Призначення вже оплачене — послуги тут не змінюються.
+      The care plan has been paid — services can&apos;t be changed here.
     </p>
   )
 }
@@ -110,12 +105,12 @@ export function ServicesBlock({ block, value, services, mode, onChange, context 
             return (
               <li key={selectionKey(sel)} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
                 <span className="min-w-0">
-                  {sel.customName ?? service?.name ?? 'Послуга'}
+                  {sel.customName ?? service?.name ?? 'Service'}
                   {sel.quantity > 1 && <span className="text-muted-foreground">{` × ${sel.quantity}`}</span>}
                 </span>
                 {/* Outside the clinic there is no price. */}
                 <span className="shrink-0 tabular-nums text-muted-foreground">
-                  {sel.customName !== undefined ? '—' : service ? priceFormatter.format(service.price * sel.quantity) : '…'}
+                  {sel.customName !== undefined ? '—' : service ? formatMoney(service.price * sel.quantity) : '…'}
                 </span>
               </li>
             )

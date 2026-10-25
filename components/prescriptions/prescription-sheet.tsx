@@ -4,7 +4,7 @@ import { calcAge } from '@/lib/data'
 import type { ClinicSettings, Patient } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { formatDate } from '@/components/documents/format'
+import { formatAge, formatSheetDate } from '@/lib/format'
 import {
   bleedBarClass,
   DocGridOverlay,
@@ -19,9 +19,9 @@ import { formatMoney, lineTotal, prescriptionTitle } from './format'
 
 export type PrescriptionSheetRow = {
   key: string
-  /** The catalog service's name, or the name a service outside the clinic was typed with. */
+  /** The catalogue service's name, or the name an External service was typed with. */
   name: string
-  /** null — a service outside the clinic: it goes to «Призначення для виконання поза клінікою» (no price). */
+  /** null — an External service: it goes to «External referrals» (no price). */
   serviceId: string | null
   unitPrice: number
   quantity: number
@@ -31,46 +31,46 @@ export type PrescriptionSheetRow = {
 }
 
 /**
- * view — read only. edit — services, quantities and the discount (doctor, medical staff, manager).
- * discount — only the discount (reception and the contact centre).
+ * view — read only. edit — services, quantities and the discount (doctor, nurse, clinic manager).
+ * discount — only the discount (front desk and the contact centre).
  */
 export type PrescriptionSheetMode = 'view' | 'edit' | 'discount'
 
 type PrescriptionSheetProps = {
-  /** The prescription blank: header and footer images (ClinicSettings, «Бланк призначення»); null — none. */
+  /** The care plan letterhead: header and footer images (ClinicSettings, «Care plan letterhead»); null — none. */
   clinicSettings: ClinicSettings
   patient: Patient
   doctorName: string
-  /** ISO date the prescription was created; the title is «Призначення з візиту від <дата>». */
+  /** ISO date the care plan was created; the title is «Care plan from the visit on <date>». */
   date: string
   rows: PrescriptionSheetRow[]
-  /** Old prescriptions only: the free text «поза клінікою», shown as is in the outside-clinic block. */
+  /** Old care plans only: the free «External» text, shown as is in the External block. */
   externalRecommendations: string
   mode?: PrescriptionSheetMode
   onRowChange?: (key: string, patch: Partial<Pick<PrescriptionSheetRow, 'quantity' | 'discountPct'>>) => void
   onRowRemove?: (key: string) => void
-  /** One discount for every clinic service: «На всі послуги, %», and 0 on «Прибрати знижку». */
+  /** One discount for every clinic service: «All services, %», and 0 on «Remove discount». */
   onDiscountAll?: (pct: number) => void
-  /** Edit mode: the service search for the «+ Додати послугу» row; passed in so the sheet makes no data calls. */
+  /** Edit mode: the service search for the «+ Add service» row; passed in so the sheet makes no data calls. */
   renderAddService?: (close: () => void) => ReactNode
   className?: string
 }
 
-const sexLabels: Record<NonNullable<Patient['sex']>, string> = { male: 'Чоловіча', female: 'Жіноча' }
+const sexLabels: Record<NonNullable<Patient['sex']>, string> = { male: 'Male', female: 'Female' }
 
-// Columns of the 12-column sheet (AGENTS.md → Document grid): Послуга 7, Кількість 1, Ціна 2, Сума 2;
-// the discount, when shown, takes one column from Послуга. Outside the clinic: Послуга 11, Кількість 1.
+// Columns of the 12-column sheet (AGENTS.md → Document grid): Service 7, Qty 1, Price 2, Amount 2;
+// the discount, when shown, takes one column from Service. External: Service 11, Qty 1.
 const span = { 1: 'col-span-1', 2: 'col-span-2', 6: 'col-span-6', 7: 'col-span-7', 9: 'col-span-9', 11: 'col-span-11' }
 
 const DISCLAIMER =
-  'Документ має інформаційний характер та містить розрахунок вартості послуг, доступних у клініці. ' +
-  'Медичні призначення наведені у консультативному висновку лікаря.'
+  'This document is an estimate of the cost of services available at the clinic. ' +
+  "Medical recommendations are given in the doctor's consultation note."
 
 export function isPrescriptionRowValid(row: Pick<PrescriptionSheetRow, 'quantity' | 'discountPct'>) {
   return Number.isInteger(row.quantity) && row.quantity >= 1 && row.discountPct >= 0 && row.discountPct <= 100
 }
 
-/** «Вартість послуг»: the clinic's services with their discounts (a service outside the clinic has no price). */
+/** «Estimated cost»: the clinic's services with their discounts (an External service has no price). */
 export function prescriptionRowsTotal(rows: PrescriptionSheetRow[]) {
   return rows.reduce(
     (sum, r) =>
@@ -87,8 +87,8 @@ const headRow = cn(
   'col-span-full grid grid-cols-subgrid min-h-[calc(var(--doc-line)*1.5)] items-center font-medium',
   bleedBarClass,
 )
-// Headers wider than their column: right-aligned ones (Ціна, Сума — 2 columns) fit; the one-column ones (Кількість,
-// Знижка) are centered with their values, so the overhang stays inside the gutters and never touches a neighbour.
+// Headers wider than their column: right-aligned ones (Price, Amount — 2 columns) fit; the one-column ones (Qty,
+// Discount) are centered with their values, so the overhang stays inside the gutters and never touches a neighbour.
 const numberHead = 'flex justify-end whitespace-nowrap'
 const centerHead = 'flex justify-center whitespace-nowrap'
 const numberInput = cn(
@@ -96,7 +96,7 @@ const numberInput = cn(
   'h-line w-full text-center text-doc tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
 )
 
-// The prescription as an A4 sheet: one layout for the dialog (view / edit / discount) and for print.
+// The care plan as an A4 sheet: one layout for the dialog (view / edit / discount) and for print.
 // Width 210mm, height follows the content (screen and print); the footer follows the information text.
 export function PrescriptionSheet({
   clinicSettings,
@@ -118,19 +118,19 @@ export function PrescriptionSheet({
   const outsideRows = rows.filter((r) => r.serviceId === null)
   const hasDiscount = clinicRows.some((r) => r.discountPct > 0)
   const [adding, setAdding] = useState(false)
-  // No discount column by default; «Додати знижку» opens it (already open when a discount is set).
+  // No discount column by default; «Add discount» opens it (already open when a discount is set).
   const [discountOpen, setDiscountOpen] = useState(hasDiscount)
   // Read only, the column is there only when some service has a discount.
   const showDiscount = editDiscount ? discountOpen : hasDiscount
 
   const age = calcAge(patient.birth_date)
-  const birthDate = patient.birth_date ? `${formatDate(patient.birth_date)}${age === null ? '' : ` (${age} р.)`}` : '—'
+  const birthDate = patient.birth_date ? `${formatSheetDate(patient.birth_date)}${age === null ? '' : ` (${formatAge(age)})`}` : '—'
   const total = prescriptionRowsTotal(rows)
   const totalWithoutDiscount = prescriptionRowsTotal(rows.map((r) => ({ ...r, discountPct: 0 })))
   const header = clinicSettings.prescription_header_image_url
   const footer = clinicSettings.prescription_footer_image_url
   const external = externalRecommendations.trim()
-  // «На всі послуги, %» shows the common value while every row has it.
+  // «All services, %» shows the common value while every row has it.
   const commonDiscount = clinicRows.length > 0 && clinicRows.every((r) => r.discountPct === clinicRows[0].discountPct)
     ? clinicRows[0].discountPct
     : ''
@@ -144,7 +144,7 @@ export function PrescriptionSheet({
         step={1}
         inputMode="numeric"
         value={row.quantity}
-        aria-label={`Кількість: ${row.name}`}
+        aria-label={`Quantity: ${row.name}`}
         aria-invalid={!Number.isInteger(row.quantity) || row.quantity < 1 || undefined}
         onChange={(e) => onRowChange?.(row.key, { quantity: Number(e.target.value) })}
         className={numberInput}
@@ -160,8 +160,8 @@ export function PrescriptionSheet({
       <button
         type="button"
         disabled={fulfilled}
-        title={fulfilled ? 'Послугу вже виконано' : 'Видалити послугу'}
-        aria-label={`Видалити послугу: ${row.name}`}
+        title={fulfilled ? 'The service has already been fulfilled' : 'Remove service'}
+        aria-label={`Remove service: ${row.name}`}
         onClick={() => onRowRemove?.(row.key)}
         className="absolute top-0 -right-7 flex size-[var(--doc-line)] items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40 print:hidden"
       >
@@ -171,8 +171,8 @@ export function PrescriptionSheet({
   }
 
   return (
-    // Unlike the висновок (A4 pages, footer at the bottom): as tall as its content, the footer right after the
-    // information text — on screen and in print. Paper, type and bars as in the висновок.
+    // Unlike the consultation note (A4 pages, footer at the bottom): as tall as its content, the footer right after
+    // the information text — on screen and in print. Paper, type and bars as in the consultation note.
     <article
       className={cn(
         sheetPaperClass,
@@ -183,52 +183,52 @@ export function PrescriptionSheet({
     >
       <DocGridOverlay />
       <div className={subgridClass}>
-        {header && <SheetHeader src={header} alt="Шапка призначення" />}
+        {header && <SheetHeader src={header} alt="Care plan header" />}
 
         <SheetInfoGrid
           className="mt-line first:mt-0"
           left={[
-            ['Пацієнт', patient.full_name],
-            ['Дата нар.', birthDate],
-            ['Стать', patient.sex ? sexLabels[patient.sex] : '—'],
+            ['Patient', patient.full_name],
+            ['Date of birth', birthDate],
+            ['Sex', patient.sex ? sexLabels[patient.sex] : '—'],
           ]}
           right={[
-            ['Лікар', doctorName],
-            ['Дата', formatDate(date)],
+            ['Doctor', doctorName],
+            ['Date', formatSheetDate(date)],
           ]}
         />
 
-        {/* As in the висновок: centered, the title size, normal weight. */}
+        {/* As in the consultation note: centered, the title size, medium weight. */}
         <h1 className="mt-[calc(var(--doc-line)*1.5)] text-center text-doc-title text-balance font-medium">{prescriptionTitle(date)}</h1>
 
         <section className={cn('mt-[calc(var(--doc-line)*1.5)]', subgridClass)} aria-labelledby="rx-clinic">
           <h2 id="rx-clinic" className="mb-[calc(var(--doc-line)*1)] font-semibold">
-            Послуги, що надаються в клініці
+            Services at the clinic
           </h2>
           <div role="table" aria-labelledby="rx-clinic" className={subgridClass}>
             <div role="row" className={headRow}>
               <span role="columnheader" className={nameSpan}>
-                Послуга
+                Service
               </span>
               <span role="columnheader" className={cn(span[1], centerHead)}>
-                Кількість
+                Qty
               </span>
               <span role="columnheader" className={cn(span[2], numberHead)}>
-                Ціна
+                Price
               </span>
               {showDiscount && (
-                <span role="columnheader" className={cn(span[1], centerHead)}>
-                  Знижка, %
+                <span role="columnheader" className={cn(span[1], centerHead)} aria-label="Discount, %">
+                  Disc., %
                 </span>
               )}
               <span role="columnheader" className={cn(span[2], numberHead)}>
-                Сума
+                Amount
               </span>
             </div>
             {showDiscount && editDiscount && (
               <div role="row" className={cn(tableRow, 'print:hidden')}>
                 <label htmlFor="rx-discount-all" className={cn(span[9], 'text-right text-muted-foreground')}>
-                  На всі послуги, %
+                  All services, %
                 </label>
                 <span className={span[1]}>
                   <input
@@ -253,7 +253,7 @@ export function PrescriptionSheet({
                     {row.name}
                     {row.fulfilledQty !== undefined && (
                       <span className="block text-doc-small text-muted-foreground tabular-nums print:hidden">
-                        {`Виконано ${row.fulfilledQty} з ${row.quantity}`}
+                        {`Fulfilled ${row.fulfilledQty} of ${row.quantity}`}
                       </span>
                     )}
                   </span>
@@ -273,7 +273,7 @@ export function PrescriptionSheet({
                           step={1}
                           inputMode="decimal"
                           value={row.discountPct}
-                          aria-label={`Знижка, %: ${row.name}`}
+                          aria-label={`Discount, %: ${row.name}`}
                           aria-invalid={row.discountPct < 0 || row.discountPct > 100 || undefined}
                           onChange={(e) => onRowChange?.(row.key, { discountPct: Number(e.target.value) })}
                           className={numberInput}
@@ -303,11 +303,11 @@ export function PrescriptionSheet({
                         className="inline-flex items-center gap-1 rounded-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
                       >
                         <PlusIcon className="size-3.5" aria-hidden="true" />
-                        Додати послугу
+                        Add service
                       </button>
                       {rows.length === 0 && (
                         <span className="text-muted-foreground">
-                          Послуг поки немає — знайдіть послугу за назвою або кодом.
+                          No services yet — find one by name or code.
                         </span>
                       )}
                     </span>
@@ -335,33 +335,33 @@ export function PrescriptionSheet({
                   setDiscountOpen(!discountOpen)
                 }}
               >
-                {discountOpen ? 'Прибрати знижку' : 'Додати знижку'}
+                {discountOpen ? 'Remove discount' : 'Add discount'}
               </Button>
             )}
             <div className="ml-auto text-right tabular-nums">
               {hasDiscount && (
-                <p className="text-doc-small text-muted-foreground">{`Без знижки: ${formatMoney(totalWithoutDiscount)}`}</p>
+                <p className="text-doc-small text-muted-foreground">{`Without discount: ${formatMoney(totalWithoutDiscount)}`}</p>
               )}
-              <p className="font-semibold">{`Вартість послуг: ${formatMoney(total)}`}</p>
+              <p className="font-semibold">{`Estimated cost: ${formatMoney(total)}`}</p>
             </div>
           </div>
         </section>
 
-        {/* Only when it has something: services outside the clinic (no price), or an old prescription's free text. */}
+        {/* Only when it has something: External services (no price), or an old care plan's free text. */}
         {(outsideRows.length > 0 || external) && (
           <section className={cn('mt-line break-inside-avoid', subgridClass)} aria-labelledby="rx-outside">
             <h2 id="rx-outside" className="font-semibold">
-              Призначення для виконання поза клінікою
+              External referrals
             </h2>
-            <p className="mb-[calc(var(--doc-line)*0.5)] text-doc-small text-muted-foreground">послуги, що не надаються в клініці</p>
+            <p className="mb-[calc(var(--doc-line)*0.5)] text-doc-small text-muted-foreground">services not provided at the clinic</p>
             {outsideRows.length > 0 && (
               <div role="table" aria-labelledby="rx-outside" className={subgridClass}>
                 <div role="row" className={headRow}>
                   <span role="columnheader" className={span[11]}>
-                    Послуга
+                    Service
                   </span>
                   <span role="columnheader" className={cn(span[1], centerHead)}>
-                    Кількість
+                    Qty
                   </span>
                 </div>
                 {outsideRows.map((row) => (
@@ -384,7 +384,7 @@ export function PrescriptionSheet({
 
       <footer className="col-span-full flex flex-col gap-line pt-line break-inside-avoid">
         <p className="text-doc-small text-muted-foreground">{DISCLAIMER}</p>
-        {footer && <SheetFooterImage src={footer} alt="Підвал призначення" />}
+        {footer && <SheetFooterImage src={footer} alt="Care plan footer" />}
       </footer>
     </article>
   )

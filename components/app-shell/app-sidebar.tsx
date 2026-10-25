@@ -39,22 +39,22 @@ type NavGroup = {
   roles?: StaffRole[]
 }
 
-const homeItem: NavItem = { title: 'Головна', href: '/', icon: HomeIcon }
+const homeItem: NavItem = { title: 'Home', href: '/', icon: HomeIcon }
 
 const navGroups: NavGroup[] = [
   {
-    label: 'Робота',
+    label: 'Work',
     items: [
-      { title: 'Пацієнти', href: '/patients', icon: UsersIcon },
-      { title: 'Призначення', href: '/prescriptions', icon: ClipboardListIcon },
+      { title: 'Patients', href: '/patients', icon: UsersIcon },
+      { title: 'Care plans', href: '/prescriptions', icon: ClipboardListIcon },
     ],
   },
   {
-    label: 'Керування',
+    label: 'Management',
     roles: ['manager'],
     items: [
-      { title: 'Шаблони', href: '/templates', icon: FileTextIcon },
-      { title: 'Налаштування', href: '/settings', icon: SettingsIcon },
+      { title: 'Templates', href: '/templates', icon: FileTextIcon },
+      { title: 'Settings', href: '/settings', icon: SettingsIcon },
     ],
   },
 ]
@@ -73,7 +73,7 @@ export function AppSidebar({ user }: { user: Staff }) {
           <Image src="/logo-placeholder.png" alt="" width={36} height={36} className="size-9 shrink-0 rounded-lg" />
           {/* text-box trims the line to x-height (the label is lowercase), so items-center lines the letters up with the logo. */}
           <span className="font-document text-2xl leading-none font-semibold tracking-tight whitespace-nowrap text-sidebar-foreground [text-box:trim-both_ex_alphabetic] group-data-[collapsible=icon]:hidden">
-            мед.кабінет
+            med.cabinet
           </span>
         </div>
       </SidebarHeader>

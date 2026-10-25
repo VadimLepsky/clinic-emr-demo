@@ -29,11 +29,11 @@ export function PrescriptionsTab({ patientId }: { patientId: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Призначення</CardTitle>
+        <CardTitle>Care plans</CardTitle>
         {canCreate && (
           <Button onClick={() => setTarget('new')}>
             <PlusIcon className="size-4" aria-hidden="true" />
-            Створити призначення
+            New care plan
           </Button>
         )}
       </CardHeader>
@@ -47,21 +47,21 @@ export function PrescriptionsTab({ patientId }: { patientId: string }) {
       ) : prescriptions.length === 0 ? (
         <div className="flex flex-col items-center gap-2 px-8 py-12 text-center text-muted-foreground">
           <ClipboardListIcon className="size-6" aria-hidden="true" />
-          Призначень поки немає.
+          No care plans yet.
         </div>
       ) : (
         <Table className="[&_th]:h-auto [&_th]:py-3 [&_th]:whitespace-normal">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead>Назва</TableHead>
-              <TableHead>Лікар</TableHead>
-              <TableHead>Дата створення</TableHead>
-              <TableHead className="text-right">Сума призначень</TableHead>
-              <TableHead className="text-right">Використано</TableHead>
-              <TableHead className="min-w-24">Виконання</TableHead>
-              <TableHead className="text-right">Сума оплат</TableHead>
-              <TableHead>Статус</TableHead>
-              <TableHead className="w-px text-right">Дії</TableHead>
+              <TableHead>Title</TableHead>
+              <TableHead>Doctor</TableHead>
+              <TableHead>Created on</TableHead>
+              <TableHead className="text-right">Estimated</TableHead>
+              <TableHead className="text-right">Used</TableHead>
+              <TableHead className="min-w-24">Completion</TableHead>
+              <TableHead className="text-right">Paid</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="w-px text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -75,7 +75,7 @@ export function PrescriptionsTab({ patientId }: { patientId: string }) {
                         href={`/patients/${patientId}/documents/${rx.source_document_id}`}
                         className="text-sm text-primary underline-offset-4 hover:underline"
                       >
-                        Висновок
+                        Consultation note
                       </Link>
                     )}
                   </TableCell>
@@ -84,7 +84,7 @@ export function PrescriptionsTab({ patientId }: { patientId: string }) {
                   <TableCell className="text-right tabular-nums">{formatMoney(rx.total_amount)}</TableCell>
                   <TableCell className="text-right tabular-nums">{formatMoney(rx.used_amount)}</TableCell>
                   <TableCell>
-                    <CompletionBar pct={rx.completion_pct} label={`Виконання: ${rx.title}`} />
+                    <CompletionBar pct={rx.completion_pct} label={`Completion: ${rx.title}`} />
                   </TableCell>
                   <TableCell className="text-right tabular-nums">{formatMoney(rx.paid_amount)}</TableCell>
                   <TableCell className="whitespace-normal">

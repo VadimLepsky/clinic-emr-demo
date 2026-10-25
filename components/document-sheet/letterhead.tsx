@@ -1,7 +1,7 @@
 import { SnapImage } from './grid'
 
-// Header and footer of an A4 sheet (висновок, призначення): always an image across the content width — a
-// letterhead from the library (templates) or the prescription blank (Налаштування → Шапки і підвали).
+// Header and footer of an A4 sheet (consultation note, care plan): always an image across the content width — a
+// letterhead from the library (templates) or the care plan letterhead (Settings → Headers & footers).
 // The header's box is rounded up to half grid lines (the picture is never stretched), so the text stays on the grid.
 
 export function SheetHeader({ src, alt }: { src: string; alt: string }) {

@@ -1,7 +1,7 @@
-// Типы сущностей повторяют таблицы БД (snake_case), чтобы при подключении Supabase ничего не мапить.
-// JSON внутри шаблона и документа — camelCase.
+// Entity types mirror the database tables (snake_case), so nothing needs mapping once Supabase is connected.
+// JSON inside a template and a document is camelCase.
 
-// ============ Сущности ============
+// ============ Entities ============
 
 export type StaffRole = 'manager' | 'doctor' | 'medical_staff' | 'contact_center' | 'reception';
 
@@ -33,7 +33,7 @@ export type Service = {
   code: string | null;
   name: string;
   category: ServiceCategory;
-  price: number; // текущая цена (в БД — из service_prices)
+  price: number; // current price (in the database — from service_prices)
   is_active: boolean;
 };
 
@@ -59,13 +59,13 @@ export type Template = {
   specialty: string | null;
   current_version_id: string;
   is_active: boolean;
-  header_id: string | null; // шапка з бібліотеки бланків (Налаштування → Шапки і підвали); null — без шапки
-  footer_id: string | null; // підвал з бібліотеки бланків; null — без підвалу
-  footer_text: string | null; // підвал конкретного шаблону (апарат, дисклеймер), може містити змінні
-  show_signature: boolean; // рядок «Лікар: ПІБ ____ (підпис)» наприкінці
-  banner_image_url: string | null; // банер праворуч від заголовка (реклама, QR); у моках — data URL
-  footer_image_url: string | null; // логотип у підвалі праворуч (апарат, партнер); у моках — data URL
-  package_ids: string[]; // пакети послуг, що показуються кнопками при заповненні; порожньо — рядка пакетів немає
+  header_id: string | null; // header from the letterhead library (Settings → Headers & footers); null — no header
+  footer_id: string | null; // footer from the letterhead library; null — no footer
+  footer_text: string | null; // this template's own footer text (device, disclaimer), may contain variables
+  show_signature: boolean; // a «Doctor: Name ____ (signature)» line at the end
+  banner_image_url: string | null; // banner to the right of the title (promo, QR); a data URL in the mocks
+  footer_image_url: string | null; // logo at the right of the footer (device, partner); a data URL in the mocks
+  package_ids: string[]; // service bundles shown as buttons while filling in; empty — no bundle row
 };
 
 export type TemplateVersion = {
@@ -100,7 +100,7 @@ export type FileRecord = {
   file_name: string;
   mime_type: string;
   size_bytes: number;
-  url: string; // в моках — заглушка
+  url: string; // a placeholder in the mocks
   created_at: string;
 };
 
@@ -112,17 +112,17 @@ export type Prescription = {
   doctor_id: string;
   source_document_id: string | null;
   title: string;
-  valid_until: string | null; // внутрішній строк виконання (+30 днів), користувачу не показується
-  external_recommendations: string | null; // устаревшее: старые призначення; новые кладут услуги вне клиники в позиции
+  valid_until: string | null; // internal completion term (+30 days), not shown to users
+  external_recommendations: string | null; // legacy: old care plans; new ones keep External services as items
   status: PrescriptionStatus;
-  locked_at: string | null; // не null = была оплата, редактировать нельзя
+  locked_at: string | null; // not null = a payment was made, editing is closed
   created_at: string;
-  deleted_at: string | null; // мягкое удаление: скрыто из списков, финансовая история сохраняется
+  deleted_at: string | null; // soft delete: hidden from lists, the financial history is kept
   deleted_by: string | null;
 };
 
-// Позиция — либо услуга из справочника (service_id), либо услуга вне клиники (custom_name: только название,
-// без кода и цены; в суммы и % выполнения не входит, выполнения у неё нет).
+// An item is either a service from the catalogue (service_id) or an External one (custom_name: a name only,
+// no code or price; it counts in neither the totals nor the completion %, and has no fulfilment).
 export type PrescriptionItem = {
   id: string;
   prescription_id: string;
@@ -130,7 +130,7 @@ export type PrescriptionItem = {
   custom_name: string | null;
   section: ServiceCategory;
   quantity: number;
-  unit_price: number; // цена на момент создания; 0 у услуги вне клиники
+  unit_price: number; // price at creation time; 0 for an External service
   discount_pct: number;
 };
 
@@ -142,7 +142,7 @@ export type PrescriptionFulfillment = {
   fulfilled_at: string;
 };
 
-// Вычисляемое представление для таблицы призначень
+// Computed view for the care plan tables
 export type PrescriptionSummary = Prescription & {
   doctor_name: string;
   patient_name: string;
@@ -160,8 +160,8 @@ export type CrmVisit = {
   status: string;
 };
 
-// Бланк призначення — окремо від бібліотеки: шапка й підвал призначень, картинки на всю ширину листа
-// (шлях /letterheads/… або data URL); null — без шапки / без підвалу.
+// Care plan letterhead — separate from the library: the care plan header and footer, images across the sheet
+// (a /letterheads/… path or a data URL); null — no header / no footer.
 export type ClinicSettings = {
   prescription_header_image_url: string | null;
   prescription_footer_image_url: string | null;
@@ -169,13 +169,13 @@ export type ClinicSettings = {
 
 export type LetterheadKind = 'header' | 'footer';
 
-// Бланк з бібліотеки (для шаблонів): шапка або підвал листа А4 — картинка на всю ширину вмісту листа.
-// is_default — шапка нових шаблонів і документів без шаблону; одна серед шапок.
+// Library letterhead (for templates): the header or footer of an A4 sheet — an image across the content width.
+// is_default — the header of new templates and of documents without a template; one among the headers.
 export type Letterhead = {
   id: string;
   kind: LetterheadKind;
   name: string;
-  image_url: string; // /letterheads/… (заздалегідь завантажені) або data URL (нові); потім Supabase Storage
+  image_url: string; // /letterheads/… (preloaded) or a data URL (new ones); Supabase Storage later
   is_default: boolean;
 };
 
@@ -191,7 +191,7 @@ export type AuditEntry = {
   description: string;
 };
 
-// ============ Шаблон (template_versions.schema) ============
+// ============ Template (template_versions.schema) ============
 
 export type TemplateSchema = {
   sections: Section[];
@@ -212,7 +212,7 @@ export type FieldBlock = {
   id: string;
   type: FieldType;
   label: string;
-  description: string; // подсказка врачу (и AI во 2-й фазе)
+  description: string; // hint for the doctor (and for AI in phase 2)
   options?: string[];
   unit?: string;
   defaultValue?: string | number | boolean | string[];
@@ -236,14 +236,14 @@ export type ServicesBlock = {
 export type StaticTextBlock = {
   kind: 'static';
   id: string;
-  text: string; // может содержать {patient.full_name} и т.п.
+  text: string; // may contain {patient.full_name} etc.
 };
 
 export type ImageBlock = {
   kind: 'image';
   id: string;
-  src: string; // у моках — data URL, потім Supabase Storage
-  alt: string; // опис для друку / доступності
+  src: string; // a data URL in the mocks, Supabase Storage later
+  alt: string; // description for print / accessibility
   width: 'auto' | 'third' | 'half' | 'full';
   align: 'left' | 'center' | 'right';
 };
@@ -258,13 +258,13 @@ export type TemplateVariable =
   | 'doctor.full_name'
   | 'doctor.specialty';
 
-// ============ Значения документа (documents.values) ============
+// ============ Document values (documents.values) ============
 
-// Услуга из справочника или «поза клінікою» (введённое название) — одно из двух.
+// A catalogue service or an External one (a typed-in name) — one of the two.
 export type ServiceSelection =
   | { serviceId: string; customName?: never; quantity: number }
   | { customName: string; serviceId?: never; quantity: number };
 
 export type FieldValue = string | number | boolean | string[] | ServiceSelection[];
 
-export type DocumentValues = Record<string, FieldValue>; // ключ = block.id
+export type DocumentValues = Record<string, FieldValue>; // key = block.id

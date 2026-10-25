@@ -28,24 +28,24 @@ export function ImportMappingStep({ table, initialMapping, onBack, onNext }: Imp
     () => table.headers.map((h, i) => ({ value: String(i), label: h })),
     [table.headers],
   )
-  const optionalItems = useMemo(() => [{ value: NO_COLUMN, label: 'Немає' }, ...columnItems], [columnItems])
+  const optionalItems = useMemo(() => [{ value: NO_COLUMN, label: 'None' }, ...columnItems], [columnItems])
 
   const fields: { key: keyof ColumnMapping; label: string; items: { value: string; label: string }[] }[] = [
-    { key: 'code', label: 'Код (необов’язково)', items: optionalItems },
-    { key: 'name', label: 'Назва послуги', items: columnItems },
-    { key: 'price', label: 'Ціна', items: columnItems },
+    { key: 'code', label: 'Code (optional)', items: optionalItems },
+    { key: 'name', label: 'Service name', items: columnItems },
+    { key: 'price', label: 'Price', items: columnItems },
   ]
 
   const handleNext = async () => {
     if (mapping.name === NO_COLUMN || mapping.price === NO_COLUMN) {
-      return setError('Оберіть колонки з назвою та ціною.')
+      return setError('Choose the name and price columns.')
     }
     setError(null)
     setBusy(true)
     try {
       await onNext(mapping)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Не вдалося порівняти прайс.')
+      setError(e instanceof Error ? e.message : 'Could not compare the price list.')
       setBusy(false)
     }
   }
@@ -53,9 +53,9 @@ export function ImportMappingStep({ table, initialMapping, onBack, onNext }: Imp
   return (
     <div className="flex flex-col gap-6">
       <DialogHeader>
-        <DialogTitle>Відповідність колонок</DialogTitle>
+        <DialogTitle>Match columns</DialogTitle>
         <DialogDescription>
-          Крок 2 з 3. Вкажіть, які колонки файлу містять код, назву та ціну. Усього рядків: {table.rows.length}.
+          Step 2 of 3. Tell us which columns of the file hold the code, the name and the price. Rows: {table.rows.length}.
         </DialogDescription>
       </DialogHeader>
 
@@ -70,7 +70,7 @@ export function ImportMappingStep({ table, initialMapping, onBack, onNext }: Imp
                 onValueChange={(v) => v && setMapping((m) => ({ ...m, [field.key]: v as string }))}
               >
                 <SelectTrigger id={`${id}-${field.key}`} className="w-full">
-                  <SelectValue placeholder="Оберіть колонку" />
+                  <SelectValue placeholder="Choose a column" />
                 </SelectTrigger>
                 <SelectContent>
                   {field.items.map((item) => (
@@ -114,11 +114,11 @@ export function ImportMappingStep({ table, initialMapping, onBack, onNext }: Imp
 
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onBack} disabled={busy}>
-          Назад
+          Back
         </Button>
         <Button type="button" onClick={handleNext} disabled={busy}>
           {busy && <Loader2Icon className="animate-spin" aria-hidden="true" />}
-          Порівняти з поточним прайсом
+          Compare with the current price list
         </Button>
       </DialogFooter>
     </div>

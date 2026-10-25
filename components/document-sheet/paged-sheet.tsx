@@ -78,7 +78,7 @@ export function PagedSheet({ atoms, footer, className }: { atoms: SheetAtom[]; f
       {layout.map((indexes, p) => (
         <article
           key={p}
-          aria-label={layout.length > 1 ? `Сторінка ${p + 1} з ${layout.length}` : undefined}
+          aria-label={layout.length > 1 ? `Page ${p + 1} of ${layout.length}` : undefined}
           className={cn(pageClass, p < layout.length - 1 && 'print:break-after-page', className)}
         >
           <DocGridOverlay />

@@ -11,7 +11,7 @@ import { fieldElementId, formatFieldValue } from './utils'
 
 type FieldBlockProps = {
   field: FieldBlockType
-  /** The label, or «поле в розділі «…»» when the field has none (then for screen readers only). */
+  /** The label, or «field in section «…»» when the field has none (then for screen readers only). */
   name?: string
   value: FieldValue | undefined
   onChange: (value: FieldValue) => void
@@ -62,7 +62,7 @@ export function FieldBlock({ field, name, value, onChange, mode, invalid = false
       )}
       {invalid && (
         <p id={errorId} className="text-sm font-medium text-destructive">
-          {"Обов'язкове поле"}
+          {'Required field'}
         </p>
       )}
     </>
@@ -144,7 +144,7 @@ export function FieldBlock({ field, name, value, onChange, mode, invalid = false
           onValueChange={(v) => onChange((v as string | null) ?? '')}
         >
           <SelectTrigger id={controlId} className="w-full" {...a11y}>
-            <SelectValue placeholder="Оберіть значення" />
+            <SelectValue placeholder="Choose a value" />
           </SelectTrigger>
           <SelectContent>
             {items.map((item) => (

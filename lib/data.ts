@@ -1,5 +1,5 @@
-// Единственная точка доступа к данным. Сейчас — моки, потом — Supabase.
-// Компоненты импортируют только отсюда и никогда напрямую из mock-data.
+// The single point of data access. Mocks now, Supabase later.
+// Components import only from here and never from mock-data directly.
 import * as db from './mock-data';
 import type {
   Staff, Patient, Service, ServiceCategory, ServicePackage, Folder, Template, TemplateVersion,
@@ -7,19 +7,20 @@ import type {
   AuditEntry, DocumentValues, ServiceSelection, ServicesBlock, StaffRole, TemplateKind, TemplateSchema,
   Letterhead, LetterheadKind,
 } from './types';
+import { carePlanTitle, plural } from './format';
 
 const delay = (ms = 150) => new Promise((r) => setTimeout(r, ms));
 const uid = (p: string) => `${p}-${Math.random().toString(36).slice(2, 9)}`;
 
-// ============ Журнал змін ============
+// ============ Activity log ============
 
 type AuditInput = Pick<AuditEntry, 'action' | 'entity_type' | 'entity_id' | 'patient_id' | 'description'> & {
   actor_type?: 'staff' | 'system';
 };
 
-// ============ Демо: «Увійти як…» (лише при NEXT_PUBLIC_DEMO=1) ============
-// Обраний співробітник живе в cookie, тож серверні компоненти (cookies()) і клієнт (document.cookie)
-// бачать одного й того самого користувача. Без прапорця — завжди db.currentUserId.
+// ============ Demo: «Sign in as…» (only with NEXT_PUBLIC_DEMO=1) ============
+// The chosen staff member lives in a cookie, so server components (cookies()) and the client (document.cookie)
+// see the same user. Without the flag — always db.currentUserId.
 
 export const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO === '1';
 export const DEMO_USER_COOKIE = 'emr-demo-user';
@@ -48,14 +49,14 @@ async function currentUserId(): Promise<string> {
 
 /** Demo only: act as another staff member. The caller refreshes server components and SWR data. */
 export async function loginAsDemoUser(staffId: string): Promise<Staff> {
-  if (!DEMO_MODE) throw new Error('Перемикання користувача доступне лише в демо-режимі');
+  if (!DEMO_MODE) throw new Error('Switching users is only available in demo mode');
   const member = db.staff.find((s) => s.id === staffId && s.is_active);
-  if (!member) throw new Error('Співробітника не знайдено');
+  if (!member) throw new Error('Staff member not found');
   document.cookie = `${DEMO_USER_COOKIE}=${encodeURIComponent(staffId)}; path=/; max-age=${60 * 60 * 24 * 30}; samesite=lax`;
   return { ...member };
 }
 
-// Дописує запис до журналу. Автор — поточний користувач, якщо не вказано actor_type: 'system'.
+// Appends an entry to the log. The author is the current user unless actor_type: 'system' is given.
 function addAudit({ actor_type = 'staff', ...entry }: AuditInput) {
   db.auditLog.push({
     id: db.auditLog.reduce((max, a) => Math.max(max, a.id), 0) + 1,
@@ -73,18 +74,18 @@ function auditTitleOf(entityType: string, entityId: string): string | null {
 }
 
 function auditEntityLabel(entityType: string) {
-  return entityType === 'prescription' ? 'призначення' : 'документ';
+  return entityType === 'prescription' ? 'care plan' : 'document';
 }
 
 export async function logPrint(entityType: string, entityId: string, patientId: string | null): Promise<void> {
   const title = auditTitleOf(entityType, entityId);
   addAudit({
     action: 'print', entity_type: entityType, entity_id: entityId, patient_id: patientId,
-    description: `Надруковано ${auditEntityLabel(entityType)}${title ? ` «${title}»` : ''}`,
+    description: `Printed ${auditEntityLabel(entityType)}${title ? ` «${title}»` : ''}`,
   });
 }
 
-// ============ Утилиты ============
+// ============ Utilities ============
 
 export function calcAge(birthDate: string | null): number | null {
   if (!birthDate) return null;
@@ -95,7 +96,7 @@ export function calcAge(birthDate: string | null): number | null {
   return age;
 }
 
-// ============ Сотрудники ============
+// ============ Staff ============
 
 export async function getCurrentUser(): Promise<Staff> {
   await delay();
@@ -112,12 +113,12 @@ type StaffInput = Pick<Staff, 'full_name' | 'role' | 'specialty' | 'crm_master_i
 
 function normalizeStaffInput(input: StaffInput, ownId?: string): StaffInput {
   const full_name = input.full_name.trim();
-  if (!full_name) throw new Error('Вкажіть ПІБ');
+  if (!full_name) throw new Error('Enter the full name');
   const crm = input.crm_master_id;
   if (crm !== null) {
-    if (!Number.isInteger(crm) || crm <= 0) throw new Error('ID в CRM має бути додатним цілим числом');
+    if (!Number.isInteger(crm) || crm <= 0) throw new Error('The CRM ID must be a positive whole number');
     if (db.staff.some((s) => s.id !== ownId && s.crm_master_id === crm)) {
-      throw new Error('Цей ID в CRM вже закріплений за іншим співробітником');
+      throw new Error('This CRM ID is already assigned to another staff member');
     }
   }
   return { full_name, role: input.role, specialty: input.specialty?.trim() || null, crm_master_id: crm, is_active: input.is_active };
@@ -129,49 +130,49 @@ export async function createStaff(input: StaffInput): Promise<Staff> {
   db.staff.push(member);
   addAudit({
     action: 'create', entity_type: 'staff', entity_id: member.id, patient_id: null,
-    description: `Додано співробітника «${member.full_name}»`,
+    description: `Added staff member «${member.full_name}»`,
   });
   return { ...member };
 }
 
-// Співробітників не видаляють, лише деактивують: історія має зберігати автора.
+// Staff are never deleted, only deactivated: the history has to keep its authors.
 export async function updateStaff(id: string, input: StaffInput): Promise<Staff> {
   await delay();
   const member = db.staff.find((s) => s.id === id);
-  if (!member) throw new Error('Співробітника не знайдено');
+  if (!member) throw new Error('Staff member not found');
   const next = normalizeStaffInput(input, id);
   if (id === (await currentUserId()) && (!next.is_active || next.role !== 'manager')) {
-    throw new Error('Не можна деактивувати себе або забрати у себе роль керівника');
+    throw new Error('You cannot deactivate yourself or remove your own clinic manager role');
   }
   Object.assign(member, next);
   addAudit({
     action: 'update', entity_type: 'staff', entity_id: member.id, patient_id: null,
-    description: `Змінено дані співробітника «${member.full_name}»`,
+    description: `Updated staff member «${member.full_name}»`,
   });
   return { ...member };
 }
 
-// Фото необов'язкове: null повертає іконку ролі. Значення — data URL.
+// The photo is optional: null brings back the role icon. The value is a data URL.
 export async function updateStaffPhoto(staffId: string, dataUrl: string | null): Promise<Staff> {
   await delay();
   const member = db.staff.find((s) => s.id === staffId);
-  if (!member) throw new Error('Співробітника не знайдено');
+  if (!member) throw new Error('Staff member not found');
   member.photo_url = dataUrl;
   addAudit({
     action: 'update', entity_type: 'staff', entity_id: member.id, patient_id: null,
-    description: dataUrl ? `Оновлено фото співробітника «${member.full_name}»` : `Видалено фото співробітника «${member.full_name}»`,
+    description: dataUrl ? `Updated the photo of «${member.full_name}»` : `Removed the photo of «${member.full_name}»`,
   });
   return { ...member };
 }
 
-// Кількість висновків, створених співробітником сьогодні
+// Number of consultation notes the staff member created today
 export async function countTodayDocuments(staffId: string): Promise<number> {
   await delay();
   const today = new Date().toISOString().slice(0, 10);
   return db.documents.filter((d) => d.author_id === staffId && d.created_at.startsWith(today)).length;
 }
 
-// ============ Пациенты ============
+// ============ Patients ============
 
 export async function searchPatients(query: string): Promise<Patient[]> {
   await delay();
@@ -187,7 +188,7 @@ export async function getPatient(id: string): Promise<Patient | null> {
   return db.patients.find((p) => p.id === id) ?? null;
 }
 
-// ============ Документы ============
+// ============ Documents ============
 
 export async function listFolders(): Promise<Folder[]> {
   await delay();
@@ -196,7 +197,7 @@ export async function listFolders(): Promise<Folder[]> {
 
 export type FolderUsage = { documents: number; templates: { id: string; name: string }[] };
 
-// Скільки документів (по всіх пацієнтах) і які шаблони прив'язані до кожної папки.
+// How many documents (across all patients) and which templates are linked to each folder.
 export async function getFolderUsage(): Promise<Record<string, FolderUsage>> {
   await delay();
   const usage: Record<string, FolderUsage> = {};
@@ -208,9 +209,9 @@ export async function getFolderUsage(): Promise<Record<string, FolderUsage>> {
 
 function folderNameOrThrow(name: string, ownId?: string) {
   const trimmed = name.trim();
-  if (!trimmed) throw new Error('Вкажіть назву папки');
+  if (!trimmed) throw new Error('Enter a folder name');
   if (db.folders.some((f) => f.id !== ownId && f.name.toLowerCase() === trimmed.toLowerCase())) {
-    throw new Error('Папка з такою назвою вже існує');
+    throw new Error('A folder with this name already exists');
   }
   return trimmed;
 }
@@ -225,7 +226,7 @@ export async function createFolder(name: string): Promise<Folder> {
   db.folders.push(folder);
   addAudit({
     action: 'create', entity_type: 'folder', entity_id: folder.id, patient_id: null,
-    description: `Створено папку «${folder.name}»`,
+    description: `Created folder «${folder.name}»`,
   });
   return { ...folder };
 }
@@ -233,12 +234,12 @@ export async function createFolder(name: string): Promise<Folder> {
 export async function updateFolder(id: string, input: { name: string }): Promise<Folder> {
   await delay();
   const folder = db.folders.find((f) => f.id === id);
-  if (!folder) throw new Error('Папку не знайдено');
+  if (!folder) throw new Error('Folder not found');
   const previousName = folder.name;
   folder.name = folderNameOrThrow(input.name, id);
   addAudit({
     action: 'update', entity_type: 'folder', entity_id: folder.id, patient_id: null,
-    description: `Папк�� «${previousName}» перейменовано на «${folder.name}»`,
+    description: `Folder «${previousName}» renamed to «${folder.name}»`,
   });
   return { ...folder };
 }
@@ -247,14 +248,14 @@ export async function reorderFolders(orderedIds: string[]): Promise<Folder[]> {
   await delay();
   const known = new Set(db.folders.map((f) => f.id));
   if (orderedIds.length !== known.size || !orderedIds.every((id) => known.has(id))) {
-    throw new Error('Некоректний порядок папок');
+    throw new Error('Invalid folder order');
   }
   orderedIds.forEach((id, index) => {
     db.folders.find((f) => f.id === id)!.sort_order = index + 1;
   });
   addAudit({
     action: 'update', entity_type: 'folder', entity_id: null, patient_id: null,
-    description: 'Змінено порядок папок',
+    description: 'Changed the folder order',
   });
   return [...db.folders].sort((a, b) => a.sort_order - b.sort_order).map((f) => ({ ...f }));
 }
@@ -262,13 +263,13 @@ export async function reorderFolders(orderedIds: string[]): Promise<Folder[]> {
 export async function deleteFolder(id: string): Promise<void> {
   await delay();
   const index = db.folders.findIndex((f) => f.id === id);
-  if (index === -1) throw new Error('Папку не знайдено');
-  if (db.documents.some((d) => d.folder_id === id)) throw new Error('У папці є документи');
-  if (db.templates.some((t) => t.folder_id === id)) throw new Error('До папки прив\u2019язані шаблони');
+  if (index === -1) throw new Error('Folder not found');
+  if (db.documents.some((d) => d.folder_id === id)) throw new Error('The folder contains documents');
+  if (db.templates.some((t) => t.folder_id === id)) throw new Error('Templates are linked to this folder');
   const [removed] = db.folders.splice(index, 1);
   addAudit({
     action: 'delete', entity_type: 'folder', entity_id: removed.id, patient_id: null,
-    description: `Видалено папку «${removed.name}»`,
+    description: `Deleted folder «${removed.name}»`,
   });
 }
 
@@ -320,14 +321,14 @@ export async function uploadDocument(input: {
   }
   addAudit({
     action: 'create', entity_type: 'document', entity_id: doc.id, patient_id: doc.patient_id,
-    description: `Завантажено «${doc.title}», ${input.files.length} файл(ів)`,
+    description: `Uploaded «${doc.title}», ${plural(input.files.length, 'file')}`,
   });
   return doc;
 }
 
-// ============ Шаблоны ============
+// ============ Templates ============
 
-// Хто створює документи за шаблонами кожного типу. Ресепшн і контакт-центр документів за шаблонами не створюють.
+// Who creates documents from templates of each kind. Front desk and contact centre don't create template documents.
 const TEMPLATE_KIND_CREATORS: Record<TemplateKind, readonly StaffRole[]> = {
   consultation: ['doctor', 'medical_staff', 'manager'],
   ultrasound: ['doctor', 'medical_staff', 'manager'],
@@ -340,13 +341,13 @@ export function canCreateKind(role: StaffRole, kind: TemplateKind): boolean {
   return TEMPLATE_KIND_CREATORS[kind].includes(role);
 }
 
-// Папка за замовчуванням для нового шаблону цього типу (за назвою папки).
+// Default folder for a new template of this kind (by folder name).
 const DEFAULT_FOLDER_NAMES: Record<TemplateKind, string> = {
-  consultation: 'Консультативні висновки',
-  ultrasound: 'Ультразвукова діагностика',
-  lab: 'Результати аналізів',
-  certificate: 'Довідки',
-  other: 'Інші файли',
+  consultation: 'Consultation notes',
+  ultrasound: 'Ultrasound',
+  lab: 'Lab results',
+  certificate: 'Certificates',
+  other: 'Other files',
 };
 
 export function defaultFolderForKind(folders: Folder[], kind: TemplateKind): Folder | undefined {
@@ -367,12 +368,12 @@ function currentVersionOf(template: Template) {
   return db.templateVersions.find((v) => v.id === template.current_version_id)!;
 }
 
-// Для керівника: усі шаблони, включно з неактивними, з номером поточної версії.
+// For the clinic manager: all templates, inactive ones included, with the current version number.
 export async function listAllTemplates(): Promise<(Template & { version: number })[]> {
   await delay();
   return db.templates
     .map((t) => ({ ...t, version: currentVersionOf(t).version }))
-    .sort((a, b) => a.name.localeCompare(b.name, 'uk'));
+    .sort((a, b) => a.name.localeCompare(b.name, 'en'));
 }
 
 export async function getTemplate(id: string): Promise<{ template: Template; version: TemplateVersion } | null> {
@@ -387,7 +388,7 @@ export async function getTemplateByVersion(versionId: string): Promise<Template 
   return (version && db.templates.find((t) => t.id === version.template_id)) || null;
 }
 
-// Кожне збереження створює нову версію; вже створені документи посилаються на свою версію і не змінюються.
+// Every save creates a new version; documents already created point to their own version and don't change.
 export async function saveTemplate(input: {
   templateId?: string; name: string; kind: TemplateKind; specialty: string | null; folder_id: string;
   header_id: string | null; footer_id: string | null; footer_text: string | null; show_signature: boolean;
@@ -395,17 +396,17 @@ export async function saveTemplate(input: {
 }): Promise<Template> {
   await delay();
   const name = input.name.trim();
-  if (!name) throw new Error('Вкажіть назву шаблону');
-  if (!db.folders.some((f) => f.id === input.folder_id)) throw new Error('Папку не знайдено');
+  if (!name) throw new Error('Enter a template name');
+  if (!db.folders.some((f) => f.id === input.folder_id)) throw new Error('Folder not found');
   if (input.header_id && !db.letterheads.some((l) => l.id === input.header_id && l.kind === 'header')) {
-    throw new Error('Шапку не знайдено');
+    throw new Error('Header not found');
   }
   if (input.footer_id && !db.letterheads.some((l) => l.id === input.footer_id && l.kind === 'footer')) {
-    throw new Error('Підвал не знайдено');
+    throw new Error('Footer not found');
   }
 
   let template = input.templateId ? db.templates.find((t) => t.id === input.templateId) : undefined;
-  if (input.templateId && !template) throw new Error('Шаблон не знайдено');
+  if (input.templateId && !template) throw new Error('Template not found');
   const templateId = template?.id ?? uid('tpl');
   const lastVersion = db.templateVersions
     .filter((v) => v.template_id === templateId)
@@ -431,7 +432,7 @@ export async function saveTemplate(input: {
   }
   addAudit({
     action: lastVersion === 0 ? 'create' : 'update', entity_type: 'template_version', entity_id: version.id,
-    patient_id: null, description: `Збережено версію ${version.version} шаблону «${name}»`,
+    patient_id: null, description: `Saved version ${version.version} of template «${name}»`,
   });
   return { ...template };
 }
@@ -439,10 +440,10 @@ export async function saveTemplate(input: {
 export type TemplateVersionInfo = {
   version: TemplateVersion;
   is_current: boolean;
-  saved_by: string | null; // null — немає запису в журналі (версія створена до ведення журналу)
+  saved_by: string | null; // null — no log entry (the version predates the log)
 };
 
-// Версії шаблону від новішої до старішої; хто зберіг — за записами журналу.
+// Template versions from newest to oldest; who saved each one comes from the log.
 export async function listTemplateVersions(templateId: string): Promise<TemplateVersionInfo[]> {
   await delay();
   const template = db.templates.find((t) => t.id === templateId);
@@ -456,7 +457,7 @@ export async function listTemplateVersions(templateId: string): Promise<Template
         ? null
         : entry.actor_type === 'staff'
           ? (db.staff.find((s) => s.id === entry.actor_id)?.full_name ?? null)
-          : 'Система';
+          : 'System';
       return { version: structuredClone(v), is_current: v.id === template.current_version_id, saved_by };
     });
 }
@@ -464,20 +465,20 @@ export async function listTemplateVersions(templateId: string): Promise<Template
 export async function setTemplateActive(id: string, active: boolean): Promise<Template> {
   await delay();
   const template = db.templates.find((t) => t.id === id);
-  if (!template) throw new Error('Шаблон не знайдено');
+  if (!template) throw new Error('Template not found');
   template.is_active = active;
   addAudit({
     action: 'update', entity_type: 'template', entity_id: template.id, patient_id: null,
-    description: `Шаблон «${template.name}» ${active ? 'активовано' : 'деактивовано'}`,
+    description: `Template «${template.name}» ${active ? 'activated' : 'deactivated'}`,
   });
   return { ...template };
 }
 
-// Копія стартує неактивною, щоб лікарі не бачил�� її до редагування.
+// A copy starts inactive so doctors don't see it until it is edited.
 export async function duplicateTemplate(id: string): Promise<Template> {
   await delay();
   const source = db.templates.find((t) => t.id === id);
-  if (!source) throw new Error('Шаблон не знайдено');
+  if (!source) throw new Error('Template not found');
   const templateId = uid('tpl');
   const version: TemplateVersion = {
     id: uid('tv'), template_id: templateId, version: 1,
@@ -485,18 +486,18 @@ export async function duplicateTemplate(id: string): Promise<Template> {
   };
   db.templateVersions.push(version);
   const template: Template = {
-    ...source, id: templateId, name: `${source.name} (копія)`, current_version_id: version.id, is_active: false,
+    ...source, id: templateId, name: `${source.name} (copy)`, current_version_id: version.id, is_active: false,
     package_ids: [...source.package_ids],
   };
   db.templates.push(template);
   addAudit({
     action: 'create', entity_type: 'template_version', entity_id: version.id, patient_id: null,
-    description: `Збережено версію 1 шаблону «${template.name}» (копія «${source.name}»)`,
+    description: `Saved version 1 of template «${template.name}» (copy of «${source.name}»)`,
   });
   return { ...template };
 }
 
-// Приклад пацієнта і лікаря для попереднього перегляду шаблону.
+// Sample patient and doctor for the template preview.
 export async function getTemplatePreviewContext(specialty: string | null): Promise<{ patient: Patient; doctor: Staff }> {
   await delay();
   const doctors = db.staff.filter((s) => s.is_active && s.specialty);
@@ -505,7 +506,7 @@ export async function getTemplatePreviewContext(specialty: string | null): Promi
   return { patient: db.patients[0], doctor };
 }
 
-// ============ Услуги ============
+// ============ Services ============
 
 export async function searchServices(query: string, category?: ServiceCategory): Promise<Service[]> {
   await delay(80);
@@ -536,24 +537,24 @@ export async function saveServicePackage(input: {
 }): Promise<ServicePackage> {
   await delay();
   const name = input.name.trim();
-  if (!name) throw new Error('Вкажіть назву пакета');
-  if (!input.items.length) throw new Error('Додайте хоча б одну послугу');
+  if (!name) throw new Error('Enter a bundle name');
+  if (!input.items.length) throw new Error('Add at least one service');
   for (const item of input.items) {
-    if (!Number.isInteger(item.quantity) || item.quantity < 1) throw new Error('Кількість має бути цілим числом від 1');
-    if (!db.services.some((s) => s.id === item.service_id)) throw new Error('Послугу не знайдено');
+    if (!Number.isInteger(item.quantity) || item.quantity < 1) throw new Error('Quantity must be a whole number from 1');
+    if (!db.services.some((s) => s.id === item.service_id)) throw new Error('Service not found');
   }
   if (db.servicePackages.some((p) => p.id !== input.id && p.name.toLowerCase() === name.toLowerCase())) {
-    throw new Error('Пакет з такою назвою вже існує');
+    throw new Error('A bundle with this name already exists');
   }
   const items = input.items.map((i) => ({ service_id: i.service_id, quantity: i.quantity }));
   const existing = input.id ? db.servicePackages.find((p) => p.id === input.id) : undefined;
-  if (input.id && !existing) throw new Error('Пакет не знайдено');
+  if (input.id && !existing) throw new Error('Bundle not found');
   if (existing) {
     existing.name = name;
     existing.items = items;
     addAudit({
       action: 'update', entity_type: 'service_package', entity_id: existing.id, patient_id: null,
-      description: `Оновлено пакет послуг «${name}»`,
+      description: `Updated service bundle «${name}»`,
     });
     return clonePackage(existing);
   }
@@ -561,7 +562,7 @@ export async function saveServicePackage(input: {
   db.servicePackages.push(created);
   addAudit({
     action: 'create', entity_type: 'service_package', entity_id: created.id, patient_id: null,
-    description: `Створено пакет послуг «${name}»`,
+    description: `Created service bundle «${name}»`,
   });
   return clonePackage(created);
 }
@@ -569,22 +570,22 @@ export async function saveServicePackage(input: {
 export async function deleteServicePackage(id: string): Promise<void> {
   await delay();
   const index = db.servicePackages.findIndex((p) => p.id === id);
-  if (index === -1) throw new Error('Пакет не знайдено');
+  if (index === -1) throw new Error('Bundle not found');
   const [removed] = db.servicePackages.splice(index, 1);
-  // Шаблони, де пакет був обраний, просто перестають його показувати.
+  // Templates that had the bundle simply stop showing it.
   for (const template of db.templates) template.package_ids = template.package_ids.filter((p) => p !== removed.id);
   addAudit({
     action: 'delete', entity_type: 'service_package', entity_id: removed.id, patient_id: null,
-    description: `Видалено пакет послуг «${removed.name}»`,
+    description: `Deleted service bundle «${removed.name}»`,
   });
 }
 
-// ============ Довідник послуг (налаштування) ============
+// ============ Service catalogue (settings) ============
 
 export type ServiceFilters = {
   query?: string;
   category?: ServiceCategory;
-  source?: string; // 'crm' або назва лабораторії
+  source?: string; // 'crm' or a laboratory name
   sortBy?: 'name' | 'price';
   sortDir?: 'asc' | 'desc';
 };
@@ -594,7 +595,7 @@ export type PriceImportRow = { code: string | null; name: string; price: number 
 export type PriceImportDiff = {
   added: PriceImportRow[];
   changed: { service: Service; old_price: number; new_price: number }[];
-  missing: Service[]; // активні послуги лабораторії, яких немає у файлі
+  missing: Service[]; // the laboratory's active services that are not in the file
   unchanged: number;
 };
 
@@ -607,15 +608,15 @@ export async function listAllServices(filters: ServiceFilters = {}): Promise<Ser
     .filter((s) => !filters.source || (filters.source === 'crm' ? s.source === 'crm' : s.lab_name === filters.source))
     .filter((s) => !q || s.name.toLowerCase().includes(q) || (s.code ?? '').toLowerCase().includes(q))
     .map((s) => ({ ...s }))
-    .sort((a, b) => (filters.sortBy === 'price' ? (a.price - b.price) * dir : a.name.localeCompare(b.name, 'uk') * dir));
+    .sort((a, b) => (filters.sortBy === 'price' ? (a.price - b.price) * dir : a.name.localeCompare(b.name, 'en') * dir));
 }
 
-// Джерела для фільтра: «crm» + назви лабораторій, що вже є у довіднику.
+// Sources for the filter: «crm» + the laboratory names already in the catalogue.
 export async function listServiceLabNames(): Promise<string[]> {
   await delay(50);
   const names = new Set<string>();
   for (const s of db.services) if (s.lab_name) names.add(s.lab_name);
-  return [...names].sort((a, b) => a.localeCompare(b, 'uk'));
+  return [...names].sort((a, b) => a.localeCompare(b, 'en'));
 }
 
 export async function updateService(
@@ -624,12 +625,12 @@ export async function updateService(
 ): Promise<Service> {
   await delay(80);
   const service = db.services.find((s) => s.id === id);
-  if (!service) throw new Error('Послугу не знайдено');
+  if (!service) throw new Error('Service not found');
   if (patch.category !== undefined) service.category = patch.category;
   if (patch.is_active !== undefined) service.is_active = patch.is_active;
   addAudit({
     action: 'update', entity_type: 'service', entity_id: service.id, patient_id: null,
-    description: `Оновлено послугу «${service.name}»`,
+    description: `Updated service «${service.name}»`,
   });
   return { ...service };
 }
@@ -645,7 +646,7 @@ function normalizeImportRows(rows: PriceImportRow[]): PriceImportRow[] {
     const name = row.name.trim();
     if (!name || !Number.isFinite(row.price) || row.price < 0) continue;
     const normalized = { code: row.code?.trim() || null, name, price: Math.round(row.price * 100) / 100 };
-    byKey.set(importKey(normalized), normalized); // дублікати у файлі: перемагає останній рядок
+    byKey.set(importKey(normalized), normalized); // duplicates in the file: the last row wins
   }
   return [...byKey.values()];
 }
@@ -657,7 +658,7 @@ function labServices(labName: string) {
 
 export async function previewPriceImport(labName: string, rows: PriceImportRow[]): Promise<PriceImportDiff> {
   await delay();
-  if (!labName.trim()) throw new Error('Вкажіть лабораторію');
+  if (!labName.trim()) throw new Error('Enter the laboratory');
   const existing = labServices(labName);
   const byKey = new Map(existing.map((s) => [importKey(s), s]));
   const diff: PriceImportDiff = { added: [], changed: [], missing: [], unchanged: 0 };
@@ -674,7 +675,7 @@ export async function previewPriceImport(labName: string, rows: PriceImportRow[]
   return diff;
 }
 
-// Ціни у вже створених призначеннях не змінюються: рядки призначення зберігають unit_price на момент створення.
+// Prices in existing care plans don't change: care plan items keep the unit_price from creation time.
 export async function applyPriceImport(
   labName: string,
   rows: PriceImportRow[],
@@ -682,7 +683,7 @@ export async function applyPriceImport(
 ): Promise<{ added: number; updated: number; deactivated: number }> {
   await delay();
   const lab = labName.trim();
-  if (!lab) throw new Error('Вкажіть лабораторію');
+  if (!lab) throw new Error('Enter the laboratory');
   const existing = labServices(lab);
   const byKey = new Map(existing.map((s) => [importKey(s), s]));
   const labDisplayName = existing[0]?.lab_name ?? lab;
@@ -712,23 +713,23 @@ export async function applyPriceImport(
   }
   addAudit({
     action: 'update', entity_type: 'service', entity_id: null, patient_id: null,
-    description: `Імпорт прайсу «${labDisplayName}»: додано ${added}, оновлено ${updated}, вимкнено ${deactivated}`,
+    description: `Price list import «${labDisplayName}»: ${added} added, ${updated} updated, ${deactivated} deactivated`,
   });
   return { added, updated, deactivated };
 }
 
-// ============ Сохранение документа по шаблону → призначення ============
+// ============ Saving a template document → care plan ============
 
-// Окрема нумерація для кожного типу документа.
+// Separate numbering for each document kind.
 const DOCUMENT_NUMBER_PREFIXES: Record<TemplateKind, string> = {
-  consultation: 'КВ-',
-  ultrasound: 'УЗД-',
-  lab: 'АН-',
-  certificate: 'ДВ-',
-  other: 'ДОК-',
+  consultation: 'CN-',
+  ultrasound: 'US-',
+  lab: 'LAB-',
+  certificate: 'CRT-',
+  other: 'DOC-',
 };
 
-// Наскрізна в межах типу: наступний після найбільшого наявного номера з тим самим префіксом.
+// Continuous within a kind: the next one after the largest existing number with the same prefix.
 function nextDocumentNumber(kind: TemplateKind): string {
   const prefix = DOCUMENT_NUMBER_PREFIXES[kind];
   const last = db.documents.reduce((max, d) => {
@@ -738,9 +739,9 @@ function nextDocumentNumber(kind: TemplateKind): string {
   return `${prefix}${String(last + 1).padStart(6, '0')}`;
 }
 
-// Будь-який тип шаблону. Призначення формується з блоків «Рекомендовані послуги», якщо вони є в шаблоні: послуги
-// з довідника й «поза клінікою» (без ціни). rec_external — лише у старих версіях шаблонів (сумісність).
-// Створювати й редагувати документ може той, хто може створювати документи цього типу (canCreateKind).
+// Any template kind. The care plan is built from the services blocks, if the template has them: catalogue services
+// and External ones (no price). rec_external exists only in old template versions (compatibility).
+// A document can be created and edited by whoever may create documents of this kind (canCreateKind).
 export async function saveDocument(input: {
   documentId?: string; patientId: string; templateVersionId: string; title: string; values: DocumentValues;
 }): Promise<{ document: MedDocument; prescriptionId: string | null; prescriptionLocked: boolean }> {
@@ -754,7 +755,7 @@ export async function saveDocument(input: {
     .flatMap((s) => s.blocks)
     .filter((b): b is ServicesBlock => b.kind === 'services');
 
-  if (!canCreateKind(user.role, template.kind)) throw new Error('Немає прав на документи цього типу');
+  if (!canCreateKind(user.role, template.kind)) throw new Error('You have no access to documents of this kind');
 
   let doc = input.documentId ? db.documents.find((d) => d.id === input.documentId) : undefined;
   if (doc) {
@@ -771,10 +772,10 @@ export async function saveDocument(input: {
     doc.updated_at = now;
     addAudit({
       action: 'update', entity_type: 'document', entity_id: doc.id, patient_id: doc.patient_id,
-      description: `Оновлено документ «${doc.title}»`,
+      description: `Updated document «${doc.title}»`,
     });
   } else {
-    if (!template.is_active) throw new Error('Шаблон вимкнено');
+    if (!template.is_active) throw new Error('The template is deactivated');
     doc = {
       id: uid('d'), patient_id: input.patientId, kind: 'template', template_version_id: version.id,
       folder_id: template.folder_id, title: input.title, number: nextDocumentNumber(template.kind),
@@ -784,11 +785,11 @@ export async function saveDocument(input: {
     db.documents.push(doc);
     addAudit({
       action: 'create', entity_type: 'document', entity_id: doc.id, patient_id: doc.patient_id,
-      description: `Створено документ «${doc.title}»`,
+      description: `Created document «${doc.title}»`,
     });
   }
 
-  // Собираем услуги из всех блоков kind = 'services' (из сохранённых значений документа)
+  // Collect the services from every kind = 'services' block (from the document's saved values)
   const savedValues = doc.values ?? {};
   const selected = serviceBlocks.flatMap((b) =>
     ((savedValues[b.id] as ServiceSelection[] | undefined) ?? []).map((sel) => ({ ...sel, section: b.category })),
@@ -803,7 +804,7 @@ export async function saveDocument(input: {
   if (!rx) {
     rx = {
       id: uid('rx'), patient_id: input.patientId, doctor_id: user.id, source_document_id: doc.id,
-      title: `Призначення з візиту від ${doc.document_date.split('-').reverse().join('.')}`,
+      title: carePlanTitle(doc.document_date),
       valid_until: defaultValidUntil(now), external_recommendations: external, status: 'active', locked_at: null, created_at: now,
       deleted_at: null, deleted_by: null,
     };
@@ -832,17 +833,17 @@ export async function saveDocument(input: {
     action: rxExisted ? 'update' : 'create', entity_type: 'prescription', entity_id: rx.id,
     patient_id: rx.patient_id, actor_type: 'system',
     description: rxExisted
-      ? 'Оновлено призначення'
-      : `Сформовано призначення з ${template.kind === 'consultation' ? 'висновку' : 'документа'}`,
+      ? 'Updated the care plan'
+      : `Created a care plan from the ${template.kind === 'consultation' ? 'consultation note' : 'document'}`,
   });
   return { document: doc, prescriptionId: rx.id, prescriptionLocked: false };
 }
 
-// ============ Призначення ============
+// ============ Care plans ============
 
 function summarize(rxId: string): PrescriptionSummary {
   const rx = db.prescriptions.find((p) => p.id === rxId)!;
-  // Услуги поза клінікою не входят ни в суммы, ни в % выполнения.
+  // External services count in neither the totals nor the completion %.
   const items = db.prescriptionItems.filter((i) => i.prescription_id === rx.id && i.service_id !== null);
   const ff = db.prescriptionFulfillments.filter((f) => items.some((i) => i.id === f.prescription_item_id));
   const total = items.reduce((s, i) => s + i.quantity * i.unit_price * (1 - i.discount_pct / 100), 0);
@@ -896,8 +897,8 @@ export function getPrescriptionDisplayStatus(summary: PrescriptionSummary): Pres
 }
 
 export type PrescriptionFilters = {
-  from?: string; // ISO date, включно
-  to?: string; // ISO date, включно
+  from?: string; // ISO date, inclusive
+  to?: string; // ISO date, inclusive
   doctorId?: string;
   status?: PrescriptionDisplayStatus;
 };
@@ -908,14 +909,14 @@ export type PrescriptionDoctorStats = {
   count: number;
   total_amount: number;
   paid_amount: number;
-  completion_pct: number; // середнє по призначеннях лікаря
+  completion_pct: number; // average over the doctor's care plans
 };
 
 export type PrescriptionStats = {
   count: number;
   total_amount: number;
   paid_amount: number;
-  completion_pct: number; // середнє по всіх призначеннях
+  completion_pct: number; // average over all care plans
   by_doctor: PrescriptionDoctorStats[];
 };
 
@@ -964,7 +965,7 @@ export async function getPrescriptionStats(range: { from: string; to: string }):
   };
 }
 
-// Призначення, створені понад `days` днів тому, за якими нічого не виконано
+// Care plans created more than `days` days ago with nothing fulfilled
 export async function listStalePrescriptions(days: number): Promise<PrescriptionSummary[]> {
   await delay();
   const threshold = Date.now() - days * 24 * 60 * 60 * 1000;
@@ -975,7 +976,7 @@ export async function listStalePrescriptions(days: number): Promise<Prescription
     .sort((a, b) => a.created_at.localeCompare(b.created_at));
 }
 
-// service — null у послуги поза клінікою (є лише custom_name).
+// service is null for an External service (only custom_name).
 export async function getPrescription(id: string): Promise<{
   summary: PrescriptionSummary; items: (PrescriptionItem & { service: Service | null; fulfilled_qty: number })[];
 } | null> {
@@ -993,9 +994,9 @@ export async function getPrescription(id: string): Promise<{
   return { summary: summarize(id), items };
 }
 
-export const PRESCRIPTION_LOCKED_MESSAGE = 'Призначення вже оплачене. Для змін створіть нове призначення';
+export const PRESCRIPTION_LOCKED_MESSAGE = 'This care plan has been paid. Create a new care plan to make changes';
 
-// Строк дії нового призначення. ? 30 днів — пропозиція, підтвердити у клієнта (docs/CONTEXT.md → «Ще відкрито»).
+// Term of a new care plan. 30 days is a proposal still to be confirmed with the clinic.
 export const PRESCRIPTION_VALID_DAYS = 30;
 
 /** valid_until for a prescription created on `fromIso` (a date or a datetime): + PRESCRIPTION_VALID_DAYS. */
@@ -1005,16 +1006,16 @@ export function defaultValidUntil(fromIso: string): string {
   return date.toISOString().slice(0, 10);
 }
 
-// Створювати й змінювати призначення можуть лікар, медперсонал і керівник; ресепшн і контакт-центр — лише
-// знижку (updatePrescriptionDiscounts), перегляд і друк (docs/CONTEXT.md). Видаляти — лише керівник.
+// Doctors, nurses and the clinic manager create and change care plans; front desk and contact centre only set the
+// discount (updatePrescriptionDiscounts), view and print. Only the clinic manager deletes.
 export const PRESCRIPTION_EDITOR_ROLES: readonly StaffRole[] = ['manager', 'doctor', 'medical_staff'];
 
 export function canEditPrescriptions(role: StaffRole): boolean {
   return PRESCRIPTION_EDITOR_ROLES.includes(role);
 }
 
-// Знижку в призначенні задає будь-яка роль, зокрема ресепшн і контакт-центр (лише знижку: послуги й кількість —
-// тільки PRESCRIPTION_EDITOR_ROLES). Оплачене призначення закрите для всіх правок.
+// Any role sets the discount in a care plan, front desk and contact centre included (the discount only: services and
+// quantities — PRESCRIPTION_EDITOR_ROLES only). A paid care plan is closed to all edits.
 export const PRESCRIPTION_DISCOUNT_ROLES: readonly StaffRole[] = [
   'manager', 'doctor', 'medical_staff', 'reception', 'contact_center',
 ];
@@ -1030,53 +1031,49 @@ export async function updatePrescriptionDiscounts(
 ): Promise<PrescriptionSummary> {
   await delay();
   const user = await getCurrentUser();
-  if (!canSetPrescriptionDiscount(user.role)) throw new Error('Немає прав змінювати знижку');
+  if (!canSetPrescriptionDiscount(user.role)) throw new Error('You have no access to change the discount');
   const rx = findActivePrescription(id);
   if (rx.locked_at) throw new Error(PRESCRIPTION_LOCKED_MESSAGE);
   for (const input of items) {
     const item = db.prescriptionItems.find((i) => i.id === input.id && i.prescription_id === rx.id);
-    if (!item || item.service_id === null) throw new Error('Позицію не знайдено');
-    if (!(input.discount_pct >= 0 && input.discount_pct <= 100)) throw new Error('Знижка має бути від 0 до 100%');
+    if (!item || item.service_id === null) throw new Error('Item not found');
+    if (!(input.discount_pct >= 0 && input.discount_pct <= 100)) throw new Error('The discount must be between 0 and 100%');
   }
   for (const input of items) {
     db.prescriptionItems.find((i) => i.id === input.id)!.discount_pct = input.discount_pct;
   }
   addAudit({
     action: 'update', entity_type: 'prescription', entity_id: rx.id, patient_id: rx.patient_id,
-    description: `Змінено знижку в призначенні «${rx.title}»`,
+    description: `Changed the discount in care plan «${rx.title}»`,
   });
   return summarize(rx.id);
 }
 
 async function requirePrescriptionEditor(): Promise<Staff> {
   const user = await getCurrentUser();
-  if (!canEditPrescriptions(user.role)) throw new Error('Ресепшн і контакт-центр можуть змінювати лише знижку');
+  if (!canEditPrescriptions(user.role)) throw new Error('Front desk and contact centre can only change the discount');
   return user;
-}
-
-function formatIsoDate(iso: string) {
-  return iso.slice(0, 10).split('-').reverse().join('.');
 }
 
 function findActivePrescription(id: string) {
   const rx = db.prescriptions.find((p) => p.id === id && !p.deleted_at);
-  if (!rx) throw new Error('Призначення не знайдено');
+  if (!rx) throw new Error('Care plan not found');
   return rx;
 }
 
 function validateItems(items: { quantity: number; discount_pct: number }[]) {
   for (const item of items) {
-    if (!Number.isInteger(item.quantity) || item.quantity < 1) throw new Error('Кількість має бути цілим числом від 1');
-    if (!(item.discount_pct >= 0 && item.discount_pct <= 100)) throw new Error('Знижка має бути від 0 до 100%');
+    if (!Number.isInteger(item.quantity) || item.quantity < 1) throw new Error('Quantity must be a whole number from 1');
+    if (!(item.discount_pct >= 0 && item.discount_pct <= 100)) throw new Error('The discount must be between 0 and 100%');
   }
 }
 
-// Рядок призначення: послуга з довідника (service_id) або поза клінікою (custom_name, без ціни й знижки).
+// A care plan line: a catalogue service (service_id) or an External one (custom_name, no price or discount).
 type PrescriptionItemInput = {
   id?: string; service_id: string | null; custom_name?: string | null; quantity: number; discount_pct: number;
 };
 
-// Створює рядки призначення. Існуючі рядки (за id) зберігають ціну на момент створення та історію виконання.
+// Creates the care plan lines. Existing lines (by id) keep their creation-time price and fulfilment history.
 function applyPrescriptionItems(rxId: string, items: PrescriptionItemInput[]) {
   validateItems(items);
   const existing = db.prescriptionItems.filter((i) => i.prescription_id === rxId);
@@ -1084,7 +1081,7 @@ function applyPrescriptionItems(rxId: string, items: PrescriptionItemInput[]) {
 
   for (const removed of existing.filter((i) => !keptIds.has(i.id))) {
     if (db.prescriptionFulfillments.some((f) => f.prescription_item_id === removed.id)) {
-      throw new Error('Не можна видалити послугу, яку вже виконано');
+      throw new Error('A service that has already been fulfilled cannot be removed');
     }
   }
   for (let i = db.prescriptionItems.length - 1; i >= 0; i--) {
@@ -1101,7 +1098,7 @@ function applyPrescriptionItems(rxId: string, items: PrescriptionItemInput[]) {
     }
     const customName = input.custom_name?.trim();
     if (input.service_id === null) {
-      if (!customName) throw new Error('Вкажіть назву послуги поза клінікою');
+      if (!customName) throw new Error('Enter the name of the External service');
       db.prescriptionItems.push({
         id: uid('ri'), prescription_id: rxId, service_id: null, custom_name: customName, section: 'other',
         quantity: input.quantity, unit_price: 0, discount_pct: 0,
@@ -1109,7 +1106,7 @@ function applyPrescriptionItems(rxId: string, items: PrescriptionItemInput[]) {
       continue;
     }
     const svc = db.services.find((s) => s.id === input.service_id);
-    if (!svc) throw new Error('Послугу не знайдено');
+    if (!svc) throw new Error('Service not found');
     db.prescriptionItems.push({
       id: uid('ri'), prescription_id: rxId, service_id: svc.id, custom_name: null, section: svc.category,
       quantity: input.quantity, unit_price: svc.price, discount_pct: input.discount_pct,
@@ -1117,7 +1114,7 @@ function applyPrescriptionItems(rxId: string, items: PrescriptionItemInput[]) {
   }
 }
 
-// Нові призначення не мають вільного тексту «поза клінікою»: такі послуги — рядки з custom_name.
+// New care plans have no free «External» text: such services are lines with custom_name.
 export async function createPrescription(input: {
   patientId: string;
   title?: string;
@@ -1125,12 +1122,12 @@ export async function createPrescription(input: {
   items: PrescriptionItemInput[];
 }): Promise<PrescriptionSummary> {
   await delay();
-  if (!input.items.length) throw new Error('Додайте хоча б одну послугу');
+  if (!input.items.length) throw new Error('Add at least one service');
   const user = await requirePrescriptionEditor();
   const now = new Date().toISOString();
   const rx = {
     id: uid('rx'), patient_id: input.patientId, doctor_id: user.id, source_document_id: null,
-    title: input.title?.trim() || `Призначення з візиту від ${formatIsoDate(now)}`,
+    title: input.title?.trim() || carePlanTitle(now),
     // Not passed → the default term; an explicitly cleared date (null / '') means no term.
     valid_until: input.valid_until === undefined ? defaultValidUntil(now) : input.valid_until || null,
     external_recommendations: null,
@@ -1140,7 +1137,7 @@ export async function createPrescription(input: {
   db.prescriptions.push(rx);
   addAudit({
     action: 'create', entity_type: 'prescription', entity_id: rx.id, patient_id: rx.patient_id,
-    description: `Створено призначення «${rx.title}»`,
+    description: `Created care plan «${rx.title}»`,
   });
   return summarize(rx.id);
 }
@@ -1158,7 +1155,7 @@ export async function updatePrescription(
   if (input.valid_until !== undefined) rx.valid_until = input.valid_until || null;
   addAudit({
     action: 'update', entity_type: 'prescription', entity_id: rx.id, patient_id: rx.patient_id,
-    description: `Оновлено призначення «${rx.title}»`,
+    description: `Updated care plan «${rx.title}»`,
   });
   return summarize(rx.id);
 }
@@ -1166,13 +1163,13 @@ export async function updatePrescription(
 export async function deletePrescription(id: string): Promise<void> {
   await delay();
   const user = await getCurrentUser();
-  if (user.role !== 'manager') throw new Error('Видаляти призначення може лише керівник');
+  if (user.role !== 'manager') throw new Error('Only the clinic manager can delete care plans');
   const rx = findActivePrescription(id);
   rx.deleted_at = new Date().toISOString();
   rx.deleted_by = user.id;
   addAudit({
     action: 'delete', entity_type: 'prescription', entity_id: rx.id, patient_id: rx.patient_id,
-    description: `Видалено призначення «${rx.title}»`,
+    description: `Deleted care plan «${rx.title}»`,
   });
 }
 
@@ -1183,7 +1180,7 @@ export async function duplicatePrescription(rxId: string): Promise<PrescriptionS
   const now = new Date().toISOString();
   const rx = {
     id: uid('rx'), patient_id: source.patient_id, doctor_id: user.id, source_document_id: null,
-    title: `Призначення з візиту від ${formatIsoDate(now)}`, valid_until: defaultValidUntil(now),
+    title: carePlanTitle(now), valid_until: defaultValidUntil(now),
     external_recommendations: source.external_recommendations,
     status: 'active' as const, locked_at: null, created_at: now, deleted_at: null, deleted_by: null,
   };
@@ -1198,12 +1195,12 @@ export async function duplicatePrescription(rxId: string): Promise<PrescriptionS
   db.prescriptions.push(rx);
   addAudit({
     action: 'create', entity_type: 'prescription', entity_id: rx.id, patient_id: rx.patient_id,
-    description: `Створено копію призначення «${source.title}»`,
+    description: `Created a copy of care plan «${source.title}»`,
   });
   return summarize(rx.id);
 }
 
-// ============ Робоче місце ============
+// ============ Workplace ============
 
 export type TodayVisit = CrmVisit & {
   patient: Patient | null;
@@ -1227,15 +1224,15 @@ export async function listTodayVisits(staffId: string): Promise<TodayVisit[]> {
     });
 }
 
-// ============ Настройки и история ============
+// ============ Settings and history ============
 
 export async function getClinicSettings(): Promise<ClinicSettings> {
   await delay();
   return { ...db.clinicSettings };
 }
 
-// Бланк призначення (Налаштування → Шапки і підвали → «Бланк призначення»): шапка й підвал призначень —
-// окремі картинки, не з бібліотеки. null — прибрати.
+// Care plan letterhead (Settings → Headers & footers → «Care plan letterhead»): the care plan header and footer —
+// separate images, not from the library. null — remove.
 export async function updatePrescriptionBlank(
   input: Partial<Pick<ClinicSettings, 'prescription_header_image_url' | 'prescription_footer_image_url'>>,
 ): Promise<ClinicSettings> {
@@ -1243,14 +1240,14 @@ export async function updatePrescriptionBlank(
   Object.assign(db.clinicSettings, input);
   addAudit({
     action: 'update', entity_type: 'clinic_settings', entity_id: null, patient_id: null,
-    description: 'Оновлено бланк призначення',
+    description: 'Updated the care plan letterhead',
   });
   return getClinicSettings();
 }
 
-// ============ Бланки: шапки і підвали (для шаблонів) ============
-// Бібліотека в Налаштуваннях: лише картинки на всю ширину листа. Шаблон обирає шапку й підвал
-// (header_id / footer_id, null — без); документ без шаблону — шапка за замовчуванням. Призначення — свій бланк.
+// ============ Letterheads: headers and footers (for templates) ============
+// The library in Settings: only images across the sheet. A template picks a header and a footer
+// (header_id / footer_id, null — none); a document without a template gets the default header. Care plans have their own.
 
 export async function listLetterheads(): Promise<Letterhead[]> {
   await delay();
@@ -1287,22 +1284,22 @@ export async function getLetterheadUsage(): Promise<Record<string, { id: string;
 
 function findLetterhead(id: string) {
   const letterhead = db.letterheads.find((l) => l.id === id);
-  if (!letterhead) throw new Error('Бланк не знайдено');
+  if (!letterhead) throw new Error('Letterhead not found');
   return letterhead;
 }
 
-const letterheadLabel = (kind: LetterheadKind) => (kind === 'header' ? 'шапку' : 'підвал');
+const letterheadLabel = (kind: LetterheadKind) => (kind === 'header' ? 'header' : 'footer');
 
 export async function createLetterhead(input: { kind: LetterheadKind; name: string; image_url: string }): Promise<Letterhead> {
   await delay();
   const name = input.name.trim();
-  if (!name) throw new Error('Вкажіть назву');
-  if (!input.image_url) throw new Error('Завантажте зображення');
+  if (!name) throw new Error('Enter a name');
+  if (!input.image_url) throw new Error('Upload an image');
   const letterhead: Letterhead = { id: uid('lh'), kind: input.kind, name, image_url: input.image_url, is_default: false };
   db.letterheads.push(letterhead);
   addAudit({
     action: 'create', entity_type: 'letterhead', entity_id: letterhead.id, patient_id: null,
-    description: `Додано ${letterheadLabel(letterhead.kind)} «${name}»`,
+    description: `Added ${letterheadLabel(letterhead.kind)} «${name}»`,
   });
   return { ...letterhead };
 }
@@ -1313,16 +1310,16 @@ export async function updateLetterhead(id: string, input: { name?: string; image
   const letterhead = findLetterhead(id);
   if (input.name !== undefined) {
     const name = input.name.trim();
-    if (!name) throw new Error('Вкажіть назву');
+    if (!name) throw new Error('Enter a name');
     letterhead.name = name;
   }
   if (input.image_url !== undefined) {
-    if (!input.image_url) throw new Error('Завантажте зображення');
+    if (!input.image_url) throw new Error('Upload an image');
     letterhead.image_url = input.image_url;
   }
   addAudit({
     action: 'update', entity_type: 'letterhead', entity_id: letterhead.id, patient_id: null,
-    description: `Оновлено ${letterheadLabel(letterhead.kind)} «${letterhead.name}»`,
+    description: `Updated ${letterheadLabel(letterhead.kind)} «${letterhead.name}»`,
   });
   return { ...letterhead };
 }
@@ -1330,11 +1327,11 @@ export async function updateLetterhead(id: string, input: { name?: string; image
 export async function setDefaultLetterhead(id: string): Promise<void> {
   await delay();
   const letterhead = findLetterhead(id);
-  if (letterhead.kind !== 'header') throw new Error('За замовчуванням буває лише шапка');
+  if (letterhead.kind !== 'header') throw new Error('Only a header can be the default');
   for (const l of db.letterheads) if (l.kind === 'header') l.is_default = l.id === id;
   addAudit({
     action: 'update', entity_type: 'letterhead', entity_id: letterhead.id, patient_id: null,
-    description: `Шапка за замовчуванням: «${letterhead.name}»`,
+    description: `Default header: «${letterhead.name}»`,
   });
 }
 
@@ -1353,7 +1350,7 @@ export async function deleteLetterhead(id: string): Promise<void> {
   }
   addAudit({
     action: 'delete', entity_type: 'letterhead', entity_id: letterhead.id, patient_id: null,
-    description: `Видалено ${letterheadLabel(letterhead.kind)} «${letterhead.name}»`,
+    description: `Deleted ${letterheadLabel(letterhead.kind)} «${letterhead.name}»`,
   });
 }
 

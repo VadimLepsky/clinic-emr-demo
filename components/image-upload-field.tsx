@@ -13,7 +13,7 @@ function readAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onload = () => resolve(String(reader.result))
-    reader.onerror = () => reject(new Error('Не вдалося прочитати файл'))
+    reader.onerror = () => reject(new Error('Could not read the file'))
     reader.readAsDataURL(file)
   })
 }
@@ -31,7 +31,7 @@ type ImageUploadFieldProps = {
 }
 
 // Upload control for document images (clinic header, template banner and footer logo, image blocks):
-// PNG / JPG / SVG up to 5 MB, stored as a data URL, with a preview and «Видалити».
+// PNG / JPG / SVG up to 5 MB, stored as a data URL, with a preview and «Remove».
 export function ImageUploadField({
   label,
   value,
@@ -46,12 +46,12 @@ export function ImageUploadField({
 
   const handleFile = async (file: File | undefined) => {
     if (!file) return
-    if (!ACCEPTED_TYPES.includes(file.type)) return void toast.error('Підтримуються PNG, JPG та SVG')
-    if (file.size > MAX_BYTES) return void toast.error('Файл завеликий: максимум 5 МБ')
+    if (!ACCEPTED_TYPES.includes(file.type)) return void toast.error('PNG, JPG and SVG are supported')
+    if (file.size > MAX_BYTES) return void toast.error('The file is too large: 5 MB at most')
     try {
       onChange(await readAsDataUrl(file))
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Не вдалося завантажити зображення')
+      toast.error(error instanceof Error ? error.message : 'Could not upload the image')
     }
   }
 
@@ -72,7 +72,7 @@ export function ImageUploadField({
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={value}
-            alt={`Поточне зображення: ${label}`}
+            alt={`Current image: ${label}`}
             onLoad={(e) => setNaturalWidth(e.currentTarget.naturalWidth)}
             className="max-h-full max-w-full object-contain"
           />
@@ -95,7 +95,7 @@ export function ImageUploadField({
         />
         <Button type="button" variant="outline" size="sm" onClick={() => inputRef.current?.click()}>
           <UploadIcon aria-hidden="true" />
-          {value ? 'Замінити' : 'Завантажити'}
+          {value ? 'Replace' : 'Upload'}
         </Button>
         {value && (
           <Button
@@ -108,15 +108,15 @@ export function ImageUploadField({
             }}
           >
             <Trash2Icon aria-hidden="true" />
-            Видалити
+            Remove
           </Button>
         )}
       </div>
       <p className="text-sm text-muted-foreground">
-        {hint ?? 'PNG, JPG або SVG, до 5 МБ.'}
+        {hint ?? 'PNG, JPG or SVG, up to 5 MB.'}
         {tooNarrow && (
           <span className="block text-status-warning-fg">
-            {`Ширина ${naturalWidth} px — для чіткого друку краще від ${minWidth} px.`}
+            {`Width ${naturalWidth} px — ${minWidth} px or more prints sharper.`}
           </span>
         )}
       </p>

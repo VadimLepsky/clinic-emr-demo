@@ -19,14 +19,14 @@ export function PatientHeader({ patient }: { patient: Patient }) {
       <PageHeader
         titleId="patient-name"
         title={patient.full_name}
-        back={{ href: '/patients', label: 'До списку пацієнтів' }}
+        back={{ href: '/patients', label: 'Back to patients' }}
       />
       <Card plain>
         <dl className="grid grid-cols-2 gap-x-8 gap-y-5 px-8 py-6 sm:grid-cols-4">
           <Field label="CRM ID" value={String(patient.crm_client_id)} />
-          <Field label="Дата народження" value={formatDate(patient.birth_date)} />
-          <Field label="Вік" value={formatAge(calcAge(patient.birth_date))} />
-          <Field label="Стать" value={patient.sex ? sexLabels[patient.sex] : '—'} />
+          <Field label="Date of birth" value={formatDate(patient.birth_date)} />
+          <Field label="Age" value={formatAge(calcAge(patient.birth_date))} />
+          <Field label="Sex" value={patient.sex ? sexLabels[patient.sex] : '—'} />
         </dl>
       </Card>
     </section>

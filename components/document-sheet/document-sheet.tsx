@@ -15,7 +15,7 @@ import type { SearchServices } from '@/components/template-form/services-context
 import { TemplateForm } from '@/components/template-form/template-form'
 import { templatePageAtoms } from '@/components/template-form/page-layout'
 import { interpolate } from '@/components/template-form/utils'
-import { formatDate } from '@/components/documents/format'
+import { formatAge, formatSheetDate } from '@/lib/format'
 import { SheetInfoGrid, SnapImage, sheetPaperClass } from './grid'
 import { SheetFooterImage, SheetHeader } from './letterhead'
 import { PagedSheet, type SheetAtom } from './paged-sheet'
@@ -48,7 +48,7 @@ type DocumentSheetProps = {
   className?: string
 }
 
-const sexLabels: Record<NonNullable<Patient['sex']>, string> = { male: 'Чоловіча', female: 'Жіноча' }
+const sexLabels: Record<NonNullable<Patient['sex']>, string> = { male: 'Male', female: 'Female' }
 
 const noop = () => {}
 
@@ -96,8 +96,8 @@ export function DocumentSheet({
 }: DocumentSheetProps) {
   const view = mode === 'view'
   const age = calcAge(patient.birth_date)
-  const documentDate = formatDate(documentDateIso)
-  const birthDate = patient.birth_date ? formatDate(patient.birth_date) : '—'
+  const documentDate = formatSheetDate(documentDateIso)
+  const birthDate = patient.birth_date ? formatSheetDate(patient.birth_date) : '—'
   const context = { patient, doctor, documentDate: documentDateIso, documentNumber }
   const { header, footer } = resolveLetterheads(letterheads, requisites)
   const showSignature = requisites?.show_signature ?? true
@@ -123,18 +123,18 @@ export function DocumentSheet({
   const hasFooter = showSignature || footerText || footerLogo || footer
   const bannerLines = (
     <>
-      <InfoLine label="П.І.Б" value={patient.full_name} strong />
+      <InfoLine label="Patient" value={patient.full_name} strong />
       <InfoLine
-        label="Дата народження"
-        value={patient.birth_date ? `${birthDate}${age === null ? '' : ` (${age} р.)`}` : '—'}
+        label="Date of birth"
+        value={patient.birth_date ? `${birthDate}${age === null ? '' : ` (${formatAge(age)})`}` : '—'}
       />
-      {documentNumber && <InfoLine label="Номер документа" value={documentNumber} />}
+      {documentNumber && <InfoLine label="Document No." value={documentNumber} />}
       {/* Doctor and date are in the signature row; without it they go here. */}
       {!showSignature && (
         <>
-          <InfoLine label="Дата прийому" value={documentDate} />
+          <InfoLine label="Visit date" value={documentDate} />
           <InfoLine
-            label="Лікар"
+            label="Doctor"
             value={doctor.specialty ? `${doctor.full_name}, ${doctor.specialty}` : doctor.full_name}
           />
         </>
@@ -169,14 +169,14 @@ export function DocumentSheet({
         node: (
           <SheetInfoGrid
             left={[
-              ['Дата', documentDate],
-              ['Медкарта №', String(patient.crm_client_id)],
-              ['Пацієнт', patient.full_name],
-              ['Дата нар.', birthDate],
+              ['Date', documentDate],
+              ['Record No.', String(patient.crm_client_id)],
+              ['Patient', patient.full_name],
+              ['Date of birth', birthDate],
             ]}
             right={[
-              ['Документ №', documentNumber ?? '—'],
-              ['Спеціаліст', doctor.full_name],
+              ['Document No.', documentNumber ?? '—'],
+              ['Doctor', doctor.full_name],
             ]}
           />
         ),
@@ -192,12 +192,12 @@ export function DocumentSheet({
         {showSignature && (
           <div className="flex flex-wrap items-end justify-between gap-x-gutter">
             <p>
-              <span className="font-semibold">Лікар:</span> {doctor.full_name}
+              <span className="font-semibold">Doctor:</span> {doctor.full_name}
               <span className="ml-6 tracking-widest" aria-hidden="true">
                 __________
               </span>
-              <span className="ml-1 text-doc-small text-muted-foreground">(підпис)</span>
-              <span className="sr-only">місце для підпису</span>
+              <span className="ml-1 text-doc-small text-muted-foreground">(signature)</span>
+              <span className="sr-only">space for the signature</span>
             </p>
             <p className="tabular-nums">{documentDate}</p>
           </div>
@@ -245,19 +245,19 @@ export function DocumentSheet({
           <div className="mt-4 grid grid-cols-2 divide-x divide-sheet-border border border-sheet-border text-xs break-inside-avoid tabular-nums">
             <InfoRows
               rows={[
-                ['Пацієнт', patient.full_name],
-                ['Вік', age === null ? '—' : `${age} р.`],
-                ['Дата народження', birthDate],
-                ['Стать', patient.sex ? sexLabels[patient.sex] : '—'],
-                ['Номер медкарти', String(patient.crm_client_id)],
+                ['Patient', patient.full_name],
+                ['Age', formatAge(age)],
+                ['Date of birth', birthDate],
+                ['Sex', patient.sex ? sexLabels[patient.sex] : '—'],
+                ['Record No.', String(patient.crm_client_id)],
               ]}
             />
             <InfoRows
               rows={[
-                ['Лікар', doctor.full_name],
-                ['Спеціалізація', doctor.specialty ?? '—'],
-                ['Дата прийому', documentDate],
-                ['Номер документа', documentNumber ?? '—'],
+                ['Doctor', doctor.full_name],
+                ['Specialty', doctor.specialty ?? '—'],
+                ['Visit date', documentDate],
+                ['Document No.', documentNumber ?? '—'],
               ]}
             />
           </div>
@@ -271,12 +271,12 @@ export function DocumentSheet({
           {showSignature && (
             <div className="flex flex-wrap items-end justify-between gap-4">
               <p>
-                <span className="font-semibold">Лікар:</span> {doctor.full_name}
+                <span className="font-semibold">Doctor:</span> {doctor.full_name}
                 <span className="ml-6 tracking-widest" aria-hidden="true">
                   __________
                 </span>
-                <span className="ml-1 text-xs text-muted-foreground">(підпис)</span>
-                <span className="sr-only">місце для підпису</span>
+                <span className="ml-1 text-xs text-muted-foreground">(signature)</span>
+                <span className="sr-only">space for the signature</span>
               </p>
               <p className="tabular-nums">{documentDate}</p>
             </div>

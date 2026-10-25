@@ -39,12 +39,12 @@ export function CompletionBar({ pct, label }: { pct: number; label: string }) {
 }
 
 type PrescriptionRowActionsProps = {
-  /** Who/what the row is about, for the accessible names («Переглянути: …»). */
+  /** Who/what the row is about, for the accessible names («View: …»). */
   subject: string
-  /** «Переглянути»: opens the prescription dialog. */
+  /** «View»: opens the care plan dialog. */
   onView?: () => void
-  /** «Карта пацієнта»: where the row itself opens the prescription (reception, contact centre), this link replaces
-   *  «Переглянути». */
+  /** «Patient record»: where the row itself opens the care plan (front desk, contact centre), this link replaces
+   *  «View». */
   patientHref?: string
   /** Prints in place (usePrintPrescription), no separate print page. */
   onPrint: () => void
@@ -70,7 +70,7 @@ export function PrescriptionRowActions({
     <div className="flex items-center justify-end gap-1">
       {patientHref && (
         <IconAction
-          label="Карта пацієнта"
+          label="Patient record"
           subject={subject}
           button={<Button variant="ghost" size="icon" nativeButton={false} render={<Link href={patientHref} />} />}
         >
@@ -78,12 +78,12 @@ export function PrescriptionRowActions({
         </IconAction>
       )}
       {onView && (
-        <IconAction label="Переглянути" subject={subject} button={<Button variant="ghost" size="icon" onClick={onView} />}>
+        <IconAction label="View" subject={subject} button={<Button variant="ghost" size="icon" onClick={onView} />}>
           <EyeIcon aria-hidden="true" />
         </IconAction>
       )}
       <IconAction
-        label="Друк"
+        label="Print"
         subject={subject}
         button={<Button variant="ghost" size="icon" onClick={onPrint} disabled={printing || printDisabled} />}
       >
@@ -91,7 +91,7 @@ export function PrescriptionRowActions({
       </IconAction>
       {onDelete && (
         <IconAction
-          label="Видалити"
+          label="Delete"
           subject={subject}
           button={
             <Button variant="ghost" size="icon" onClick={onDelete} className="text-destructive hover:text-destructive" />

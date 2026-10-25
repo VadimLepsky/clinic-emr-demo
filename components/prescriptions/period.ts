@@ -1,6 +1,6 @@
 export type Period = 'all' | 'current' | 'previous'
 
-const monthFormatter = new Intl.DateTimeFormat('uk-UA', { month: 'long', year: 'numeric' })
+const monthFormatter = new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric' })
 
 function toIso(date: Date) {
   const mm = String(date.getMonth() + 1).padStart(2, '0')

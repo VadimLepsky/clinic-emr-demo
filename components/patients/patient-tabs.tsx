@@ -4,9 +4,9 @@ import { HistoryTab } from '@/components/history/history-tab'
 import { PrescriptionsTab } from '@/components/prescriptions/prescriptions-tab'
 
 const tabs = [
-  { value: 'documents', label: 'Документи' },
-  { value: 'prescriptions', label: 'Призначення' },
-  { value: 'history', label: 'Історія змін' },
+  { value: 'documents', label: 'Documents' },
+  { value: 'prescriptions', label: 'Care plans' },
+  { value: 'history', label: 'Activity log' },
 ]
 
 export function PatientTabs({ patientId, initialTab }: { patientId: string; initialTab?: string }) {

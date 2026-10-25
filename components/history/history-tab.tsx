@@ -14,22 +14,22 @@ import { formatDate, formatTime } from '@/components/documents/format'
 type Filter = 'changes' | 'print' | 'all'
 
 const filters: { value: Filter; label: string }[] = [
-  { value: 'all', label: 'Усі' },
-  { value: 'changes', label: 'Зміни' },
-  { value: 'print', label: 'Друк' },
+  { value: 'all', label: 'All' },
+  { value: 'changes', label: 'Changes' },
+  { value: 'print', label: 'Printing' },
 ]
 
 const actionMeta: Record<AuditEntry['action'], { label: string; className: string }> = {
-  create: { label: 'Створено', className: 'bg-status-success-bg text-status-success-fg' },
-  update: { label: 'Змінено', className: 'bg-status-info-bg text-status-info-fg' },
-  delete: { label: 'Видалено', className: 'bg-status-danger-bg text-status-danger-fg' },
-  print: { label: 'Друк', className: 'bg-status-neutral-bg text-status-neutral-fg' },
+  create: { label: 'Created', className: 'bg-status-success-bg text-status-success-fg' },
+  update: { label: 'Updated', className: 'bg-status-info-bg text-status-info-fg' },
+  delete: { label: 'Deleted', className: 'bg-status-danger-bg text-status-danger-fg' },
+  print: { label: 'Printed', className: 'bg-status-neutral-bg text-status-neutral-fg' },
 }
 
 const emptyMessages: Record<Filter, string> = {
-  changes: 'Змін поки немає.',
-  print: 'Друку поки не було.',
-  all: 'Записів поки немає.',
+  changes: 'No changes yet.',
+  print: 'Nothing has been printed yet.',
+  all: 'No entries yet.',
 }
 
 function matchesFilter(entry: AuditEntry, filter: Filter) {
@@ -71,8 +71,8 @@ export function HistoryTab({ patientId }: { patientId: string }) {
   const groups = useMemo(() => groupByDay(visible), [visible])
 
   const actorName = (entry: AuditEntry) => {
-    if (entry.actor_type === 'system') return 'Система'
-    if (entry.actor_type === 'ai') return 'ШІ'
+    if (entry.actor_type === 'system') return 'System'
+    if (entry.actor_type === 'ai') return 'AI'
     return (entry.actor_id && staffNames.get(entry.actor_id)) || '—'
   }
 
@@ -90,8 +90,8 @@ export function HistoryTab({ patientId }: { patientId: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Історія змін</CardTitle>
-        <div role="group" aria-label="Фільтр записів" className="flex flex-wrap gap-2">
+        <CardTitle>Activity log</CardTitle>
+        <div role="group" aria-label="Filter entries" className="flex flex-wrap gap-2">
           {filters.map((f) => (
             <button
               key={f.value}
@@ -159,7 +159,7 @@ export function HistoryTab({ patientId }: { patientId: string }) {
                           href={href}
                           className="shrink-0 text-sm font-medium text-primary underline-offset-4 hover:underline"
                         >
-                          {entry.entity_type === 'prescription' ? 'До призначень' : 'Відкрити'}
+                          {entry.entity_type === 'prescription' ? 'Care plans' : 'Open'}
                         </Link>
                       )}
                     </li>

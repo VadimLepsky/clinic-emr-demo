@@ -27,17 +27,17 @@ type Icon = React.ComponentType<{ className?: string }>
 
 // Documents filled in from a template: an item opens the template picker for its type.
 const TEMPLATE_OPTIONS: { kind: TemplateKind; label: string; icon: Icon }[] = [
-  { kind: 'consultation', label: 'Консультація', icon: StethoscopeIcon },
-  { kind: 'ultrasound', label: 'УЗД', icon: ScanLineIcon },
-  { kind: 'lab', label: 'Аналізи', icon: FlaskConicalIcon },
-  { kind: 'certificate', label: 'Довідка', icon: FileBadgeIcon },
+  { kind: 'consultation', label: 'Consultation', icon: StethoscopeIcon },
+  { kind: 'ultrasound', label: 'Ultrasound', icon: ScanLineIcon },
+  { kind: 'lab', label: 'Lab results', icon: FlaskConicalIcon },
+  { kind: 'certificate', label: 'Certificate', icon: FileBadgeIcon },
 ]
 
-// Results from labs and devices still arrive as files; «Завантажити з ПК» is for everyone.
+// Results from labs and devices still arrive as files; «Upload from computer» is for everyone.
 const UPLOAD_OPTIONS: { key: string; label: string; kind: TemplateKind | null; folderName: string }[] = [
-  { key: 'ultrasound', label: 'Завантажити файл УЗД', kind: 'ultrasound', folderName: 'Ультразвукова діагностика' },
-  { key: 'lab', label: 'Завантажити файл аналізів', kind: 'lab', folderName: 'Результати аналізів' },
-  { key: 'other', label: 'Завантажити з ПК', kind: null, folderName: 'Інші файли' },
+  { key: 'ultrasound', label: 'Upload an ultrasound file', kind: 'ultrasound', folderName: 'Ultrasound' },
+  { key: 'lab', label: 'Upload lab results', kind: 'lab', folderName: 'Lab results' },
+  { key: 'other', label: 'Upload from computer', kind: null, folderName: 'Other files' },
 ]
 
 type AddDocumentMenuProps = {
@@ -63,7 +63,7 @@ export function AddDocumentMenu({ patientId, role, onUpload }: AddDocumentMenuPr
       <DropdownMenu>
         <DropdownMenuTrigger render={<Button disabled={!role} />}>
           <PlusIcon aria-hidden="true" />
-          Додати документ
+          Add document
           <ChevronDownIcon aria-hidden="true" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="min-w-64">

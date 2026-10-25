@@ -5,7 +5,7 @@ import { HomeGreeting } from '@/components/home/home-greeting'
 import { ManagerHome } from '@/components/home/manager-home'
 import { ReceptionHome } from '@/components/home/reception-home'
 
-export const metadata = { title: 'Головна' }
+export const metadata = { title: 'Home' }
 
 export default async function HomePage() {
   const user = await getCurrentUser()

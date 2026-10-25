@@ -38,7 +38,7 @@ export function ServiceAddSearch({
   inputId,
   onAdd,
   onAddCustom,
-  placeholder = 'Додати послугу: назва або код (від 3 символів)',
+  placeholder = 'Add a service: name or code (3 characters or more)',
   autoFocus,
   onDismiss,
   className,
@@ -104,14 +104,14 @@ export function ServiceAddSearch({
         className={className ?? 'w-full'}
       />
       <ComboboxContent>
-        <ComboboxEmpty>{pending ? 'Пошук…' : 'Нічого не знайдено'}</ComboboxEmpty>
+        <ComboboxEmpty>{pending ? 'Searching…' : 'Nothing found'}</ComboboxEmpty>
         {onAddCustom && (!canSearch || pending || results.length === 0) && (
           <p className="px-3 pt-2 text-sm text-muted-foreground">
             {!canSearch
-              ? `Пошук у довіднику — від ${MIN_QUERY_LENGTH} символів`
+              ? `Catalogue search — ${MIN_QUERY_LENGTH} characters or more`
               : pending
-                ? 'Пошук…'
-                : 'У довіднику нічого не знайдено'}
+                ? 'Searching…'
+                : 'Nothing found in the catalogue'}
           </p>
         )}
         <ComboboxList>
@@ -132,7 +132,7 @@ export function ServiceAddSearch({
             ) : (
               <ComboboxItem key={option.key} value={option}>
                 <PlusIcon className="text-muted-foreground" aria-hidden="true" />
-                <span className="min-w-0 flex-1">{`Додати «${option.customName}» як послугу ${OUTSIDE_CLINIC_LABEL}`}</span>
+                <span className="min-w-0 flex-1">{`Add «${option.customName}» as an ${OUTSIDE_CLINIC_LABEL} service`}</span>
               </ComboboxItem>
             )
           }

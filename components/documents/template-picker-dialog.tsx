@@ -14,11 +14,11 @@ import { Skeleton } from '@/components/ui/skeleton'
 const SEARCH_THRESHOLD = 6
 
 const kindGroups: { kind: TemplateKind; label: string }[] = [
-  { kind: 'consultation', label: 'Консультації' },
-  { kind: 'ultrasound', label: 'УЗД' },
-  { kind: 'lab', label: 'Аналізи' },
-  { kind: 'certificate', label: 'Довідки' },
-  { kind: 'other', label: 'Інше' },
+  { kind: 'consultation', label: 'Consultations' },
+  { kind: 'ultrasound', label: 'Ultrasound' },
+  { kind: 'lab', label: 'Lab results' },
+  { kind: 'certificate', label: 'Certificates' },
+  { kind: 'other', label: 'Other' },
 ]
 
 const sameSpecialty = (a: string | null, b: string | null) =>
@@ -29,17 +29,17 @@ export const newDocumentHref = (patientId: string, templateId: string) =>
 
 type TemplatePickerProps = {
   patientId: string
-  /** Only these types (e.g. «Додати документ» → УЗД); all creatable types when omitted. */
+  /** Only these types (e.g. «Add document» → Ultrasound); all creatable types when omitted. */
   kinds?: TemplateKind[]
   /** Called after a template is picked, before the page changes (closes the dialog). */
   onPicked?: () => void
 }
 
 /**
- * Active templates the current user may fill in (canCreateKind), grouped by type, «Ваша спеціальність» first.
+ * Active templates the current user may fill in (canCreateKind), grouped by type, «Your specialty» first.
  * Nothing is preselected, even with one template. Picking opens the new document with that template.
  * Items are buttons (router.push), not links: the unsaved-changes guard of an open editor intercepts link
- * clicks, and «Змінити шаблон» has already asked.
+ * clicks, and «Change template» has already asked.
  */
 export function TemplatePicker({ patientId, kinds, onPicked }: TemplatePickerProps) {
   const router = useRouter()
@@ -60,12 +60,12 @@ export function TemplatePicker({ patientId, kinds, onPicked }: TemplatePickerPro
     (t) => t.is_active && canCreateKind(user.role, t.kind) && (!kinds || kinds.includes(t.kind)),
   )
   if (available.length === 0) {
-    return <p className="text-muted-foreground">Немає активних шаблонів, які ви можете заповнити.</p>
+    return <p className="text-muted-foreground">There are no active templates you can fill in.</p>
   }
 
   const search = query.trim().toLowerCase()
   const shown = search ? available.filter((t) => t.name.toLowerCase().includes(search)) : available
-  const byName = (a: Template, b: Template) => a.name.localeCompare(b.name, 'uk')
+  const byName = (a: Template, b: Template) => a.name.localeCompare(b.name, 'en')
   const groups = kindGroups
     .map((group) => {
       const inKind = shown.filter((t) => t.kind === group.kind).sort(byName)
@@ -91,8 +91,8 @@ export function TemplatePicker({ patientId, kinds, onPicked }: TemplatePickerPro
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Пошук за назвою"
-            aria-label="Пошук шаблону за назвою"
+            placeholder="Search by name"
+            aria-label="Search templates by name"
             className="pl-10"
           />
         </div>
@@ -100,17 +100,17 @@ export function TemplatePicker({ patientId, kinds, onPicked }: TemplatePickerPro
 
       <div className="-mx-1 flex max-h-[min(60vh,32rem)] flex-col gap-5 overflow-y-auto px-1">
         {groups.length === 0 ? (
-          <p className="text-muted-foreground">За запитом «{query.trim()}» шаблонів немає.</p>
+          <p className="text-muted-foreground">No templates match «{query.trim()}».</p>
         ) : (
           groups.map((group) => (
             <section key={group.kind} aria-label={group.label} className="flex flex-col gap-2">
               {/* The type heading only helps when there is more than one type. */}
               {groups.length > 1 && <h3 className="font-semibold">{group.label}</h3>}
               {group.own.length > 0 && (
-                <TemplateList title="Ваша спеціальність" templates={group.own} onPick={pick} />
+                <TemplateList title="Your specialty" templates={group.own} onPick={pick} />
               )}
               {group.others.length > 0 && (
-                <TemplateList title={group.own.length > 0 ? 'Інші' : undefined} templates={group.others} onPick={pick} />
+                <TemplateList title={group.own.length > 0 ? 'Other' : undefined} templates={group.others} onPick={pick} />
               )}
             </section>
           ))
@@ -163,7 +163,7 @@ type TemplatePickerDialogProps = {
   onClose: () => void
 }
 
-/** «Оберіть шаблон»: every way into a new document (visits, «Додати документ», «Змінити шаблон») goes through it. */
+/** «Choose a template»: every way into a new document (visits, «Add document», «Change template») goes through it. */
 export function TemplatePickerDialog({ patientId, kinds, onClose }: TemplatePickerDialogProps) {
   // Keeps the last patient while the dialog animates out, so its content doesn't vanish mid-close.
   const [shownPatientId, setShownPatientId] = useState(patientId)
@@ -179,7 +179,7 @@ export function TemplatePickerDialog({ patientId, kinds, onClose }: TemplatePick
         initialFocus={() => popupRef.current?.querySelector<HTMLElement>('input[type=search]') ?? popupRef.current}
       >
         <DialogHeader>
-          <DialogTitle>Оберіть шаблон</DialogTitle>
+          <DialogTitle>Choose a template</DialogTitle>
         </DialogHeader>
         {shownPatientId && <TemplatePicker patientId={shownPatientId} kinds={kinds} onPicked={onClose} />}
       </DialogContent>

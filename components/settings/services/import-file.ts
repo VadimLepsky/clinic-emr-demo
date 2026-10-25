@@ -10,14 +10,14 @@ export async function parseSpreadsheet(file: File): Promise<SpreadsheetTable> {
   const XLSX = await import('xlsx')
   const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array' })
   const sheet = workbook.Sheets[workbook.SheetNames[0]]
-  if (!sheet) throw new Error('Файл не містить аркушів')
+  if (!sheet) throw new Error('The file has no sheets')
   const matrix = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, raw: false, defval: '', blankrows: false })
   const cells = matrix.map((row) => row.map((cell) => String(cell ?? '').trim()))
   const headerIndex = cells.findIndex((row) => row.some(Boolean))
-  if (headerIndex === -1) throw new Error('Файл порожній')
-  const headers = cells[headerIndex].map((h, i) => h || `Колонка ${i + 1}`)
+  if (headerIndex === -1) throw new Error('The file is empty')
+  const headers = cells[headerIndex].map((h, i) => h || `Column ${i + 1}`)
   const rows = cells.slice(headerIndex + 1).filter((row) => row.some(Boolean))
-  if (!rows.length) throw new Error('У файлі немає рядків з даними')
+  if (!rows.length) throw new Error('The file has no data rows')
   return { headers, rows }
 }
 
@@ -27,14 +27,16 @@ export function guessMapping(headers: string[]): ColumnMapping {
     return index === -1 ? NO_COLUMN : String(index)
   }
   return {
-    code: find(/^(код|code|артикул|№|id)|код\b|\bcode\b/i),
-    name: find(/назв|найменув|послуг|аналіз|name|title|service/i),
-    price: find(/цін|ціна|вартіст|price|cost|грн|сума/i),
+    code: find(/^(code|sku|ref|no\.?|#|id)\b|\bcode\b/i),
+    name: find(/name|title|service|test|description/i),
+    price: find(/price|cost|fee|amount|eur|€/i),
   }
 }
 
 export function parsePrice(raw: string): number | null {
-  const cleaned = raw.replace(/[\s\u00a0]/g, '').replace(/(грн|uah|₴)\.?/gi, '').replace(',', '.')
+  const stripped = raw.replace(/[\s\u00a0]/g, '').replace(/(eur|€)\.?/gi, '')
+  // «1,234.50»: the comma groups thousands; «12,50»: the comma is the decimal point.
+  const cleaned = stripped.includes('.') ? stripped.replace(/,/g, '') : stripped.replace(',', '.')
   if (!/^\d+(\.\d+)?$/.test(cleaned)) return null
   const value = Number(cleaned)
   return Number.isFinite(value) ? value : null

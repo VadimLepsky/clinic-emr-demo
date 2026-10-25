@@ -37,10 +37,10 @@ export function PreviewDialog({ open, onOpenChange, meta, schema }: PreviewDialo
         className="flex max-h-[92svh] flex-col gap-0 sm:max-w-[min(64rem,calc(100vw-2rem))]"
       >
         <DialogHeader className="-mx-8 -mt-8 flex-row items-center justify-between gap-4 rounded-t-2xl bg-background px-8 py-6">
-          <DialogTitle className="text-2xl">Попередній перегляд</DialogTitle>
+          <DialogTitle className="text-2xl">Preview</DialogTitle>
           <DialogClose render={<Button variant="ghost" size="icon-sm" />}>
             <XIcon aria-hidden="true" />
-            <span className="sr-only">Закрити</span>
+            <span className="sr-only">Close</span>
           </DialogClose>
         </DialogHeader>
         <SheetBackdrop variant="dialog">
@@ -49,13 +49,13 @@ export function PreviewDialog({ open, onOpenChange, meta, schema }: PreviewDialo
               className="paper bg-background"
               mode="view"
               mock
-              title={meta.name.trim() || 'Без назви'}
+              title={meta.name.trim() || 'Untitled'}
               schema={schema}
               values={{}}
               patient={context.patient}
               doctor={context.doctor}
               documentDate={documentDate}
-              documentNumber="КВ-000000"
+              documentNumber="CN-000000"
               letterheads={letterheads}
               requisites={meta}
               services={[]}

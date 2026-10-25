@@ -20,12 +20,12 @@ type FieldEditorProps = {
   errors: BuilderErrors
 }
 
-const AI_HINT = 'Підказка для лікаря. Пізніше її використовуватиме AI, щоб розкладати розшифровку розмови по полях'
+const AI_HINT = 'A hint for the doctor. Later, AI will use it to sort a visit transcript into the fields'
 
 const textViews = [
-  { value: 'text', label: 'Короткий рядок' },
-  { value: 'textarea', label: 'Великий текст' },
-  { value: 'number', label: 'Число' },
+  { value: 'text', label: 'Short line' },
+  { value: 'textarea', label: 'Long text' },
+  { value: 'number', label: 'Number' },
 ] as const
 
 function ErrorText({ message }: { message?: string }) {
@@ -53,7 +53,7 @@ function DescriptionInput({ field, onChange }: Omit<FieldEditorProps, 'errors'>)
   const inputId = `tb-desc-${field.id}`
   return (
     <div className="flex flex-col gap-1.5">
-      <Label htmlFor={inputId}>Опис поля</Label>
+      <Label htmlFor={inputId}>Field description</Label>
       <Textarea
         id={inputId}
         rows={2}
@@ -80,7 +80,7 @@ function RequiredSwitch({ field, onChange }: Omit<FieldEditorProps, 'errors'>) {
   return (
     <SwitchRow
       id={`tb-req-${field.id}`}
-      label="Обов'язкове"
+      label="Required"
       checked={Boolean(field.required)}
       onChange={(required) => onChange({ ...field, required })}
     />
@@ -100,9 +100,9 @@ function TextFieldEditor({ field, onChange, errors }: FieldEditorProps) {
   return (
     <div className="flex flex-col gap-3">
       <div className="grid gap-3 sm:grid-cols-2">
-        <LabelInput field={field} onChange={onChange} errors={errors} label="Назва поля" />
+        <LabelInput field={field} onChange={onChange} errors={errors} label="Field name" />
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor={`tb-view-${field.id}`}>Вигляд</Label>
+          <Label htmlFor={`tb-view-${field.id}`}>Display</Label>
           <Select items={textViews} value={field.type} onValueChange={(v) => v && changeView(v as FieldBlock['type'])}>
             <SelectTrigger id={`tb-view-${field.id}`} className="w-full">
               <SelectValue />
@@ -121,7 +121,7 @@ function TextFieldEditor({ field, onChange, errors }: FieldEditorProps) {
       {field.type === 'number' ? (
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor={defaultId}>Значення за замовчуванням</Label>
+            <Label htmlFor={defaultId}>Default value</Label>
             <Input
               id={defaultId}
               type="number"
@@ -133,10 +133,10 @@ function TextFieldEditor({ field, onChange, errors }: FieldEditorProps) {
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor={`tb-unit-${field.id}`}>Одиниця виміру</Label>
+            <Label htmlFor={`tb-unit-${field.id}`}>Unit</Label>
             <Input
               id={`tb-unit-${field.id}`}
-              placeholder="мм, кг, уд/хв…"
+              placeholder="mm, kg, bpm…"
               value={field.unit ?? ''}
               onChange={(e) => onChange({ ...field, unit: e.target.value || undefined })}
             />
@@ -144,7 +144,7 @@ function TextFieldEditor({ field, onChange, errors }: FieldEditorProps) {
         </div>
       ) : (
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor={defaultId}>Значення за замовчуванням</Label>
+          <Label htmlFor={defaultId}>Default value</Label>
           <VariableInput
             id={defaultId}
             multiline={field.type === 'textarea'}
@@ -182,7 +182,7 @@ function OptionsEditor({ field, onChange, errors }: FieldEditorProps) {
   return (
     <fieldset id={errorElementId(key)} className="flex flex-col gap-1.5" tabIndex={-1}>
       <legend className="mb-1.5 text-sm font-medium">
-        Варіанти вибору <span className="text-destructive">*</span>
+        Options <span className="text-destructive">*</span>
       </legend>
       <SortableList
         items={items}
@@ -192,9 +192,9 @@ function OptionsEditor({ field, onChange, errors }: FieldEditorProps) {
       >
         {(item, handle, index) => (
           <div className="flex items-center gap-1.5">
-            <DragHandle {...handle} label={`Перемістити варіант ${index + 1}`} />
+            <DragHandle {...handle} label={`Move option ${index + 1}`} />
             <Input
-              aria-label={`Варіант ${index + 1}`}
+              aria-label={`Option ${index + 1}`}
               value={item.option}
               aria-invalid={Boolean(errors[key]) && !item.option.trim()}
               onChange={(e) => update(options.map((o, i) => (i === index ? e.target.value : o)), syncedKeys)}
@@ -203,7 +203,7 @@ function OptionsEditor({ field, onChange, errors }: FieldEditorProps) {
               type="button"
               variant="ghost"
               size="icon-sm"
-              aria-label={`Видалити варіант ${index + 1}`}
+              aria-label={`Delete option ${index + 1}`}
               disabled={options.length <= 1}
               onClick={() =>
                 update(
@@ -222,10 +222,10 @@ function OptionsEditor({ field, onChange, errors }: FieldEditorProps) {
         variant="ghost"
         size="xs"
         className="self-start"
-        onClick={() => update([...options, `Варіант ${options.length + 1}`], [...syncedKeys, crypto.randomUUID()])}
+        onClick={() => update([...options, `Option ${options.length + 1}`], [...syncedKeys, crypto.randomUUID()])}
       >
         <PlusIcon aria-hidden="true" />
-        Додати варіант
+        Add option
       </Button>
       <ErrorText message={errors[key]} />
     </fieldset>
@@ -242,7 +242,7 @@ function SelectFieldEditor({ field, onChange, errors }: FieldEditorProps) {
     : typeof field.defaultValue === 'string'
       ? field.defaultValue
       : undefined
-  const defaultItems = [{ value: NO_DEFAULT, label: 'Без значення' }, ...options.map((o) => ({ value: o, label: o }))]
+  const defaultItems = [{ value: NO_DEFAULT, label: 'No value' }, ...options.map((o) => ({ value: o, label: o }))]
 
   const setDefault = (value: string) => {
     const picked = value === NO_DEFAULT ? undefined : value
@@ -258,11 +258,11 @@ function SelectFieldEditor({ field, onChange, errors }: FieldEditorProps) {
 
   return (
     <div className="flex flex-col gap-3">
-      <LabelInput field={field} onChange={onChange} errors={errors} label="Назва поля" />
+      <LabelInput field={field} onChange={onChange} errors={errors} label="Field name" />
       <DescriptionInput field={field} onChange={onChange} />
       <OptionsEditor field={field} onChange={onChange} errors={errors} />
       <div className="flex flex-col gap-1.5 sm:w-1/2">
-        <Label htmlFor={`tb-default-${field.id}`}>Значення за замовчуванням</Label>
+        <Label htmlFor={`tb-default-${field.id}`}>Default value</Label>
         <Select
           items={defaultItems}
           value={currentDefault && options.includes(currentDefault) ? currentDefault : NO_DEFAULT}
@@ -281,7 +281,7 @@ function SelectFieldEditor({ field, onChange, errors }: FieldEditorProps) {
         </Select>
       </div>
       <div className="flex flex-wrap gap-x-6 gap-y-2">
-        <SwitchRow id={`tb-multi-${field.id}`} label="Можна обрати кілька" checked={multiple} onChange={toggleMultiple} />
+        <SwitchRow id={`tb-multi-${field.id}`} label="Allow several" checked={multiple} onChange={toggleMultiple} />
         <RequiredSwitch field={field} onChange={onChange} />
       </div>
     </div>
@@ -291,11 +291,11 @@ function SelectFieldEditor({ field, onChange, errors }: FieldEditorProps) {
 function CheckboxFieldEditor({ field, onChange, errors }: FieldEditorProps) {
   return (
     <div className="flex flex-col gap-3">
-      <LabelInput field={field} onChange={onChange} errors={errors} label="Назва (текст біля чекбокса)" />
+      <LabelInput field={field} onChange={onChange} errors={errors} label="Name (text next to the checkbox)" />
       <DescriptionInput field={field} onChange={onChange} />
       <SwitchRow
         id={`tb-default-${field.id}`}
-        label="Відмічено за замовчуванням"
+        label="Ticked by default"
         checked={field.defaultValue === true}
         onChange={(v) => onChange({ ...field, defaultValue: v })}
       />
@@ -311,15 +311,15 @@ export function FieldEditor(props: FieldEditorProps) {
 }
 
 export function fieldTypeLabel(field: FieldBlock) {
-  if (field.type === 'select' || field.type === 'multiselect') return 'Випадаючий список'
-  if (field.type === 'checkbox') return 'Чекбокс'
-  return 'Текстове поле'
+  if (field.type === 'select' || field.type === 'multiselect') return 'Dropdown'
+  if (field.type === 'checkbox') return 'Checkbox'
+  return 'Text field'
 }
 
-/** «Без назви — <опис>» for a field without a name (the name is optional). */
+/** «Untitled — <description>» for a field without a name (the name is optional). */
 function namelessTitle(field: FieldBlock) {
   const description = field.description.trim()
-  return description ? `Без назви — ${description}` : 'Без назви'
+  return description ? `Untitled — ${description}` : 'Untitled'
 }
 
 /** The field's title in the builder's list as text (drag and delete buttons). */
@@ -327,7 +327,7 @@ export function fieldTitleText(field: FieldBlock) {
   return `${fieldTypeLabel(field)} · ${field.label.trim() || namelessTitle(field)}`
 }
 
-/** The field's title in the builder's list; without a name — in grey «Без назви — <опис>». */
+/** The field's title in the builder's list; without a name — in grey «Untitled — <description>». */
 export function FieldTitle({ field }: { field: FieldBlock }) {
   return (
     <>

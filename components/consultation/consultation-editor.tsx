@@ -81,9 +81,9 @@ export function ConsultationEditor({
   const services = useSelectedServices(schema, values, packageServiceIds)
   const { isPromptOpen, requestLeave, confirmLeave, cancelLeave } = useUnsavedChanges(dirty && !saving)
   useEffect(() => onDirtyChange?.(dirty), [dirty, onDirtyChange])
-  // Any template type is edited here; only a consultation is a «висновок».
+  // Any template type is edited here; only a consultation is a «consultation note».
   const isConsultation = !template || template.kind === 'consultation'
-  const savedLabel = isConsultation ? 'Висновок збережено' : 'Документ збережено'
+  const savedLabel = isConsultation ? 'Consultation note saved' : 'Document saved'
 
   const handleChange = (blockId: string, value: FieldValue) => {
     setValues((prev) => ({ ...prev, [blockId]: value }))
@@ -99,7 +99,7 @@ export function ConsultationEditor({
       el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       el?.focus({ preventScroll: true })
       const names = fieldNames(schema)
-      toast.error(`Заповніть обов'язкові поля: ${missing.map((id) => names.get(id) ?? id).join(', ')}`)
+      toast.error(`Fill in the required fields: ${missing.map((id) => names.get(id) ?? id).join(', ')}`)
       return
     }
 
@@ -122,13 +122,13 @@ export function ConsultationEditor({
 
       // With a paid prescription the services were read-only, so there is nothing to warn about.
       if (!result.prescriptionLocked && result.prescriptionId && getSelectedServices(schema, values).length > 0) {
-        toast.success(`${savedLabel}. Призначення сформовано`)
+        toast.success(`${savedLabel}. Care plan created`)
       } else {
         toast.success(savedLabel)
       }
       onSaved(result.document)
     } catch {
-      toast.error(`Не вдалося зберегти ${isConsultation ? 'висновок' : 'документ'}. Спробуйте ще раз.`)
+      toast.error(`Could not save the ${isConsultation ? 'consultation note' : 'document'}. Please try again.`)
       setSaving(false)
     }
   }
@@ -190,13 +190,13 @@ export function ConsultationEditor({
 
       <div className="sticky bottom-0 z-10 -mx-4 -mb-10 mt-2 border-t border-border bg-canvas/95 px-4 py-4 backdrop-blur sm:-mx-6 sm:px-6 md:-mx-10 md:px-10 supports-backdrop-filter:bg-canvas/80">
         <div className="flex items-center justify-end gap-2">
-          {dirty && <span className="mr-auto text-sm text-muted-foreground">Є незбережені зміни</span>}
+          {dirty && <span className="mr-auto text-sm text-muted-foreground">Unsaved changes</span>}
           <Button type="button" variant="outline" onClick={() => requestLeave(onCancel)} disabled={saving}>
-            Скасувати
+            Cancel
           </Button>
           <Button type="submit" form="consultation-form" disabled={saving}>
             {saving && <Loader2Icon className="size-4 animate-spin" aria-hidden="true" />}
-            Зберегти
+            Save
           </Button>
         </div>
       </div>
@@ -204,17 +204,17 @@ export function ConsultationEditor({
       <Dialog open={isPromptOpen} onOpenChange={(open) => !open && cancelLeave()}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Незбережені зміни</DialogTitle>
+            <DialogTitle>Unsaved changes</DialogTitle>
             <DialogDescription>
-              Зміни {isConsultation ? 'у висновку' : 'в документі'} не збережено. Вийти без збереження?
+              Changes to the {isConsultation ? 'consultation note' : 'document'} are not saved. Leave without saving?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={cancelLeave}>
-              Залишитися
+              Stay
             </Button>
             <Button variant="destructive" onClick={confirmLeave}>
-              Вийти без збереження
+              Leave without saving
             </Button>
           </DialogFooter>
         </DialogContent>

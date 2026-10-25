@@ -4,8 +4,8 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from './theme-toggle'
 
-// Контент сторінки — центрований контейнер (AGENTS.md → Visual scale → Width): до 1400px, на 2xl — до 1600px,
-// щоб на широких моніторах сторінка не тиснулась ліворуч. `wide` — без верхньої межі, для сторінок-таблиць.
+// Page content is a centered container (AGENTS.md → Visual scale → Width): up to 1400px, up to 1600px on 2xl,
+// so on wide monitors the page doesn't hug the left edge. `wide` has no upper limit, for table pages.
 export const pageWidthClass = {
   default: 'mx-auto w-full max-w-[1400px] 2xl:max-w-[1600px]',
   wide: 'w-full',
@@ -28,9 +28,9 @@ type PageHeaderProps = {
   className?: string
 }
 
-// Заголовок сторінки text-3xl: стрілка «назад», заголовок, дії та перемикач теми в одному рядку,
-// по центру за висотою. Нічого над заголовком, тож він починається на тій самій висоті, що й на головній.
-// Від заголовка (а якщо є опис — від опису) до контенту 60px: pb-9 (36px) + gap-6 (24px) у Page.
+// Page title text-3xl: back arrow, title, actions and theme toggle in one row, vertically centered.
+// Nothing above the title, so it starts at the same height as on the home page.
+// From the title (or from the description, if there is one) to the content is 60px: pb-9 (36px) + gap-6 (24px) of Page.
 export function PageHeader({ title, description, actions, back, titleId, className }: PageHeaderProps) {
   return (
     <header className={cn('flex flex-col gap-1 pb-9', className)}>

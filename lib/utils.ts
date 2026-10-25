@@ -1,8 +1,8 @@
 import { clsx, type ClassValue } from 'clsx'
 import { extendTailwindMerge } from 'tailwind-merge'
 
-// text-body и text-doc* (лист А4) — размеры шрифта из globals.css; без этого twMerge считает их цветом и выкидывает
-// при слиянии (или выкидывает цвет текста рядом с ними).
+// text-body and text-doc* (A4 sheet) are font sizes from globals.css; without this twMerge takes them for a colour and
+// drops them when merging (or drops the text colour next to them).
 const twMerge = extendTailwindMerge({
   extend: { classGroups: { 'font-size': [{ text: ['body', 'doc', 'doc-title', 'doc-small'] }] } },
 })

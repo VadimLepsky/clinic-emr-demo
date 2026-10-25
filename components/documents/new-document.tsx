@@ -24,11 +24,11 @@ import { todayIso } from './format'
 import { TemplatePickerDialog } from './template-picker-dialog'
 
 const newDocumentTitles: Record<TemplateKind, string> = {
-  consultation: 'Новий консультативний висновок',
-  ultrasound: 'Новий протокол УЗД',
-  lab: 'Нові результати аналізів',
-  certificate: 'Нова довідка',
-  other: 'Новий документ',
+  consultation: 'New consultation note',
+  ultrasound: 'New ultrasound report',
+  lab: 'New lab results',
+  certificate: 'New certificate',
+  other: 'New document',
 }
 
 /**
@@ -70,18 +70,18 @@ export function NewDocument({
   return (
     <Page>
       <PageHeader
-        back={{ href: patientHref, label: 'До документів пацієнта' }}
+        back={{ href: patientHref, label: 'Back to patient documents' }}
         title={patient.full_name}
         // The template's name is text under the title (no dropdown): next to the actions it squeezed the patient's
         // name onto two lines.
         description={
           template ? (
             <>
-              {newDocumentTitles[template.kind]} · шаблон{' '}
+              {newDocumentTitles[template.kind]} · template{' '}
               <span className="font-medium text-foreground">«{template.name}»</span>
             </>
           ) : (
-            'Новий документ'
+            'New document'
           )
         }
         actions={
@@ -89,7 +89,7 @@ export function NewDocument({
             <>
               <EditorLayoutToggle value={editorLayout} onChange={setEditorLayout} />
               <Button variant="outline" onClick={changeTemplate}>
-                Змінити шаблон
+                Change template
               </Button>
             </>
           ) : undefined
@@ -99,15 +99,15 @@ export function NewDocument({
       {!templates || !currentUser ? (
         <FormSkeleton />
       ) : !template ? (
-        <EmptyState text={templateId ? 'Шаблон не знайдено або його вимкнено.' : 'Оберіть шаблон, щоб почати заповнення.'}>
-          <Button onClick={() => setPicker('open')}>Обрати шаблон</Button>
+        <EmptyState text={templateId ? 'Template not found or deactivated.' : 'Choose a template to start filling in.'}>
+          <Button onClick={() => setPicker('open')}>Choose template</Button>
         </EmptyState>
       ) : !allowed ? (
-        <EmptyState text="Ваша роль не може створювати документи цього типу.">
-          <Button onClick={() => setPicker('open')}>Обрати інший шаблон</Button>
+        <EmptyState text="Your role cannot create documents of this kind.">
+          <Button onClick={() => setPicker('open')}>Choose another template</Button>
         </EmptyState>
       ) : version === null ? (
-        <EmptyState text="Не вдалося завантажити версію шаблону." />
+        <EmptyState text="Could not load the template version." />
       ) : !version ? (
         <FormSkeleton />
       ) : (
@@ -138,12 +138,12 @@ export function NewDocument({
       <Dialog open={confirmChange} onOpenChange={setConfirmChange}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Змінити шаблон?</DialogTitle>
-            <DialogDescription>Введені дані буде втрачено.</DialogDescription>
+            <DialogTitle>Change template?</DialogTitle>
+            <DialogDescription>What you have entered will be lost.</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmChange(false)}>
-              Скасувати
+              Cancel
             </Button>
             <Button
               variant="destructive"
@@ -152,7 +152,7 @@ export function NewDocument({
                 setPicker('open')
               }}
             >
-              Змінити шаблон
+              Change template
             </Button>
           </DialogFooter>
         </DialogContent>

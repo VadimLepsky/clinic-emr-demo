@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatMoney } from '@/components/prescriptions/format'
+import { plural } from '@/lib/format'
 import { PackageDialog } from './package-dialog'
 
 export function PackageList() {
@@ -34,10 +35,10 @@ export function PackageList() {
     try {
       await deleteServicePackage(deleting.id)
       await mutate()
-      toast.success(`Пакет «${deleting.name}» видалено`)
+      toast.success(`Bundle «${deleting.name}» deleted`)
       setDeleting(null)
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Не вдалося видалити пакет')
+      toast.error(e instanceof Error ? e.message : 'Could not delete the bundle')
     } finally {
       setDeleteBusy(false)
     }
@@ -47,25 +48,25 @@ export function PackageList() {
     <Card>
       <CardHeader>
         <div className="flex min-w-0 flex-col gap-1">
-          <CardTitle>Пакети послуг</CardTitle>
+          <CardTitle>Service bundles</CardTitle>
           <CardDescription>
-            Готові набори послуг, які лікар додає до призначення одним кліком.
+            Ready-made sets of services a doctor adds to a care plan in one click.
           </CardDescription>
         </div>
         <Button onClick={() => setEditing('new')}>
           <PlusIcon aria-hidden="true" />
-          Новий пакет
+          New bundle
         </Button>
       </CardHeader>
 
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <TableHead>Назва</TableHead>
-            <TableHead>Склад</TableHead>
-            <TableHead className="text-right">Сума</TableHead>
+            <TableHead>Name</TableHead>
+            <TableHead>Contents</TableHead>
+            <TableHead className="text-right">Total</TableHead>
             <TableHead className="w-24">
-              <span className="sr-only">Дії</span>
+              <span className="sr-only">Actions</span>
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -80,7 +81,7 @@ export function PackageList() {
           {packages?.length === 0 && (
             <TableRow>
               <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
-                Пакетів ще немає.
+                No bundles yet.
               </TableCell>
             </TableRow>
           )}
@@ -110,18 +111,18 @@ export function PackageList() {
       <Dialog open={deleting !== null} onOpenChange={(open) => !open && !deleteBusy && setDeleting(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Видалити пакет?</DialogTitle>
+            <DialogTitle>Delete bundle?</DialogTitle>
             <DialogDescription>
-              Пакет «{deleting?.name}» буде видалено. Вже створені призначення не зміняться.
+              Bundle «{deleting?.name}» will be deleted. Existing care plans won&apos;t change.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleting(null)} disabled={deleteBusy}>
-              Скасувати
+              Cancel
             </Button>
             <Button variant="destructive" onClick={confirmDelete} disabled={deleteBusy}>
               {deleteBusy && <Loader2Icon className="animate-spin" aria-hidden="true" />}
-              Видалити
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -152,15 +153,15 @@ function PackageRow({
     <TableRow>
       <TableCell className="font-medium">{pkg.name}</TableCell>
       <TableCell className="max-w-md whitespace-normal text-muted-foreground">
-        <span className="text-foreground">{pkg.items.length} посл.</span>: {summary}
+        <span className="text-foreground">{plural(pkg.items.length, 'service')}</span>: {summary}
       </TableCell>
       <TableCell className="text-right tabular-nums">{formatMoney(total)}</TableCell>
       <TableCell>
         <div className="flex justify-end gap-1">
-          <Button variant="ghost" size="icon-sm" onClick={onEdit} aria-label={`Редагувати: ${pkg.name}`}>
+          <Button variant="ghost" size="icon-sm" onClick={onEdit} aria-label={`Edit: ${pkg.name}`}>
             <PencilIcon aria-hidden="true" />
           </Button>
-          <Button variant="ghost" size="icon-sm" onClick={onDelete} aria-label={`Видалити: ${pkg.name}`}>
+          <Button variant="ghost" size="icon-sm" onClick={onDelete} aria-label={`Delete: ${pkg.name}`}>
             <Trash2Icon aria-hidden="true" />
           </Button>
         </div>

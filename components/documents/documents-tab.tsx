@@ -78,7 +78,7 @@ export function DocumentsTab({ patientId }: { patientId: string }) {
 
         <Card plain className="flex-1">
           <CardHeader className="border-b-0">
-            <CardTitle>{activeFolderId ? folderName(activeFolderId) : 'Усі документи'}</CardTitle>
+            <CardTitle>{activeFolderId ? folderName(activeFolderId) : 'All documents'}</CardTitle>
             <AddDocumentMenu patientId={patientId} role={currentUser?.role} onUpload={startUpload} />
           </CardHeader>
 
@@ -88,7 +88,7 @@ export function DocumentsTab({ patientId }: { patientId: string }) {
             <div className="flex flex-col items-center gap-2 px-8 py-14 text-center">
               <FileXIcon className="size-8 text-muted-foreground" aria-hidden="true" />
               <p className="text-muted-foreground">
-                {totalCount === 0 ? 'У пацієнта ще немає документів' : 'У цій папці немає документів'}
+                {totalCount === 0 ? 'The patient has no documents yet' : 'This folder has no documents'}
               </p>
             </div>
           ) : (

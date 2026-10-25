@@ -63,14 +63,14 @@ function UploadForm({
     if (!list) return
     const incoming = Array.from(list)
     const accepted = incoming.filter((f) => ACCEPTED_TYPES.includes(f.type))
-    setError(accepted.length < incoming.length ? 'Дозволені лише файли JPEG, PNG або PDF.' : null)
+    setError(accepted.length < incoming.length ? 'Only JPEG, PNG or PDF files are allowed.' : null)
     setFiles((prev) => [...prev, ...accepted])
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!title.trim()) return setError('Вкажіть назву документа.')
-    if (files.length === 0) return setError('Додайте хоча б один файл.')
+    if (!title.trim()) return setError('Enter the document title.')
+    if (files.length === 0) return setError('Add at least one file.')
     setSaving(true)
     try {
       await uploadDocument({
@@ -82,7 +82,7 @@ function UploadForm({
       })
       onUploaded(folderId)
     } catch {
-      setError('Не вдалося зберегти документ. Спробуйте ще раз.')
+      setError('Could not save the document. Please try again.')
       setSaving(false)
     }
   }
@@ -90,13 +90,13 @@ function UploadForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6" noValidate>
       <DialogHeader>
-        <DialogTitle>Завантажити документ</DialogTitle>
-        <DialogDescription>Файли JPEG, PNG або PDF буде додано до картки пацієнта.</DialogDescription>
+        <DialogTitle>Upload document</DialogTitle>
+        <DialogDescription>JPEG, PNG or PDF files will be added to the patient record.</DialogDescription>
       </DialogHeader>
 
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
-          <Label htmlFor={`${formId}-folder`}>Папка</Label>
+          <Label htmlFor={`${formId}-folder`}>Folder</Label>
           <Select items={folderItems} value={folderId} onValueChange={(v) => v && setFolderId(v as string)}>
             <SelectTrigger id={`${formId}-folder`} className="w-full">
               <SelectValue />
@@ -114,19 +114,19 @@ function UploadForm({
         <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
           <div className="flex flex-col gap-2">
             <Label htmlFor={`${formId}-title`}>
-              Назва <span className="text-destructive">*</span>
+              Title <span className="text-destructive">*</span>
             </Label>
             <Input
               id={`${formId}-title`}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Напр., Загальний аналіз крові"
+              placeholder="E.g. Full blood count"
               required
               autoFocus
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor={`${formId}-date`}>Дата документа</Label>
+            <Label htmlFor={`${formId}-date`}>Document date</Label>
             <Input
               id={`${formId}-date`}
               type="date"
@@ -138,7 +138,7 @@ function UploadForm({
         </div>
 
         <div className="flex flex-col gap-2">
-          <span className="text-sm font-medium">Файли</span>
+          <span className="text-sm font-medium">Files</span>
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
@@ -160,9 +160,9 @@ function UploadForm({
           >
             <UploadCloudIcon className="size-6 text-muted-foreground" aria-hidden="true" />
             <span className="text-sm">
-              Перетягніть файли сюди або <span className="font-medium text-primary">оберіть на комп&apos;ютері</span>
+              Drop files here or <span className="font-medium text-primary">choose them on your computer</span>
             </span>
-            <span className="text-sm text-muted-foreground">JPEG, PNG, PDF · можна кілька файлів</span>
+            <span className="text-sm text-muted-foreground">JPEG, PNG, PDF · several files allowed</span>
           </button>
           <input
             ref={fileInputRef}
@@ -198,7 +198,7 @@ function UploadForm({
                     variant="ghost"
                     size="icon-sm"
                     onClick={() => setFiles((prev) => prev.filter((_, i) => i !== index))}
-                    aria-label={`Видалити ${file.name}`}
+                    aria-label={`Remove ${file.name}`}
                   >
                     <XIcon />
                   </Button>
@@ -217,11 +217,11 @@ function UploadForm({
 
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel} disabled={saving}>
-          Скасувати
+          Cancel
         </Button>
         <Button type="submit" disabled={saving}>
           {saving && <Loader2Icon className="animate-spin" aria-hidden="true" />}
-          Зберегти
+          Save
         </Button>
       </DialogFooter>
     </form>

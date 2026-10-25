@@ -50,20 +50,20 @@ function StaffForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!fullName.trim()) return setError('Вкажіть ПІБ.')
+    if (!fullName.trim()) return setError('Enter the full name.')
     const crmTrimmed = crmId.trim()
     const crm = crmTrimmed ? Number(crmTrimmed) : null
-    if (crm !== null && (!Number.isInteger(crm) || crm <= 0)) return setError('ID в CRM має бути додатним цілим числом.')
+    if (crm !== null && (!Number.isInteger(crm) || crm <= 0)) return setError('The CRM ID must be a positive whole number.')
     setSaving(true)
     setError(null)
     const input = { full_name: fullName, role, specialty: specialty || null, crm_master_id: crm, is_active: isActive }
     try {
       if (staff) await updateStaff(staff.id, input)
       else await createStaff(input)
-      toast.success(staff ? 'Співробітника оновлено' : 'Співробітника додано')
+      toast.success(staff ? 'Staff member updated' : 'Staff member added')
       await onSaved()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не вдалося зберегти співробітника.')
+      setError(err instanceof Error ? err.message : 'Could not save the staff member.')
     } finally {
       setSaving(false)
     }
@@ -72,19 +72,19 @@ function StaffForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <DialogHeader>
-        <DialogTitle>{staff ? 'Редагувати співробітника' : 'Новий співробітник'}</DialogTitle>
-        <DialogDescription>Співробітників не видаляють, лише деактивують: історія зберігає автора.</DialogDescription>
+        <DialogTitle>{staff ? 'Edit staff member' : 'New staff member'}</DialogTitle>
+        <DialogDescription>Staff are never deleted, only deactivated: the history keeps its authors.</DialogDescription>
       </DialogHeader>
 
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
-          <Label htmlFor={`${id}-name`}>ПІБ</Label>
+          <Label htmlFor={`${id}-name`}>Full name</Label>
           <Input id={`${id}-name`} value={fullName} onChange={(e) => setFullName(e.target.value)} autoFocus />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-2">
-            <Label htmlFor={`${id}-role`}>Роль</Label>
+            <Label htmlFor={`${id}-role`}>Role</Label>
             <Select items={roleItems} value={role} onValueChange={(v) => v && setRole(v as StaffRole)}>
               <SelectTrigger id={`${id}-role`} className="w-full">
                 <SelectValue />
@@ -99,13 +99,13 @@ function StaffForm({
             </Select>
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor={`${id}-specialty`}>Спеціальність</Label>
+            <Label htmlFor={`${id}-specialty`}>Specialty</Label>
             <Input id={`${id}-specialty`} value={specialty} onChange={(e) => setSpecialty(e.target.value)} />
           </div>
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor={`${id}-crm`}>ID лікаря в CRM</Label>
+          <Label htmlFor={`${id}-crm`}>Doctor ID in the CRM</Label>
           <Input
             id={`${id}-crm`}
             type="number"
@@ -117,13 +117,13 @@ function StaffForm({
             aria-describedby={`${id}-crm-hint`}
           />
           <p id={`${id}-crm-hint`} className="text-sm text-muted-foreground">
-            Потрібен для «Мої записи» і статистики
+            Needed for «Today&apos;s patients» and the analytics
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <Switch id={`${id}-active`} checked={isActive} onCheckedChange={setIsActive} />
-          <Label htmlFor={`${id}-active`}>Активний</Label>
+          <Label htmlFor={`${id}-active`}>Active</Label>
         </div>
 
         {error && (
@@ -135,11 +135,11 @@ function StaffForm({
 
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel} disabled={saving}>
-          Скасувати
+          Cancel
         </Button>
         <Button type="submit" disabled={saving}>
           {saving && <Loader2Icon className="animate-spin" aria-hidden="true" />}
-          Зберегти
+          Save
         </Button>
       </DialogFooter>
     </form>

@@ -11,6 +11,7 @@ import type {
   TemplateSchema,
   TemplateVariable,
 } from '@/lib/types'
+import { formatNumber, formatSheetDate } from '@/lib/format'
 
 export type TemplateFormContext = {
   patient: Patient
@@ -23,12 +24,9 @@ export const sectionElementId = (sectionId: string) => `tf-section-${sectionId}`
 export const fieldElementId = (fieldId: string) => `tf-field-${fieldId}`
 export const cleanLabel = (label: string) => label.trim().replace(/:\s*$/, '')
 
-const dateFormatter = new Intl.DateTimeFormat('uk-UA', { day: '2-digit', month: '2-digit', year: 'numeric' })
-const numberFormatter = new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 2 })
-
+/** Variables land on the sheet, so dates take the sheet format (24/10/2026). */
 function formatIsoDate(iso: string | null) {
-  if (!iso) return ''
-  return dateFormatter.format(new Date(`${iso.slice(0, 10)}T00:00:00`))
+  return iso ? formatSheetDate(iso.slice(0, 10)) : ''
 }
 
 export function collectFields(schema: TemplateSchema): FieldBlock[] {
@@ -66,14 +64,14 @@ export function isEmptyValue(value: FieldValue | undefined): boolean {
   return value.length === 0
 }
 
-/** How a field is named in messages and for screen readers: its label, or «поле в розділі «…»» — the name is
+/** How a field is named in messages and for screen readers: its label, or «field in section «…»» — the name is
  *  optional (the sheet then prints only the value). Keyed by field id. */
 export function fieldNames(schema: TemplateSchema): Map<string, string> {
   const names = new Map<string, string>()
   for (const section of schema.sections) {
     const fields = section.blocks.flatMap((b) => (b.kind === 'field' ? [b] : b.kind === 'group' ? b.blocks : []))
     for (const field of fields) {
-      names.set(field.id, cleanLabel(field.label) || `поле в розділі «${cleanLabel(section.title)}»`)
+      names.set(field.id, cleanLabel(field.label) || `field in section «${cleanLabel(section.title)}»`)
     }
   }
   return names
@@ -85,8 +83,8 @@ export function findMissingRequired(schema: TemplateSchema, values: DocumentValu
     .map((field) => field.id)
 }
 
-/** Said only in the dropdown item that adds a service outside the clinic; after that it is a plain service name. */
-export const OUTSIDE_CLINIC_LABEL = 'поза клінікою'
+/** Said only in the dropdown item that adds an External service; after that it is a plain service name. */
+export const OUTSIDE_CLINIC_LABEL = 'External'
 
 /** A catalog service (serviceId) or one outside the clinic (customName) — exactly one of the two. */
 function isServiceSelection(value: unknown): value is ServiceSelection {
@@ -124,13 +122,13 @@ export function formatFieldValue(field: FieldBlock, value: FieldValue | undefine
 
   switch (field.type) {
     case 'checkbox':
-      return value === true ? 'Так' : value === false ? 'Ні' : null
+      return value === true ? 'Yes' : value === false ? 'No' : null
     case 'multiselect':
       return Array.isArray(value) && value.length ? (value as string[]).join(', ') : null
     case 'number': {
       if (value === '') return null
       const num = typeof value === 'number' ? value : Number(value)
-      return Number.isNaN(num) ? null : withUnit(numberFormatter.format(num))
+      return Number.isNaN(num) ? null : withUnit(formatNumber(num))
     }
     default: {
       const text = String(value).trim()

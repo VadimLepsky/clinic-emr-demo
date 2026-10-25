@@ -46,7 +46,7 @@ export function ImportDiffStep({ labName, rows, skipped, diff, onBack, onApply }
     try {
       await onApply(rows, defaultCategory, [...deactivateIds])
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Не вдалося застосувати зміни.')
+      setError(e instanceof Error ? e.message : 'Could not apply the changes.')
       setBusy(false)
     }
   }
@@ -54,20 +54,20 @@ export function ImportDiffStep({ labName, rows, skipped, diff, onBack, onApply }
   return (
     <div className="flex flex-col gap-6">
       <DialogHeader>
-        <DialogTitle>Перевірка змін</DialogTitle>
+        <DialogTitle>Review changes</DialogTitle>
         <DialogDescription>
-          Крок 3 з 3. Лабораторія «{labName.trim()}». Без змін: {diff.unchanged}
-          {skipped > 0 && `. Пропущено рядків без назви або з некоректною ціною: ${skipped}`}.
+          Step 3 of 3. Laboratory «{labName.trim()}». Unchanged: {diff.unchanged}
+          {skipped > 0 && `. Rows skipped without a name or with an invalid price: ${skipped}`}.
         </DialogDescription>
       </DialogHeader>
 
       <div className="flex flex-col gap-4">
         <div className="flex max-h-[55vh] flex-col gap-5 overflow-y-auto pr-1">
-          <Section title="Нові послуги" count={diff.added.length} empty="Нових послуг немає.">
+          <Section title="New services" count={diff.added.length} empty="No new services.">
             <div className="flex flex-col gap-2 pb-1">
               <div className="flex items-center gap-2">
                 <Label htmlFor={`${id}-category`} className="shrink-0 text-muted-foreground">
-                  Категорія для нових:
+                  Category for new ones:
                 </Label>
                 <Select
                   items={serviceCategories}
@@ -97,7 +97,7 @@ export function ImportDiffStep({ labName, rows, skipped, diff, onBack, onApply }
             />
           </Section>
 
-          <Section title="Змінилась ціна" count={diff.changed.length} empty="Змін цін немає.">
+          <Section title="Price changed" count={diff.changed.length} empty="No price changes.">
             <Rows
               items={diff.changed.map((c) => ({
                 key: c.service.id,
@@ -114,9 +114,9 @@ export function ImportDiffStep({ labName, rows, skipped, diff, onBack, onApply }
             />
           </Section>
 
-          <Section title="Відсутні у файлі" count={diff.missing.length} empty="Усі активні послуги є у файлі.">
+          <Section title="Missing from the file" count={diff.missing.length} empty="All active services are in the file.">
             <p className="pb-1 text-sm text-muted-foreground">
-              Позначте послуги, які потрібно деактивувати. За замовчуванням вони залишаються активними.
+              Tick the services to deactivate. By default they stay active.
             </p>
             <ul className="divide-y divide-border rounded-lg border border-border">
               {diff.missing.slice(0, MAX_VISIBLE).map((s) => (
@@ -147,11 +147,11 @@ export function ImportDiffStep({ labName, rows, skipped, diff, onBack, onApply }
 
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onBack} disabled={busy}>
-          Назад
+          Back
         </Button>
         <Button type="button" onClick={handleApply} disabled={busy || nothingToDo}>
           {busy && <Loader2Icon className="animate-spin" aria-hidden="true" />}
-          Застосувати зміни
+          Apply changes
         </Button>
       </DialogFooter>
     </div>
@@ -204,5 +204,5 @@ function Rows({
 
 function Overflow({ total }: { total: number }) {
   if (total <= MAX_VISIBLE) return null
-  return <p className="text-sm text-muted-foreground">…та ще {total - MAX_VISIBLE}</p>
+  return <p className="text-sm text-muted-foreground">…and {total - MAX_VISIBLE} more</p>
 }

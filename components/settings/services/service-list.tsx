@@ -49,13 +49,13 @@ export function ServiceList({ initialImportOpen = false }: { initialImportOpen?:
   useEffect(() => setPage(0), [deferredQuery, category, source, sortBy, sortDir])
 
   const categoryItems = useMemo(
-    () => [{ value: ALL, label: 'Усі категорії' }, ...serviceCategories],
+    () => [{ value: ALL, label: 'All categories' }, ...serviceCategories],
     [],
   )
   const sourceItems = useMemo(
     () => [
-      { value: ALL, label: 'Усі джерела' },
-      { value: 'crm', label: 'Клініка' },
+      { value: ALL, label: 'All sources' },
+      { value: 'crm', label: 'Clinic' },
       ...labNames.map((n) => ({ value: n, label: n })),
     ],
     [labNames],
@@ -79,7 +79,7 @@ export function ServiceList({ initialImportOpen = false }: { initialImportOpen?:
       )
       await refreshSearchCaches()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Не вдалося зберегти зміни')
+      toast.error(error instanceof Error ? error.message : 'Could not save the changes')
     }
   }
 
@@ -104,15 +104,15 @@ export function ServiceList({ initialImportOpen = false }: { initialImportOpen?:
     <Card>
       <CardHeader>
         <div className="flex max-w-3xl min-w-0 flex-col gap-1">
-          <CardTitle>Послуги</CardTitle>
+          <CardTitle>Services</CardTitle>
           <CardDescription>
-            Довідник, у якому лікарі шукають послуги для призначень. Послуги з джерелом «Клініка» синхронізуються з
-            CRM — для них можна змінити лише категорію й активність.
+            The catalogue doctors search for care plan services. Services with the «Clinic» source sync from the
+            CRM — only their category and active state can be changed.
           </CardDescription>
         </div>
         <Button onClick={() => setImportOpen(true)}>
           <UploadIcon aria-hidden="true" />
-          Імпорт прайсу лабораторії
+          Import a lab price list
         </Button>
       </CardHeader>
 
@@ -126,13 +126,13 @@ export function ServiceList({ initialImportOpen = false }: { initialImportOpen?:
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Пошук за назвою або кодом"
-            aria-label="Пошук за назвою або кодом"
+            placeholder="Search by name or code"
+            aria-label="Search by name or code"
             className="pl-9"
           />
         </div>
         <Select items={categoryItems} value={category} onValueChange={(v) => v && setCategory(v as string)}>
-          <SelectTrigger aria-label="Категорія" className="w-52">
+          <SelectTrigger aria-label="Category" className="w-52">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -144,7 +144,7 @@ export function ServiceList({ initialImportOpen = false }: { initialImportOpen?:
           </SelectContent>
         </Select>
         <Select items={sourceItems} value={source} onValueChange={(v) => v && setSource(v as string)}>
-          <SelectTrigger aria-label="Джерело" className="w-44">
+          <SelectTrigger aria-label="Source" className="w-44">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -160,23 +160,23 @@ export function ServiceList({ initialImportOpen = false }: { initialImportOpen?:
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <TableHead className="w-24">Код</TableHead>
+            <TableHead className="w-24">Code</TableHead>
             <SortableHead
-              label="Назва"
+              label="Name"
               active={sortBy === 'name'}
               dir={sortDir}
               onClick={() => toggleSort('name')}
             />
-            <TableHead className="w-60">Категорія</TableHead>
-            <TableHead className="w-32">Джерело</TableHead>
+            <TableHead className="w-60">Category</TableHead>
+            <TableHead className="w-32">Source</TableHead>
             <SortableHead
-              label="Ціна"
+              label="Price"
               align="right"
               active={sortBy === 'price'}
               dir={sortDir}
               onClick={() => toggleSort('price')}
             />
-            <TableHead className="w-24">Активна</TableHead>
+            <TableHead className="w-24">Active</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -191,7 +191,7 @@ export function ServiceList({ initialImportOpen = false }: { initialImportOpen?:
           {services?.length === 0 && (
             <TableRow>
               <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                Нічого не знайдено.
+                Nothing found.
               </TableCell>
             </TableRow>
           )}
@@ -205,7 +205,7 @@ export function ServiceList({ initialImportOpen = false }: { initialImportOpen?:
                   value={service.category}
                   onValueChange={(v) => v && patchService(service, { category: v as ServiceCategory })}
                 >
-                  <SelectTrigger size="sm" aria-label={`Категорія: ${service.name}`} className="w-full">
+                  <SelectTrigger size="sm" aria-label={`Category: ${service.name}`} className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -223,7 +223,7 @@ export function ServiceList({ initialImportOpen = false }: { initialImportOpen?:
                   {service.source === 'crm' && (
                     <LockIcon
                       className="size-3.5 text-muted-foreground"
-                      aria-label="Синхронізується з CRM"
+                      aria-label="Synced from the CRM"
                     />
                   )}
                   {formatMoney(service.price)}
@@ -233,7 +233,7 @@ export function ServiceList({ initialImportOpen = false }: { initialImportOpen?:
                 <Switch
                   checked={service.is_active}
                   onCheckedChange={(checked) => patchService(service, { is_active: checked })}
-                  aria-label={`Активна: ${service.name}`}
+                  aria-label={`Active: ${service.name}`}
                 />
               </TableCell>
             </TableRow>
@@ -244,11 +244,11 @@ export function ServiceList({ initialImportOpen = false }: { initialImportOpen?:
       {total > PAGE_SIZE && (
         <CardFooter className="justify-between text-sm text-muted-foreground">
           <span>
-            {currentPage * PAGE_SIZE + 1}–{Math.min(total, (currentPage + 1) * PAGE_SIZE)} з {total}
+            {currentPage * PAGE_SIZE + 1}–{Math.min(total, (currentPage + 1) * PAGE_SIZE)} of {total}
           </span>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" disabled={currentPage === 0} onClick={() => setPage(currentPage - 1)}>
-              Назад
+              Back
             </Button>
             <Button
               variant="outline"
@@ -256,7 +256,7 @@ export function ServiceList({ initialImportOpen = false }: { initialImportOpen?:
               disabled={currentPage >= pageCount - 1}
               onClick={() => setPage(currentPage + 1)}
             >
-              Далі
+              Next
             </Button>
           </div>
         </CardFooter>

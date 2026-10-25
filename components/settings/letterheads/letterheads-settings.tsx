@@ -32,38 +32,38 @@ import { LetterheadPreview } from '@/components/document-sheet/letterhead-previe
 
 const ACCEPTED_TYPES = ['image/png', 'image/jpeg']
 const MAX_BYTES = 5 * 1024 * 1024
-const IMAGE_HINT = 'PNG або JPG, ширина як у листа А4'
+const IMAGE_HINT = 'PNG or JPG, as wide as an A4 sheet'
 
 const copy: Record<
   LetterheadKind,
   { title: string; description: string; add: string; newTitle: string; empty: string; afterDelete: string }
 > = {
   header: {
-    title: 'Шапки',
-    description: 'Верх листа А4. Шаблон обирає свою; нові шаблони й документи без шаблону — шапка за замовчуванням.',
-    add: 'Додати шапку',
-    newTitle: 'Нова шапка',
-    empty: `Завантажте шапку бланка (${IMAGE_HINT})`,
-    afterDelete: 'друкуватимуться з шапкою за замовчуванням',
+    title: 'Headers',
+    description: 'The top of an A4 sheet. A template picks its own; new templates and documents without a template get the default header.',
+    add: 'Add header',
+    newTitle: 'New header',
+    empty: `Upload a letterhead header (${IMAGE_HINT})`,
+    afterDelete: 'will print with the default header',
   },
   footer: {
-    title: 'Підвали',
-    description: 'Низ листа А4, під підписом. Обирається в шаблоні.',
-    add: 'Додати підвал',
-    newTitle: 'Новий підвал',
-    empty: `Завантажте підвал бланка (${IMAGE_HINT})`,
-    afterDelete: 'друкуватимуться без підвалу',
+    title: 'Footers',
+    description: 'The bottom of an A4 sheet, under the signature. Chosen in the template.',
+    add: 'Add footer',
+    newTitle: 'New footer',
+    empty: `Upload a letterhead footer (${IMAGE_HINT})`,
+    afterDelete: 'will print without a footer',
   },
 }
 
 /** PNG / JPG up to 5 MB as a data URL (mocks; Supabase Storage later). */
 function readImage(file: File): Promise<string> {
-  if (!ACCEPTED_TYPES.includes(file.type)) return Promise.reject(new Error('Підтримуються PNG і JPG'))
-  if (file.size > MAX_BYTES) return Promise.reject(new Error('Файл завеликий: максимум 5 МБ'))
+  if (!ACCEPTED_TYPES.includes(file.type)) return Promise.reject(new Error('PNG and JPG are supported'))
+  if (file.size > MAX_BYTES) return Promise.reject(new Error('The file is too large: 5 MB at most'))
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onload = () => resolve(String(reader.result))
-    reader.onerror = () => reject(new Error('Не вдалося прочитати файл'))
+    reader.onerror = () => reject(new Error('Could not read the file'))
     reader.readAsDataURL(file)
   })
 }
@@ -102,11 +102,11 @@ export function LetterheadsSettings() {
 }
 
 const blankSlots = [
-  { key: 'prescription_header_image_url', label: 'Шапка', alt: 'Шапка призначення' },
-  { key: 'prescription_footer_image_url', label: 'Підвал', alt: 'Підвал призначення' },
+  { key: 'prescription_header_image_url', label: 'Header', alt: 'Care plan header' },
+  { key: 'prescription_footer_image_url', label: 'Footer', alt: 'Care plan footer' },
 ] as const
 
-/** «Бланк призначення»: the prescriptions' own header and footer — just images, separate from the library. */
+/** «Care plan letterhead»: the care plans' own header and footer — just images, separate from the library. */
 function PrescriptionBlank({ clinicSettings }: { clinicSettings: ClinicSettings | undefined }) {
   const { mutate } = useSWRConfig()
   const fileRef = useRef<HTMLInputElement>(null)
@@ -118,7 +118,7 @@ function PrescriptionBlank({ clinicSettings }: { clinicSettings: ClinicSettings 
       await mutate('clinic-settings', result, { revalidate: false })
       toast.success(success)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Не вдалося зберегти')
+      toast.error(error instanceof Error ? error.message : 'Could not save')
     }
   }
 
@@ -127,9 +127,9 @@ function PrescriptionBlank({ clinicSettings }: { clinicSettings: ClinicSettings 
     setTarget(null)
     if (!file || !key) return
     try {
-      await save({ [key]: await readImage(file) }, 'Зображення збережено')
+      await save({ [key]: await readImage(file) }, 'Image saved')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Не вдалося завантажити зображення')
+      toast.error(error instanceof Error ? error.message : 'Could not upload the image')
     }
   }
 
@@ -137,8 +137,8 @@ function PrescriptionBlank({ clinicSettings }: { clinicSettings: ClinicSettings 
     <Card>
       <CardHeader>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <CardTitle>Бланк призначення</CardTitle>
-          <CardDescription>Шапка й підвал друкованих призначень — окремо від бланків шаблонів.</CardDescription>
+          <CardTitle>Care plan letterhead</CardTitle>
+          <CardDescription>Header and footer of printed care plans — separate from the template letterheads.</CardDescription>
         </div>
       </CardHeader>
       {!clinicSettings ? (
@@ -161,15 +161,15 @@ function PrescriptionBlank({ clinicSettings }: { clinicSettings: ClinicSettings 
                     <div className="ml-auto flex items-center gap-1">
                       <Button variant="ghost" size="sm" onClick={choose}>
                         <UploadIcon aria-hidden="true" />
-                        Замінити
+                        Replace
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => save({ [slot.key]: null }, `${slot.label} прибрано`)}
+                        onClick={() => save({ [slot.key]: null }, `${slot.label} removed`)}
                       >
                         <Trash2Icon aria-hidden="true" />
-                        Прибрати
+                        Remove
                       </Button>
                     </div>
                   )}
@@ -183,7 +183,7 @@ function PrescriptionBlank({ clinicSettings }: { clinicSettings: ClinicSettings 
                     className="flex w-full cursor-pointer flex-col items-center gap-2 rounded-xl border border-dashed border-border px-6 py-8 text-center text-muted-foreground transition-colors hover:bg-muted/40 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
                   >
                     <UploadIcon className="size-5" aria-hidden="true" />
-                    {`${slot.key === 'prescription_header_image_url' ? 'Шапки' : 'Підвалу'} немає — завантажте зображення (${IMAGE_HINT})`}
+                    {`No ${slot.key === 'prescription_header_image_url' ? 'header' : 'footer'} — upload an image (${IMAGE_HINT})`}
                   </button>
                 )}
               </div>
@@ -231,7 +231,7 @@ function LetterheadList({
       toast.success(success)
       return true
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Не вдалося зберегти')
+      toast.error(error instanceof Error ? error.message : 'Could not save')
       return false
     }
   }
@@ -242,9 +242,9 @@ function LetterheadList({
     if (!file || !target) return
     try {
       const image_url = await readImage(file)
-      await run(() => updateLetterhead(target.id, { image_url }), 'Зображення замінено')
+      await run(() => updateLetterhead(target.id, { image_url }), 'Image replaced')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Не вдалося завантажити зображення')
+      toast.error(error instanceof Error ? error.message : 'Could not upload the image')
     }
   }
 
@@ -270,11 +270,11 @@ function LetterheadList({
         <ul className="divide-y divide-border">
           {letterheads.map((letterhead) => {
             const used = usage[letterhead.id] ?? []
-            // Where it is used: «за замовчуванням», «шаблон: …».
+            // Where it is used: «default», «template: …».
             const uses = [
-              ...(letterhead.is_default ? ['за замовчуванням'] : []),
+              ...(letterhead.is_default ? ['default'] : []),
               ...(used.length > 0
-                ? [`${used.length === 1 ? 'шаблон' : 'шаблони'}: ${used.map((t) => t.name).join(', ')}`]
+                ? [`${used.length === 1 ? 'template' : 'templates'}: ${used.map((t) => t.name).join(', ')}`]
                 : []),
             ]
             return (
@@ -282,7 +282,7 @@ function LetterheadList({
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                   <div className="flex min-w-0 flex-1 flex-col">
                     <p className="font-semibold">{letterhead.name}</p>
-                    <p className="text-sm text-muted-foreground">{uses.length ? uses.join(' · ') : 'Не використовується'}</p>
+                    <p className="text-sm text-muted-foreground">{uses.length ? uses.join(' · ') : 'Not used'}</p>
                   </div>
                   <div className="ml-auto flex flex-wrap items-center gap-1">
                     {kind === 'header' && !letterhead.is_default && (
@@ -290,10 +290,10 @@ function LetterheadList({
                         variant="ghost"
                         size="sm"
                         onClick={() =>
-                          run(() => setDefaultLetterhead(letterhead.id), `«${letterhead.name}» — шапка за замовчуванням`)
+                          run(() => setDefaultLetterhead(letterhead.id), `«${letterhead.name}» is now the default header`)
                         }
                       >
-                        Зробити за замовчуванням
+                        Make default
                       </Button>
                     )}
                     <Button
@@ -305,17 +305,17 @@ function LetterheadList({
                       }}
                     >
                       <UploadIcon aria-hidden="true" />
-                      Замінити картинку
+                      Replace image
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => setRenaming(letterhead)}>
-                      Перейменувати
+                      Rename
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon-sm"
                       className="text-destructive hover:text-destructive"
                       onClick={() => setDeleting(letterhead)}
-                      aria-label={`Видалити: ${letterhead.name}`}
+                      aria-label={`Delete: ${letterhead.name}`}
                     >
                       <Trash2Icon aria-hidden="true" />
                     </Button>
@@ -357,19 +357,19 @@ function LetterheadList({
         kind={kind}
         open={adding}
         onOpenChange={setAdding}
-        onCreate={(input) => run(() => createLetterhead({ kind, ...input }), 'Бланк додано')}
+        onCreate={(input) => run(() => createLetterhead({ kind, ...input }), 'Letterhead added')}
       />
       <RenameDialog
         letterhead={renaming}
         onClose={() => setRenaming(null)}
-        onRename={(id, name) => run(() => updateLetterhead(id, { name }), 'Назву змінено')}
+        onRename={(id, name) => run(() => updateLetterhead(id, { name }), 'Name changed')}
       />
       <DeleteDialog
         letterhead={deleting}
         usedIn={deleting ? (usage[deleting.id] ?? []) : []}
         afterDelete={text.afterDelete}
         onClose={() => setDeleting(null)}
-        onDelete={(id) => run(() => deleteLetterhead(id), 'Бланк видалено')}
+        onDelete={(id) => run(() => deleteLetterhead(id), 'Letterhead deleted')}
       />
     </Card>
   )
@@ -407,7 +407,7 @@ function AddLetterheadDialog({
       // The file name is a fair first guess for the name.
       if (!name.trim()) setName(file.name.replace(/\.[^.]+$/, ''))
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Не вдалося завантажити зображення')
+      toast.error(error instanceof Error ? error.message : 'Could not upload the image')
     }
   }
 
@@ -426,15 +426,15 @@ function AddLetterheadDialog({
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           <DialogHeader>
             <DialogTitle>{copy[kind].newTitle}</DialogTitle>
-            <DialogDescription>{`${IMAGE_HINT}: від 2000 px завширшки, щоб друк був чіткий.`}</DialogDescription>
+            <DialogDescription>{`${IMAGE_HINT}: 2000 px wide or more, so it prints sharp.`}</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor={`${id}-name`}>Назва</Label>
+              <Label htmlFor={`${id}-name`}>Name</Label>
               <Input id={`${id}-name`} value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor={`${id}-file`}>Зображення</Label>
+              <Label htmlFor={`${id}-file`}>Image</Label>
               <input
                 ref={fileRef}
                 id={`${id}-file`}
@@ -451,7 +451,7 @@ function AddLetterheadDialog({
                   <LetterheadPreview src={image} alt={name} />
                   <Button type="button" variant="outline" size="sm" className="self-start" onClick={() => fileRef.current?.click()}>
                     <UploadIcon aria-hidden="true" />
-                    Замінити
+                    Replace
                   </Button>
                 </>
               ) : (
@@ -468,11 +468,11 @@ function AddLetterheadDialog({
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => reset(false)} disabled={saving}>
-              Скасувати
+              Cancel
             </Button>
             <Button type="submit" disabled={saving || !image || !name.trim()}>
               {saving && <Loader2Icon className="animate-spin" aria-hidden="true" />}
-              Додати
+              Add
             </Button>
           </DialogFooter>
         </form>
@@ -523,18 +523,18 @@ function RenameForm({
       }}
     >
       <DialogHeader>
-        <DialogTitle>Перейменувати</DialogTitle>
+        <DialogTitle>Rename</DialogTitle>
       </DialogHeader>
       <div className="flex flex-col gap-2">
-        <Label htmlFor={`${id}-name`}>Назва</Label>
+        <Label htmlFor={`${id}-name`}>Name</Label>
         <Input id={`${id}-name`} value={name} onChange={(e) => setName(e.target.value)} autoFocus />
       </div>
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
-          Скасувати
+          Cancel
         </Button>
         <Button type="submit" disabled={saving || !name.trim()}>
-          Зберегти
+          Save
         </Button>
       </DialogFooter>
     </form>
@@ -559,16 +559,16 @@ function DeleteDialog({
     <Dialog open={letterhead !== null} onOpenChange={(open) => !open && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{`Видалити «${letterhead?.name ?? ''}»?`}</DialogTitle>
+          <DialogTitle>{`Delete «${letterhead?.name ?? ''}»?`}</DialogTitle>
           <DialogDescription>
             {usedIn.length > 0
-              ? `Використовується в шаблонах: ${usedIn.map((t) => `«${t.name}»`).join(', ')}. Після видалення вони ${afterDelete}.`
-              : 'У шаблонах не використовується.'}
+              ? `Used in templates: ${usedIn.map((t) => `«${t.name}»`).join(', ')}. After deleting, they ${afterDelete}.`
+              : 'Not used in any template.'}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={busy}>
-            Скасувати
+            Cancel
           </Button>
           <Button
             variant="destructive"
@@ -581,7 +581,7 @@ function DeleteDialog({
               if (ok) onClose()
             }}
           >
-            Видалити
+            Delete
           </Button>
         </DialogFooter>
       </DialogContent>

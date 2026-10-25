@@ -16,27 +16,22 @@ import {
   ComboboxValue,
   useComboboxAnchor,
 } from '@/components/ui/combobox'
+import { formatMoney } from '@/lib/format'
 import type { SearchServices } from './services-context'
 import { OUTSIDE_CLINIC_LABEL, selectionKey } from './utils'
 
 const MIN_QUERY_LENGTH = 3
 const DEBOUNCE_MS = 200
 
-const priceFormatter = new Intl.NumberFormat('uk-UA', {
-  style: 'currency',
-  currency: 'UAH',
-  maximumFractionDigits: 0,
-})
-
 export function serviceChipLabel(service: Service) {
   return service.code ? `${service.code} ${service.name}` : service.name
 }
 
 function sourceLabel(service: Service) {
-  return service.source === 'crm' ? 'Клініка' : (service.lab_name ?? 'Лабораторія')
+  return service.source === 'crm' ? 'Clinic' : (service.lab_name ?? 'Laboratory')
 }
 
-/** A dropdown item and a chip: a catalog service, or one outside the clinic (only the typed name). */
+/** A dropdown item and a chip: a catalogue service, or an External one (only the typed name). */
 type PickerOption = { key: string; service: Service; customName?: undefined } | { key: string; customName: string; service?: undefined }
 
 const serviceOption = (service: Service): PickerOption => ({ key: service.id, service })
@@ -95,7 +90,7 @@ export function ServicesPicker({
     return service ? [serviceOption(service)] : []
   })
   const unresolved = selections.filter((s) => s.serviceId !== undefined && !catalog.has(s.serviceId))
-  // The last item is always «Додати «…» як послугу поза клінікою», also when the search finds nothing
+  // The last item is always «Add «…» as an External service», also when the search finds nothing
   // (and before the search starts: an outside-clinic name may be shorter than the search minimum).
   const items = typed ? [...results.map(serviceOption), customOption(typed)] : []
 
@@ -142,7 +137,7 @@ export function ServicesPicker({
               <ComboboxChipsInput
                 id={id}
                 aria-labelledby={labelId}
-                placeholder={value.length === 0 ? 'Введіть назву або код послуги' : undefined}
+                placeholder={value.length === 0 ? 'Type a service name or code' : undefined}
                 className="h-5 bg-transparent placeholder:text-muted-foreground"
               />
             </>
@@ -153,10 +148,10 @@ export function ServicesPicker({
         {(!canSearch || pending || results.length === 0) && (
           <p className="px-3 pt-2 text-sm text-muted-foreground">
             {!canSearch
-              ? `Пошук у довіднику — від ${MIN_QUERY_LENGTH} символів`
+              ? `Catalogue search — ${MIN_QUERY_LENGTH} characters or more`
               : pending
-                ? 'Пошук…'
-                : 'У довіднику нічого не знайдено'}
+                ? 'Searching…'
+                : 'Nothing found in the catalogue'}
           </p>
         )}
         <ComboboxList>
@@ -168,7 +163,7 @@ export function ServicesPicker({
                     {option.service.code ?? '—'}
                   </span>
                   <span className="min-w-0 flex-1 truncate">{option.service.name}</span>
-                  <span className="shrink-0 tabular-nums">{priceFormatter.format(option.service.price)}</span>
+                  <span className="shrink-0 tabular-nums">{formatMoney(option.service.price)}</span>
                   <span className="w-20 shrink-0 truncate text-right text-sm text-muted-foreground">
                     {sourceLabel(option.service)}
                   </span>
@@ -177,7 +172,7 @@ export function ServicesPicker({
             ) : (
               <ComboboxItem key={option.key} value={option}>
                 <PlusIcon className="text-muted-foreground" aria-hidden="true" />
-                <span className="min-w-0 flex-1">{`Додати «${option.customName}» як послугу ${OUTSIDE_CLINIC_LABEL}`}</span>
+                <span className="min-w-0 flex-1">{`Add «${option.customName}» as an ${OUTSIDE_CLINIC_LABEL} service`}</span>
               </ComboboxItem>
             )
           }

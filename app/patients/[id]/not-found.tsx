@@ -4,9 +4,9 @@ export default function PatientNotFound() {
   return (
     <Page>
       <PageHeader
-        back={{ href: '/patients', label: 'До списку пацієнтів' }}
-        title="Пацієнта не знайдено"
-        description="Перевірте посилання або скористайтеся пошуком."
+        back={{ href: '/patients', label: 'Back to patients' }}
+        title="Patient not found"
+        description="Check the link or use the search."
       />
     </Page>
   )
