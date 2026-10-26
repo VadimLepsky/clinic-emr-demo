@@ -6,7 +6,7 @@ export async function ManagerOnly({ children }: { children: React.ReactNode }) {
   if (user.role === 'manager') return children
   return (
     <Page>
-      <PageHeader title="This section is for the clinic manager only" />
+      <PageHeader title="This section is for the practice manager only" />
     </Page>
   )
 }

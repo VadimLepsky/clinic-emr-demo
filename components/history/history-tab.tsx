@@ -159,7 +159,7 @@ export function HistoryTab({ patientId }: { patientId: string }) {
                           href={href}
                           className="shrink-0 text-sm font-medium text-primary underline-offset-4 hover:underline"
                         >
-                          {entry.entity_type === 'prescription' ? 'Care plans' : 'Open'}
+                          {entry.entity_type === 'prescription' ? 'Orders' : 'Open'}
                         </Link>
                       )}
                     </li>

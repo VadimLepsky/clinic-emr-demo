@@ -106,7 +106,7 @@ export function ServiceList({ initialImportOpen = false }: { initialImportOpen?:
         <div className="flex max-w-3xl min-w-0 flex-col gap-1">
           <CardTitle>Services</CardTitle>
           <CardDescription>
-            The catalogue doctors search for care plan services. Services with the «Clinic» source sync from the
+            The catalog providers search for order services. Services with the «Clinic» source sync from the
             CRM — only their category and active state can be changed.
           </CardDescription>
         </div>

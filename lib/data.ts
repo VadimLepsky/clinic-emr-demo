@@ -74,7 +74,7 @@ function auditTitleOf(entityType: string, entityId: string): string | null {
 }
 
 function auditEntityLabel(entityType: string) {
-  return entityType === 'prescription' ? 'care plan' : 'document';
+  return entityType === 'prescription' ? 'orders' : 'document';
 }
 
 export async function logPrint(entityType: string, entityId: string, patientId: string | null): Promise<void> {
@@ -142,7 +142,7 @@ export async function updateStaff(id: string, input: StaffInput): Promise<Staff>
   if (!member) throw new Error('Staff member not found');
   const next = normalizeStaffInput(input, id);
   if (id === (await currentUserId()) && (!next.is_active || next.role !== 'manager')) {
-    throw new Error('You cannot deactivate yourself or remove your own clinic manager role');
+    throw new Error('You cannot deactivate yourself or remove your own practice manager role');
   }
   Object.assign(member, next);
   addAudit({
@@ -165,7 +165,7 @@ export async function updateStaffPhoto(staffId: string, dataUrl: string | null):
   return { ...member };
 }
 
-// Number of consultation notes the staff member created today
+// Number of visit notes the staff member created today
 export async function countTodayDocuments(staffId: string): Promise<number> {
   await delay();
   const today = new Date().toISOString().slice(0, 10);
@@ -328,7 +328,7 @@ export async function uploadDocument(input: {
 
 // ============ Templates ============
 
-// Who creates documents from templates of each kind. Front desk and contact centre don't create template documents.
+// Who creates documents from templates of each kind. Front desk and contact center don't create template documents.
 const TEMPLATE_KIND_CREATORS: Record<TemplateKind, readonly StaffRole[]> = {
   consultation: ['doctor', 'medical_staff', 'manager'],
   ultrasound: ['doctor', 'medical_staff', 'manager'],
@@ -343,10 +343,10 @@ export function canCreateKind(role: StaffRole, kind: TemplateKind): boolean {
 
 // Default folder for a new template of this kind (by folder name).
 const DEFAULT_FOLDER_NAMES: Record<TemplateKind, string> = {
-  consultation: 'Consultation notes',
+  consultation: 'Visit notes',
   ultrasound: 'Ultrasound',
   lab: 'Lab results',
-  certificate: 'Certificates',
+  certificate: 'Letters & forms',
   other: 'Other files',
 };
 
@@ -368,7 +368,7 @@ function currentVersionOf(template: Template) {
   return db.templateVersions.find((v) => v.id === template.current_version_id)!;
 }
 
-// For the clinic manager: all templates, inactive ones included, with the current version number.
+// For the practice manager: all templates, inactive ones included, with the current version number.
 export async function listAllTemplates(): Promise<(Template & { version: number })[]> {
   await delay();
   return db.templates
@@ -580,7 +580,7 @@ export async function deleteServicePackage(id: string): Promise<void> {
   });
 }
 
-// ============ Service catalogue (settings) ============
+// ============ Service catalog (settings) ============
 
 export type ServiceFilters = {
   query?: string;
@@ -611,7 +611,7 @@ export async function listAllServices(filters: ServiceFilters = {}): Promise<Ser
     .sort((a, b) => (filters.sortBy === 'price' ? (a.price - b.price) * dir : a.name.localeCompare(b.name, 'en') * dir));
 }
 
-// Sources for the filter: «crm» + the laboratory names already in the catalogue.
+// Sources for the filter: «crm» + the laboratory names already in the catalog.
 export async function listServiceLabNames(): Promise<string[]> {
   await delay(50);
   const names = new Set<string>();
@@ -675,7 +675,7 @@ export async function previewPriceImport(labName: string, rows: PriceImportRow[]
   return diff;
 }
 
-// Prices in existing care plans don't change: care plan items keep the unit_price from creation time.
+// Prices in existing orders don't change: order items keep the unit_price from creation time.
 export async function applyPriceImport(
   labName: string,
   rows: PriceImportRow[],
@@ -718,7 +718,7 @@ export async function applyPriceImport(
   return { added, updated, deactivated };
 }
 
-// ============ Saving a template document → care plan ============
+// ============ Saving a template document → orders ============
 
 // Separate numbering for each document kind.
 const DOCUMENT_NUMBER_PREFIXES: Record<TemplateKind, string> = {
@@ -739,7 +739,7 @@ function nextDocumentNumber(kind: TemplateKind): string {
   return `${prefix}${String(last + 1).padStart(6, '0')}`;
 }
 
-// Any template kind. The care plan is built from the services blocks, if the template has them: catalogue services
+// Any template kind. The orders are built from the services blocks, if the template has them: catalog services
 // and External ones (no price). rec_external exists only in old template versions (compatibility).
 // A document can be created and edited by whoever may create documents of this kind (canCreateKind).
 export async function saveDocument(input: {
@@ -833,13 +833,13 @@ export async function saveDocument(input: {
     action: rxExisted ? 'update' : 'create', entity_type: 'prescription', entity_id: rx.id,
     patient_id: rx.patient_id, actor_type: 'system',
     description: rxExisted
-      ? 'Updated the care plan'
-      : `Created a care plan from the ${template.kind === 'consultation' ? 'consultation note' : 'document'}`,
+      ? 'Updated the orders'
+      : `Created orders from the ${template.kind === 'consultation' ? 'visit note' : 'document'}`,
   });
   return { document: doc, prescriptionId: rx.id, prescriptionLocked: false };
 }
 
-// ============ Care plans ============
+// ============ Orders ============
 
 function summarize(rxId: string): PrescriptionSummary {
   const rx = db.prescriptions.find((p) => p.id === rxId)!;
@@ -909,14 +909,14 @@ export type PrescriptionDoctorStats = {
   count: number;
   total_amount: number;
   paid_amount: number;
-  completion_pct: number; // average over the doctor's care plans
+  completion_pct: number; // average over the provider's orders
 };
 
 export type PrescriptionStats = {
   count: number;
   total_amount: number;
   paid_amount: number;
-  completion_pct: number; // average over all care plans
+  completion_pct: number; // average over all orders
   by_doctor: PrescriptionDoctorStats[];
 };
 
@@ -965,7 +965,7 @@ export async function getPrescriptionStats(range: { from: string; to: string }):
   };
 }
 
-// Care plans created more than `days` days ago with nothing fulfilled
+// Orders created more than `days` days ago with nothing fulfilled
 export async function listStalePrescriptions(days: number): Promise<PrescriptionSummary[]> {
   await delay();
   const threshold = Date.now() - days * 24 * 60 * 60 * 1000;
@@ -994,9 +994,9 @@ export async function getPrescription(id: string): Promise<{
   return { summary: summarize(id), items };
 }
 
-export const PRESCRIPTION_LOCKED_MESSAGE = 'This care plan has been paid. Create a new care plan to make changes';
+export const PRESCRIPTION_LOCKED_MESSAGE = 'These orders have been paid. Create new orders to make changes';
 
-// Term of a new care plan. 30 days is a proposal still to be confirmed with the clinic.
+// Term of new orders. 30 days is a proposal still to be confirmed with the clinic.
 export const PRESCRIPTION_VALID_DAYS = 30;
 
 /** valid_until for a prescription created on `fromIso` (a date or a datetime): + PRESCRIPTION_VALID_DAYS. */
@@ -1006,16 +1006,16 @@ export function defaultValidUntil(fromIso: string): string {
   return date.toISOString().slice(0, 10);
 }
 
-// Doctors, nurses and the clinic manager create and change care plans; front desk and contact centre only set the
-// discount (updatePrescriptionDiscounts), view and print. Only the clinic manager deletes.
+// Doctors, nurses and the practice manager create and change orders; front desk and contact center only set the
+// discount (updatePrescriptionDiscounts), view and print. Only the practice manager deletes.
 export const PRESCRIPTION_EDITOR_ROLES: readonly StaffRole[] = ['manager', 'doctor', 'medical_staff'];
 
 export function canEditPrescriptions(role: StaffRole): boolean {
   return PRESCRIPTION_EDITOR_ROLES.includes(role);
 }
 
-// Any role sets the discount in a care plan, front desk and contact centre included (the discount only: services and
-// quantities — PRESCRIPTION_EDITOR_ROLES only). A paid care plan is closed to all edits.
+// Any role sets the discount in orders, front desk and contact center included (the discount only: services and
+// quantities — PRESCRIPTION_EDITOR_ROLES only). Paid orders are closed to all edits.
 export const PRESCRIPTION_DISCOUNT_ROLES: readonly StaffRole[] = [
   'manager', 'doctor', 'medical_staff', 'reception', 'contact_center',
 ];
@@ -1044,20 +1044,20 @@ export async function updatePrescriptionDiscounts(
   }
   addAudit({
     action: 'update', entity_type: 'prescription', entity_id: rx.id, patient_id: rx.patient_id,
-    description: `Changed the discount in care plan «${rx.title}»`,
+    description: `Changed the discount in «${rx.title}»`,
   });
   return summarize(rx.id);
 }
 
 async function requirePrescriptionEditor(): Promise<Staff> {
   const user = await getCurrentUser();
-  if (!canEditPrescriptions(user.role)) throw new Error('Front desk and contact centre can only change the discount');
+  if (!canEditPrescriptions(user.role)) throw new Error('Front desk and contact center can only change the discount');
   return user;
 }
 
 function findActivePrescription(id: string) {
   const rx = db.prescriptions.find((p) => p.id === id && !p.deleted_at);
-  if (!rx) throw new Error('Care plan not found');
+  if (!rx) throw new Error('Orders not found');
   return rx;
 }
 
@@ -1068,12 +1068,12 @@ function validateItems(items: { quantity: number; discount_pct: number }[]) {
   }
 }
 
-// A care plan line: a catalogue service (service_id) or an External one (custom_name, no price or discount).
+// An order line: a catalog service (service_id) or an External one (custom_name, no price or discount).
 type PrescriptionItemInput = {
   id?: string; service_id: string | null; custom_name?: string | null; quantity: number; discount_pct: number;
 };
 
-// Creates the care plan lines. Existing lines (by id) keep their creation-time price and fulfilment history.
+// Creates the order lines. Existing lines (by id) keep their creation-time price and fulfillment history.
 function applyPrescriptionItems(rxId: string, items: PrescriptionItemInput[]) {
   validateItems(items);
   const existing = db.prescriptionItems.filter((i) => i.prescription_id === rxId);
@@ -1114,7 +1114,7 @@ function applyPrescriptionItems(rxId: string, items: PrescriptionItemInput[]) {
   }
 }
 
-// New care plans have no free «External» text: such services are lines with custom_name.
+// New orders have no free «External» text: such services are lines with custom_name.
 export async function createPrescription(input: {
   patientId: string;
   title?: string;
@@ -1137,7 +1137,7 @@ export async function createPrescription(input: {
   db.prescriptions.push(rx);
   addAudit({
     action: 'create', entity_type: 'prescription', entity_id: rx.id, patient_id: rx.patient_id,
-    description: `Created care plan «${rx.title}»`,
+    description: `Created «${rx.title}»`,
   });
   return summarize(rx.id);
 }
@@ -1155,7 +1155,7 @@ export async function updatePrescription(
   if (input.valid_until !== undefined) rx.valid_until = input.valid_until || null;
   addAudit({
     action: 'update', entity_type: 'prescription', entity_id: rx.id, patient_id: rx.patient_id,
-    description: `Updated care plan «${rx.title}»`,
+    description: `Updated «${rx.title}»`,
   });
   return summarize(rx.id);
 }
@@ -1163,13 +1163,13 @@ export async function updatePrescription(
 export async function deletePrescription(id: string): Promise<void> {
   await delay();
   const user = await getCurrentUser();
-  if (user.role !== 'manager') throw new Error('Only the clinic manager can delete care plans');
+  if (user.role !== 'manager') throw new Error('Only the practice manager can delete orders');
   const rx = findActivePrescription(id);
   rx.deleted_at = new Date().toISOString();
   rx.deleted_by = user.id;
   addAudit({
     action: 'delete', entity_type: 'prescription', entity_id: rx.id, patient_id: rx.patient_id,
-    description: `Deleted care plan «${rx.title}»`,
+    description: `Deleted «${rx.title}»`,
   });
 }
 
@@ -1195,7 +1195,7 @@ export async function duplicatePrescription(rxId: string): Promise<PrescriptionS
   db.prescriptions.push(rx);
   addAudit({
     action: 'create', entity_type: 'prescription', entity_id: rx.id, patient_id: rx.patient_id,
-    description: `Created a copy of care plan «${source.title}»`,
+    description: `Created a copy of «${source.title}»`,
   });
   return summarize(rx.id);
 }
@@ -1231,7 +1231,7 @@ export async function getClinicSettings(): Promise<ClinicSettings> {
   return { ...db.clinicSettings };
 }
 
-// Care plan letterhead (Settings → Headers & footers → «Care plan letterhead»): the care plan header and footer —
+// Orders letterhead (Settings → Headers & footers → «Orders letterhead»): the orders header and footer —
 // separate images, not from the library. null — remove.
 export async function updatePrescriptionBlank(
   input: Partial<Pick<ClinicSettings, 'prescription_header_image_url' | 'prescription_footer_image_url'>>,
@@ -1240,14 +1240,14 @@ export async function updatePrescriptionBlank(
   Object.assign(db.clinicSettings, input);
   addAudit({
     action: 'update', entity_type: 'clinic_settings', entity_id: null, patient_id: null,
-    description: 'Updated the care plan letterhead',
+    description: 'Updated the orders letterhead',
   });
   return getClinicSettings();
 }
 
 // ============ Letterheads: headers and footers (for templates) ============
 // The library in Settings: only images across the sheet. A template picks a header and a footer
-// (header_id / footer_id, null — none); a document without a template gets the default header. Care plans have their own.
+// (header_id / footer_id, null — none); a document without a template gets the default header. Orders have their own.
 
 export async function listLetterheads(): Promise<Letterhead[]> {
   await delay();

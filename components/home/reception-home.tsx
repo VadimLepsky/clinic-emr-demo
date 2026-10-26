@@ -27,9 +27,9 @@ export function ReceptionHome() {
     refreshInterval: REFRESH_INTERVAL_MS,
   })
 
-  // Front desk and the contact centre see only how many care plans there are today: no day totals or payments.
-  // The amount of each care plan stays in its row.
-  const summary = prescriptions ? [{ label: 'Care plans', value: String(prescriptions.length) }] : undefined
+  // Front desk and the contact center see only how many orders there are today: no day totals or payments.
+  // The amount of each set of orders stays in its row.
+  const summary = prescriptions ? [{ label: 'Orders', value: String(prescriptions.length) }] : undefined
 
   return (
     <div className="grid items-start gap-6 xl:grid-cols-3">
@@ -38,7 +38,7 @@ export function ReceptionHome() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Today&apos;s care plans</CardTitle>
+            <CardTitle>Today&apos;s orders</CardTitle>
           </CardHeader>
           {!prescriptions ? (
             <div className="flex flex-col gap-3 px-8 py-6" aria-busy="true">
@@ -49,7 +49,7 @@ export function ReceptionHome() {
           ) : prescriptions.length === 0 ? (
             <div className="flex flex-col items-center gap-2 px-8 py-12 text-center text-muted-foreground">
               <ClipboardListIcon className="size-6" aria-hidden="true" />
-              No care plans have been created today yet.
+              No orders have been created today yet.
             </div>
           ) : (
             <Table>
@@ -57,7 +57,7 @@ export function ReceptionHome() {
                 <TableRow className="hover:bg-transparent">
                   <TableHead>Time</TableHead>
                   <TableHead>Patient</TableHead>
-                  <TableHead>Doctor</TableHead>
+                  <TableHead>Provider</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -65,13 +65,13 @@ export function ReceptionHome() {
               </TableHeader>
               <TableBody>
                 {prescriptions.map((rx) => (
-                  // The whole row opens the care plan; the patient name is its keyboard path, the record is in «Actions».
+                  // The whole row opens the orders; the patient name is its keyboard path, the record is in «Actions».
                   <TableRow key={rx.id} className="cursor-pointer" onClick={() => openPrescription(rx)}>
                     <TableCell className="tabular-nums">{formatTime(rx.created_at)}</TableCell>
                     <TableCell className="font-semibold whitespace-normal">
                       <button
                         type="button"
-                        aria-label={`Open care plan: ${rx.patient_name}`}
+                        aria-label={`Open orders: ${rx.patient_name}`}
                         onClick={(e) => {
                           e.stopPropagation()
                           openPrescription(rx)

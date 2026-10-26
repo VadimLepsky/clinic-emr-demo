@@ -29,12 +29,12 @@ export function guessMapping(headers: string[]): ColumnMapping {
   return {
     code: find(/^(code|sku|ref|no\.?|#|id)\b|\bcode\b/i),
     name: find(/name|title|service|test|description/i),
-    price: find(/price|cost|fee|amount|eur|€/i),
+    price: find(/price|cost|fee|amount|usd|\$/i),
   }
 }
 
 export function parsePrice(raw: string): number | null {
-  const stripped = raw.replace(/[\s\u00a0]/g, '').replace(/(eur|€)\.?/gi, '')
+  const stripped = raw.replace(/[\s\u00a0]/g, '').replace(/(usd|\$)\.?/gi, '')
   // «1,234.50»: the comma groups thousands; «12,50»: the comma is the decimal point.
   const cleaned = stripped.includes('.') ? stripped.replace(/,/g, '') : stripped.replace(',', '.')
   if (!/^\d+(\.\d+)?$/.test(cleaned)) return null

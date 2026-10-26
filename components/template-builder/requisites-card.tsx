@@ -46,7 +46,7 @@ export function RequisitesCard({ meta, onChange }: RequisitesCardProps) {
         />
 
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium">Patient and doctor details</p>
+          <p className="text-sm font-medium">Patient and provider details</p>
           <p className="text-sm text-muted-foreground">Always printed under the header and filled in automatically:</p>
           <ul className="flex flex-wrap gap-1.5">
             {autoFilledInfo.map((item) => (
@@ -94,7 +94,7 @@ export function RequisitesCard({ meta, onChange }: RequisitesCardProps) {
             checked={meta.show_signature}
             onCheckedChange={(v) => onChange({ show_signature: v })}
           />
-          <Label htmlFor="tb-signature">Doctor&apos;s signature line</Label>
+          <Label htmlFor="tb-signature">Provider signature line</Label>
         </div>
       </CardContent>
     </Card>

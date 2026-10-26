@@ -89,7 +89,7 @@ function PackageForm({
     <form onSubmit={handleSubmit} className="flex flex-col gap-6" noValidate>
       <DialogHeader>
         <DialogTitle>{pkg ? 'Edit bundle' : 'New service bundle'}</DialogTitle>
-        <DialogDescription>Add the services that should go into a care plan together.</DialogDescription>
+        <DialogDescription>Add the services that should go into orders together.</DialogDescription>
       </DialogHeader>
 
       <div className="flex flex-col gap-4">

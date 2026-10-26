@@ -77,7 +77,7 @@ function VisitRow({ visit, onStart }: { visit: TodayVisit; onStart: (patientId: 
 }
 
 /** Home for doctors and nurses. A visit starts with an explicit template choice: the picker shows the
- *  templates this user may fill in (a doctor — consultations and certificates, an ultrasound doctor — ultrasound). */
+ *  templates this user may fill in (a doctor — visit notes and letters, an ultrasound doctor — ultrasound). */
 export function DoctorHome({ userId }: { userId: string }) {
   const { data: visits } = useSWR(['visits', 'today', userId], ([, , id]) => listTodayVisits(id))
   const { data: documents } = useSWR(['documents', 'today-count', userId], ([, , id]) => countTodayDocuments(id))

@@ -1,8 +1,9 @@
 // Clinical scenarios of the demo: what the patient says, what the doctor finds and concludes, and which services
-// end up in the care plan. Each case keeps complaints, findings, assessment and recommendations consistent with
+// end up in the orders. Each case keeps complaints, findings, assessment and recommendations consistent with
 // each other; the generator picks a case and fills the template's fields from it.
 //
 // These shapes describe generator input only — they are not entities (entities live in lib/types.ts).
+import { formatSheetDate } from '../format'
 import type { FieldValue } from '../types'
 import type { Rng } from './random'
 import type { TemplateKey } from './templates'
@@ -13,7 +14,7 @@ export type Text = string | readonly string[]
 export type ValueContext = { rng: Rng; date: string; age: number; sex: 'male' | 'female' }
 export type Value = FieldValue | ((ctx: ValueContext) => FieldValue)
 
-/** Catalogue codes that are always recommended, and ones recommended with a probability. */
+/** Catalog codes that are always recommended, and ones recommended with a probability. */
 export type ServicePick = { always?: readonly string[]; maybe?: readonly (readonly [code: string, p: number])[] }
 
 export type CaseText = {
@@ -32,11 +33,11 @@ export type CaseText = {
 export type Scenario = CaseText & {
   id: string
   template: TemplateKey
-  /** gp — the patient's own GP; otherwise the clinic's specialist. */
+  /** gp — the patient's own PCP; otherwise the clinic's specialist. */
   doctor: 'gp' | 'endo' | 'cardio' | 'gyn' | 'neuro' | 'gastro' | 'us'
   ages: readonly [number, number]
   sex?: 'male' | 'female'
-  /** Typical share of the care plan the patient goes on to do (before the doctor's own factor). */
+  /** Typical share of the orders the patient goes on to do (before the doctor's own factor). */
   completion: number
   durations?: readonly string[]
   allergyChance?: number
@@ -62,7 +63,7 @@ export type Scenario = CaseText & {
 const between = (min: number, max: number, digits = 0) => ({ rng }: ValueContext) => rng.float(min, max, digits)
 const oneOf = (...items: string[]) => ({ rng }: ValueContext) => rng.pick(items)
 
-// ============ General consultation (GPs; the gastroenterologist uses it too) ============
+// ============ Office visit (PCPs; the gastroenterologist uses it too) ============
 
 const gpHypothyroid: Scenario = {
   id: 'gp-hypothyroid', template: 'general', doctor: 'gp', ages: [24, 72], completion: 0.8,
@@ -77,7 +78,7 @@ const gpHypothyroid: Scenario = {
     'Gradual onset; exercise tolerance has dropped. Thyroid function has never been checked.',
   ],
   prevTreatment: ['Multivitamins from the pharmacy, no effect.', 'None.'],
-  vitals: { bp: [[108, 128], [68, 82]], hr: [54, 66], temp: [36.1, 36.5] },
+  vitals: { bp: [[108, 128], [68, 82]], hr: [54, 66], temp: [97.0, 97.7] },
   examNotes: [
     'Skin dry, mild puffiness around the eyes. Thyroid not visibly enlarged, soft on palpation. Heart sounds regular, quiet.',
     'Dry skin, slow relaxation of the ankle reflexes. Thyroid slightly enlarged, painless. Chest clear.',
@@ -102,7 +103,7 @@ const gpHypertension: Scenario = {
     {
       complaints: 'Morning headaches and a feeling of pressure in the head for {d}. Home blood pressure readings up to 160/95.',
       history: 'No previous treatment for blood pressure. Father had a stroke at 68.',
-      examNotes: 'Heart sounds regular, no murmurs. No peripheral oedema. Overweight.',
+      examNotes: 'Heart sounds regular, no murmurs. No peripheral edema. Overweight.',
       diagnosis: 'Essential hypertension, stage 2, newly diagnosed. Cardiovascular risk to be assessed.',
       drugs: 'Amlodipine 5 mg once daily in the morning. Home blood pressure diary twice a day for 2 weeks.',
     },
@@ -122,8 +123,8 @@ const gpHypertension: Scenario = {
   followUp: 'Review in 2 weeks with the blood pressure diary and results.',
 }
 
-const gpAnaemia: Scenario = {
-  id: 'gp-anaemia', template: 'general', doctor: 'gp', ages: [18, 50], sex: 'female', completion: 0.85,
+const gpAnemia: Scenario = {
+  id: 'gp-anemia', template: 'general', doctor: 'gp', ages: [18, 50], sex: 'female', completion: 0.85,
   durations: ['a month', '2 months', '3 months'],
   complaints: [
     'Weakness, tiredness and breathlessness on stairs for {d}. Periods heavy for the last year.',
@@ -136,14 +137,14 @@ const gpAnaemia: Scenario = {
   vitals: { bp: [[100, 118], [62, 75]], hr: [82, 96] },
   examNotes: 'Pale skin and conjunctivae. Heart sounds regular, soft systolic flow murmur. Abdomen soft, non-tender.',
   diagnosis: [
-    'Iron-deficiency anaemia, probably due to heavy menstrual bleeding. To be confirmed.',
-    'Suspected iron-deficiency anaemia.',
+    'Iron-deficiency anemia, probably due to heavy menstrual bleeding. To be confirmed.',
+    'Suspected iron-deficiency anemia.',
   ],
   lab: { always: ['3001', '3011', '3012'], maybe: [['NL-102', 0.6], ['NL-103', 0.5], ['3013', 0.4], ['NL-118', 0.3]] },
   instrumental: { maybe: [['2008', 0.3]] },
   consultation: { always: ['1005'] },
   lifestyle: 'Iron-rich foods (red meat, pulses, leafy greens), vitamin C with meals, tea and coffee away from meals.',
-  drugs: 'Ferrous sulfate 200 mg once daily on alternate days; continue for 3 months after haemoglobin returns to normal.',
+  drugs: 'Ferrous sulfate 325 mg once daily on alternate days; continue for 3 months after hemoglobin returns to normal.',
   followUp: 'Repeat full blood count and ferritin in 4–6 weeks.',
 }
 
@@ -170,43 +171,43 @@ const gpUrti: Scenario = {
   id: 'gp-urti', template: 'general', doctor: 'gp', ages: [2, 88], completion: 0.9,
   durations: ['5 days', 'a week', '8 days'],
   generalState: 'satisfactory',
-  vitals: { temp: [37.8, 38.7], hr: [88, 104], spo2: [95, 98] },
+  vitals: { temp: [100.0, 101.7], hr: [88, 104], spo2: [95, 98] },
   cases: [
     {
       adultOnly: true,
-      complaints: 'Sore throat, painful swallowing and fever up to 39 °C for {d}.',
-      history: 'Started as a common cold; paracetamol at home with a short-lived effect. A family member was ill last week.',
+      complaints: 'Sore throat, painful swallowing and fever up to 102.2 °F for {d}.',
+      history: 'Started as a common cold; acetaminophen at home with a short-lived effect. A family member was ill last week.',
       examNotes: 'Throat red, tonsils enlarged with white exudate. Tender anterior cervical lymph nodes. Chest clear.',
       diagnosis: 'Acute tonsillopharyngitis, probably streptococcal.',
       lab: { always: ['3001', '3003', '3018'], maybe: [['CL-212', 0.5]] },
-      drugs: 'Phenoxymethylpenicillin 500 mg four times a day for 10 days. Paracetamol 1 g up to four times a day for fever.',
+      drugs: 'Penicillin V 500 mg four times a day for 10 days. Acetaminophen 1 g up to four times a day for fever.',
     },
     {
       adultOnly: true,
-      complaints: 'Fever up to 38.6 °C and cough for {d}; the cough is now productive with yellow sputum.',
+      complaints: 'Fever up to 101.5 °F and cough for {d}; the cough is now productive with yellow sputum.',
       history: 'Symptoms improved on day 3, then the fever came back. Non-smoker.',
       examNotes: 'Pharynx red. Harsh breathing with scattered wheeze, fine crackles at the right base. No signs of respiratory distress.',
       diagnosis: 'Acute bronchitis after a viral upper respiratory tract infection. Right lower lobe pneumonia to be excluded.',
       lab: { always: ['3001', '3003'] },
-      drugs: 'Amoxicillin 500 mg three times a day for 7 days. Paracetamol 1 g up to four times a day for fever.',
+      drugs: 'Amoxicillin 500 mg three times a day for 7 days. Acetaminophen 1 g up to four times a day for fever.',
     },
     {
       childOnly: true,
       complaints: 'Runny nose, cough and fever for {d}, worse again after initial improvement. Pulling at the right ear, poor sleep.',
-      history: 'Attends nursery. Paracetamol syrup at home. Vaccinations up to date.',
+      history: 'Attends nursery. Acetaminophen syrup at home. Vaccinations up to date.',
       examNotes: 'Pharynx red. Right eardrum red and bulging, left normal. Chest clear, no recession.',
       diagnosis: 'Acute otitis media on the right after an upper respiratory tract infection.',
       lab: { always: ['3001', '3003'] },
-      drugs: 'Amoxicillin suspension by weight, three times a day for 5 days. Paracetamol or ibuprofen syrup by weight for pain and fever.',
+      drugs: 'Amoxicillin suspension by weight, three times a day for 5 days. Acetaminophen or ibuprofen syrup by weight for pain and fever.',
     },
     {
       childOnly: true,
-      complaints: 'Fever up to 38.5 °C, sore throat and refusing food for {d}.',
+      complaints: 'Fever up to 101.3 °F, sore throat and refusing food for {d}.',
       history: 'Classmates off school with similar symptoms. No rash.',
       examNotes: 'Tonsils enlarged and red with exudate, tender neck glands. Chest clear.',
       diagnosis: 'Acute tonsillitis.',
       lab: { always: ['3001', '3018'], maybe: [['3003', 0.6]] },
-      drugs: 'Phenoxymethylpenicillin by weight for 10 days if the strep test is positive. Paracetamol by weight for fever.',
+      drugs: 'Penicillin V by weight for 10 days if the strep test is positive. Acetaminophen by weight for fever.',
     },
   ],
   external: { instrumental: [['Chest X-ray', 0.35]] },
@@ -252,7 +253,7 @@ const gpGerd: Scenario = {
   ],
   habits: { smoking: 0.3, alcohol: 0.4 },
   examNotes: 'Abdomen soft, mild epigastric tenderness, no masses. Overweight.',
-  diagnosis: ['Gastro-oesophageal reflux disease, suspected.', 'Reflux symptoms. Dyspepsia; H. pylori to be excluded.'],
+  diagnosis: ['Gastroesophageal reflux disease, suspected.', 'Reflux symptoms. Dyspepsia; H. pylori to be excluded.'],
   lab: { always: ['3001'], maybe: [['3019', 0.6], ['CL-211', 0.25]] },
   instrumental: { maybe: [['2007', 0.5]] },
   consultation: { maybe: [['1007', 0.6]] },
@@ -266,7 +267,7 @@ const gpDiabetes: Scenario = {
   id: 'gp-t2dm', template: 'general', doctor: 'gp', ages: [40, 80], completion: 0.85,
   complaints: [
     'Thirst, dry mouth and passing urine more often for {d}. Tiredness after meals.',
-    'Random glucose of 11.2 mmol/L at a workplace health check. Tiredness, occasional blurred vision.',
+    'Random glucose of 202 mg/dL at a workplace health check. Tiredness, occasional blurred vision.',
   ],
   history: [
     'Weight gain of 8 kg over 2 years. Mother has type 2 diabetes.',
@@ -274,7 +275,7 @@ const gpDiabetes: Scenario = {
   ],
   vitals: { bp: [[130, 146], [80, 90]] },
   examNotes: 'Central obesity, BMI 32. Foot pulses present, sensation intact.',
-  diagnosis: ['Suspected type 2 diabetes mellitus. Obesity class I.', 'Hyperglycaemia; type 2 diabetes to be confirmed.'],
+  diagnosis: ['Suspected type 2 diabetes mellitus. Obesity class I.', 'Hyperglycemia; type 2 diabetes to be confirmed.'],
   lab: { always: ['3010', '3004', '3006', '3008'], maybe: [['CL-201', 0.6], ['3007', 0.5], ['3005', 0.5]] },
   instrumental: { maybe: [['2001', 0.5]] },
   consultation: { always: ['1003'], maybe: [['1013', 0.5]] },
@@ -291,12 +292,12 @@ const gpUti: Scenario = {
     'Painful urination and cloudy urine for {d}, no fever.',
   ],
   history: ['Second episode this year. No fever or back pain.', 'First episode. Not pregnant.'],
-  vitals: { temp: [36.6, 37.3] },
+  vitals: { temp: [97.9, 99.1] },
   examNotes: 'Suprapubic tenderness. Renal angles non-tender.',
   diagnosis: ['Acute uncomplicated cystitis.', 'Lower urinary tract infection, recurrent.'],
   lab: { always: ['3005', 'CL-213'], maybe: [['3001', 0.4]] },
   instrumental: { maybe: [['2011', 0.4]] },
-  lifestyle: 'Drink about 2 litres a day, do not hold urine.',
+  lifestyle: 'Drink about 2 liters a day, do not hold urine.',
   drugs: 'Nitrofurantoin 100 mg twice daily for 5 days.',
   followUp: 'Review if no better after 3 days or if a fever appears.',
 }
@@ -311,7 +312,7 @@ const gpPreop: Scenario = {
     },
     {
       complaints: 'Attends for pre-operative tests before a planned knee arthroscopy.',
-      history: 'Sports injury of the right knee, meniscal tear on MRI. No previous anaesthetic problems.',
+      history: 'Sports injury of the right knee, meniscal tear on MRI. No previous anesthetic problems.',
       diagnosis: 'Pre-operative assessment before knee arthroscopy.',
     },
   ],
@@ -327,11 +328,11 @@ const gpPreop: Scenario = {
 const gpCertificate: Scenario = {
   id: 'gp-certificate', template: 'certificate', doctor: 'gp', ages: [18, 66], completion: 0,
   extra: {
-    occupation: oneOf('Office administrator', 'Delivery driver', 'Primary school teacher', 'Warehouse operative', 'Software developer', 'Chef', 'Care assistant'),
-    fitness: ({ rng }) => (rng.chance(0.85) ? 'fit for work' : 'fit with restrictions'),
+    occupation: oneOf('Office administrator', 'Delivery driver', 'Elementary school teacher', 'Warehouse associate', 'Software developer', 'Chef', 'Home health aide'),
+    fitness: ({ rng }) => (rng.chance(0.85) ? 'fit for full duty' : 'fit with restrictions'),
     valid_until: ({ date }) => {
       const [y, m, d] = date.split('-')
-      return `${d}/${m}/${Number(y) + 1}`
+      return formatSheetDate(`${Number(y) + 1}-${m}-${d}`)
     },
   },
 }
@@ -341,10 +342,10 @@ const gpCertificate: Scenario = {
 const gastroIbs: Scenario = {
   id: 'gastro-ibs', template: 'general', doctor: 'gastro', ages: [19, 52], completion: 0.6,
   durations: ['4 months', 'half a year', 'a year'],
-  complaints: 'Bloating and cramping pain relieved by opening the bowels, alternating constipation and diarrhoea, for {d}.',
+  complaints: 'Bloating and cramping pain relieved by opening the bowels, alternating constipation and diarrhea, for {d}.',
   history: 'Worse with stress. No blood in the stool, no weight loss, no family history of bowel cancer.',
   examNotes: 'Abdomen soft, mild tenderness in the left iliac fossa, no masses.',
-  diagnosis: 'Irritable bowel syndrome, mixed type, suspected; coeliac disease and IBD to be excluded.',
+  diagnosis: 'Irritable bowel syndrome, mixed type, suspected; celiac disease and IBD to be excluded.',
   lab: { always: ['3001', '3003', 'NL-118', 'CL-210'], maybe: [['CL-209', 0.4], ['3013', 0.3]] },
   instrumental: { maybe: [['2007', 0.6]] },
   consultation: { maybe: [['1013', 0.5]] },
@@ -359,7 +360,7 @@ const gastroDyspepsia: Scenario = {
   cases: [
     {
       complaints: 'Epigastric pain and early fullness after meals for {d}, occasional nausea.',
-      history: 'GP started omeprazole with a partial effect. No weight loss, no vomiting.',
+      history: 'PCP started omeprazole with a partial effect. No weight loss, no vomiting.',
       diagnosis: 'Functional dyspepsia; Helicobacter pylori infection to be excluded.',
     },
     {
@@ -399,7 +400,7 @@ const endoDiabetes: Scenario = {
   id: 'endo-t2dm', template: 'endo', doctor: 'endo', ages: [42, 86], completion: 0.8,
   cases: [
     {
-      complaints: 'Diabetes review. No hypoglycaemia. Tingling in the feet in the evenings.',
+      complaints: 'Diabetes review. No hypoglycemia. Tingling in the feet in the evenings.',
       prevTreatment: 'Metformin 1000 mg twice daily.',
       examNotes: 'Feet: skin intact, pulses present, monofilament sensation reduced at the toes on both sides.',
       diagnosis: 'Type 2 diabetes mellitus, not at target (HbA1c above 7%). Early peripheral neuropathy.',
@@ -407,14 +408,14 @@ const endoDiabetes: Scenario = {
       consultation: { maybe: [['1011', 0.4], ['1013', 0.4]] },
     },
     {
-      complaints: 'Diabetes review. Home glucose 6–7.5 mmol/L before breakfast. Feels well.',
+      complaints: 'Diabetes review. Home glucose 110–135 mg/dL before breakfast. Feels well.',
       prevTreatment: 'Metformin 1000 mg twice daily, gliclazide 80 mg in the morning.',
       examNotes: 'No injection site problems. Foot pulses present, sensation intact.',
       diagnosis: 'Type 2 diabetes mellitus without complications, on target.',
       drugs: 'Continue current treatment.',
     },
     {
-      complaints: 'Newly diagnosed type 2 diabetes, referred by the GP with HbA1c 7.9%. Thirst has eased with diet.',
+      complaints: 'Newly diagnosed type 2 diabetes, referred by the PCP with HbA1c 7.9%. Thirst has eased with diet.',
       prevTreatment: 'None.',
       examNotes: 'Central obesity. Foot pulses present, sensation intact. No acanthosis.',
       diagnosis: 'Type 2 diabetes mellitus, newly diagnosed. Obesity class I.',
@@ -437,7 +438,7 @@ const endoDiabetes: Scenario = {
   followUp: 'Review in 3 months with HbA1c.',
   long: {
     complaints:
-      'Diabetes review. Over the last 3 months home glucose before breakfast 8–11 mmol/L, after meals up to 14 mmol/L. ' +
+      'Diabetes review. Over the last 3 months home glucose before breakfast 145–200 mg/dL, after meals up to 250 mg/dL. ' +
       'Two episodes of shakiness and sweating late in the afternoon that settled after juice; glucose was not measured at the time. ' +
       'Burning and tingling in both feet in the evenings, worse in bed, for about half a year. Blurred vision after long days at the computer. ' +
       'Getting up at night to pass urine twice. Tired by the end of the working day. Weight up by 3 kg since the spring.',
@@ -449,23 +450,23 @@ const endoDiabetes: Scenario = {
       'Metformin 1000 mg twice daily, gliclazide 80 mg in the morning, ramipril 5 mg once daily, atorvastatin 20 mg at night. ' +
       'Over-the-counter alpha-lipoic acid for the feet, no clear effect.',
     medicalHistory:
-      'Hypertension for 8 years. Dyslipidaemia. Fatty liver on ultrasound 3 years ago. Laparoscopic appendicectomy at 30. ' +
+      'Hypertension for 8 years. Dyslipidemia. Fatty liver on ultrasound 3 years ago. Laparoscopic appendectomy at 30. ' +
       'No heart attack or stroke. No known kidney disease.',
     examNotes:
       'Central obesity, BMI 33. Skin: acanthosis nigricans on the neck, no ulcers. ' +
       'Feet: skin dry, callus under the first metatarsal heads on both sides, dorsalis pedis and posterior tibial pulses present. ' +
       'Monofilament sensation reduced at the toes on both sides, vibration sense reduced at the big toes, ankle reflexes reduced. ' +
-      'Thyroid not enlarged. Heart sounds regular, no murmurs. Chest clear. No peripheral oedema.',
+      'Thyroid not enlarged. Heart sounds regular, no murmurs. Chest clear. No peripheral edema.',
     diagnosis:
       'Type 2 diabetes mellitus, poorly controlled (HbA1c above target), with distal symmetrical diabetic polyneuropathy. ' +
-      'Possible hypoglycaemia on gliclazide with irregular meals. Hypertension, at target. Dyslipidaemia. Obesity class I. Non-alcoholic fatty liver disease.',
+      'Possible hypoglycemia on gliclazide with irregular meals. Hypertension, at target. Dyslipidemia. Obesity class I. Non-alcoholic fatty liver disease.',
     lifestyle:
       'Diabetes education session with the nurse. Regular meals on shift days, no long gaps; carry glucose tablets. ' +
       'Measure glucose before breakfast and 2 hours after the main meal 3 days a week, and whenever feeling shaky. ' +
       'Lose 5–7% of body weight over 6 months. A 20-minute walk after the main meal. ' +
-      'Daily foot check, moisturise the feet, no barefoot walking, see a podiatrist for the callus.',
+      'Daily foot check, moisturize the feet, no barefoot walking, see a podiatrist for the callus.',
     drugs:
-      'Stop gliclazide (risk of hypoglycaemia with shift work). Continue metformin 1000 mg twice daily with meals. ' +
+      'Stop gliclazide (risk of hypoglycemia with shift work). Continue metformin 1000 mg twice daily with meals. ' +
       'Start semaglutide 0.25 mg subcutaneously once a week for 4 weeks, then 0.5 mg once a week; nurse to teach the injection technique. ' +
       'Continue ramipril 5 mg and atorvastatin 20 mg. For the burning feet: amitriptyline 10 mg at night, may increase to 25 mg after 2 weeks.',
     followUp: 'Nurse phone call in 2 weeks about glucose readings and tolerance; review in 3 months with HbA1c, kidney function and lipids.',
@@ -476,7 +477,7 @@ const endoHypothyroid: Scenario = {
   id: 'endo-hypothyroid', template: 'endo', doctor: 'endo', ages: [24, 76], completion: 0.85,
   cases: [
     {
-      complaints: 'Fatigue, feeling cold and weight gain; referred by the GP with TSH 9.8 mIU/L and low free T4.',
+      complaints: 'Fatigue, feeling cold and weight gain; referred by the PCP with TSH 9.8 mIU/L and low free T4.',
       history: 'Symptoms for several months. Thyroid ultrasound shows diffuse changes typical of autoimmune thyroiditis.',
       prevTreatment: 'None.',
       extra: { thyroid_palpation: 'diffusely enlarged' },
@@ -525,7 +526,7 @@ const endoNodule: Scenario = {
   history: 'Thyroid ultrasound: nodule in the right lobe, 14 × 11 mm, TI-RADS 3. No radiation exposure. No family history of thyroid cancer.',
   extra: { thyroid_palpation: 'nodular', family_history: 'No thyroid disease in the family.', waist: between(78, 100) },
   examNotes: 'Firm, mobile nodule in the right lobe, painless. No enlarged neck lymph nodes. Voice normal.',
-  diagnosis: 'Nodular goitre: right lobe nodule, TI-RADS 3. Clinically euthyroid.',
+  diagnosis: 'Nodular goiter: right lobe nodule, TI-RADS 3. Clinically euthyroid.',
   lab: { always: ['3013', '3014'], maybe: [['NL-104', 0.5]] },
   instrumental: { maybe: [['2018', 0.45]] },
   lifestyle: 'No restrictions.',
@@ -536,7 +537,7 @@ const endoNodule: Scenario = {
 const endoObesity: Scenario = {
   id: 'endo-obesity', template: 'endo', doctor: 'endo', ages: [28, 62], completion: 0.5,
   complaints: 'Weight gain of 12 kg over 3 years despite dieting. Cravings for sweets, tiredness after meals.',
-  history: 'Fasting glucose 6.4 mmol/L last year. Irregular working hours, little exercise.',
+  history: 'Fasting glucose 115 mg/dL last year. Irregular working hours, little exercise.',
   extra: { waist: between(104, 118), thyroid_palpation: 'not enlarged', family_history: 'Both parents overweight; father has type 2 diabetes.' },
   examNotes: 'BMI 34. Acanthosis nigricans on the neck. No striae.',
   diagnosis: 'Obesity class I. Prediabetes (impaired fasting glucose); insulin resistance suspected.',
@@ -544,7 +545,7 @@ const endoObesity: Scenario = {
   instrumental: { maybe: [['2020', 0.6]] },
   consultation: { always: ['1013'] },
   lifestyle: 'A daily deficit of about 500 kcal, protein at every meal, 8,000–10,000 steps a day, strength training twice a week.',
-  drugs: ['Metformin 500 mg with the evening meal, 500 mg twice daily after 2 weeks if tolerated.', 'No medication; lifestyle programme first.'],
+  drugs: ['Metformin 500 mg with the evening meal, 500 mg twice daily after 2 weeks if tolerated.', 'No medication; lifestyle program first.'],
   followUp: 'Review in 3 months with weight and waist measurements.',
 }
 
@@ -558,13 +559,13 @@ const cardioAngina: Scenario = {
   prevTreatment: 'Ramipril 5 mg once daily.',
   habits: { smoking: 0.5 },
   extra: {
-    risk_factors: ['hypertension', 'dyslipidaemia'],
+    risk_factors: ['hypertension', 'dyslipidemia'],
     ecg: 'Sinus rhythm 72 bpm, normal axis, no acute ST changes.',
     cv_risk: 'high',
   },
   vitals: { bp: [[134, 150], [82, 92]] },
   examNotes: 'Chest clear. Peripheral pulses present. No carotid bruits.',
-  diagnosis: 'Stable angina, CCS class II; coronary artery disease suspected. Hypertension. Dyslipidaemia.',
+  diagnosis: 'Stable angina, CCS class II; coronary artery disease suspected. Hypertension. Dyslipidemia.',
   lab: { always: ['3006', '3004', '3010', '3008', 'CL-204'], maybe: [['CL-207', 0.4], ['3001', 0.5]] },
   instrumental: { always: ['2004', '2005'], maybe: [['2012', 0.4]] },
   external: { instrumental: [['Coronary CT angiography', 0.5]] },
@@ -593,18 +594,18 @@ const cardioPalpitations: Scenario = {
 
 const cardioHypertension: Scenario = {
   id: 'cardio-hypertension', template: 'cardio', doctor: 'cardio', ages: [42, 86], completion: 0.7,
-  history: 'Hypertension for {years} years. Referred by the GP: not at target on treatment.',
+  history: 'Hypertension for {years} years. Referred by the PCP: not at target on treatment.',
   cases: [
     {
       complaints: 'Hypertension review. Home readings 140–150/88–94 on amlodipine. Ankle swelling in the evenings.',
       prevTreatment: 'Amlodipine 5 mg once daily.',
-      extra: { oedema: 'ankles' },
+      extra: { edema: 'ankles' },
       drugs: 'Add ramipril 5 mg once daily to amlodipine 5 mg. Keep the home blood pressure diary.',
     },
     {
       complaints: 'Hypertension review. Home readings 135–148/85–92. Cramps in the legs at night.',
       prevTreatment: 'Ramipril 5 mg once daily, indapamide 1.5 mg once daily.',
-      extra: { oedema: 'none' },
+      extra: { edema: 'none' },
       drugs: 'Replace indapamide with amlodipine 5 mg once daily; continue ramipril 5 mg.',
     },
   ],
@@ -625,28 +626,28 @@ const cardioHypertension: Scenario = {
 const cardioHeartFailure: Scenario = {
   id: 'cardio-hf', template: 'cardio', doctor: 'cardio', ages: [62, 88], completion: 0.85,
   durations: ['3 weeks', 'a month', '6 weeks'],
-  complaints: 'Breathless after 100 metres or one flight of stairs, swollen ankles by the evening, for {d}. Sleeps on two pillows.',
+  complaints: 'Breathless after 100 meters or one flight of stairs, swollen ankles by the evening, for {d}. Sleeps on two pillows.',
   history: 'Myocardial infarction 6 years ago, stent in the right coronary artery. Type 2 diabetes.',
   prevTreatment: 'Aspirin 75 mg, atorvastatin 40 mg, bisoprolol 5 mg, metformin 1000 mg twice daily.',
   extra: {
-    risk_factors: ['hypertension', 'diabetes', 'dyslipidaemia'],
+    risk_factors: ['hypertension', 'diabetes', 'dyslipidemia'],
     heart_sounds: 'systolic murmur',
-    oedema: 'lower legs',
+    edema: 'lower legs',
     ecg: 'Sinus rhythm 84 bpm, Q waves in II, III and aVF.',
     cv_risk: 'very high',
   },
   vitals: { bp: [[126, 140], [74, 86]], hr: [80, 92], spo2: [93, 96] },
-  examNotes: 'Fine crackles at both lung bases, raised jugular venous pressure, oedema to mid-shin.',
+  examNotes: 'Fine crackles at both lung bases, raised jugular venous pressure, edema to mid-shin.',
   diagnosis: 'Chronic heart failure, NYHA II–III. Coronary artery disease, old inferior MI. Type 2 diabetes.',
   lab: { always: ['CL-203', '3008', '3009', '3001', '3010', '3007'], maybe: [['CL-205', 0.5]] },
   instrumental: { always: ['2004', '2001'], maybe: [['2002', 0.4]] },
   external: { instrumental: [['Chest X-ray', 0.7]] },
-  lifestyle: 'Weigh daily; call if up 2 kg in 3 days. Fluids up to 1.5 litres, salt under 5 g.',
+  lifestyle: 'Weigh daily; call if up 2 kg in 3 days. Fluids up to 1.5 liters, salt under 5 g.',
   drugs: 'Furosemide 40 mg in the morning, ramipril 2.5 mg once daily; continue bisoprolol, aspirin, atorvastatin.',
   followUp: 'Review in a week with the echocardiography and results.',
   long: {
     complaints:
-      'Increasing breathlessness for {d}: now after about 100 metres on the flat or one flight of stairs, earlier only on hills. ' +
+      'Increasing breathlessness for {d}: now after about 100 meters on the flat or one flight of stairs, earlier only on hills. ' +
       'Ankles and lower legs swollen by the evening, the swelling goes down overnight only partly. Sleeps on two pillows, ' +
       'woke up twice last week short of breath and had to sit up for a few minutes. Dry cough at night. ' +
       'Weight up by 4 kg in a month without eating more. Tired, has stopped gardening. No chest pain at rest; ' +
@@ -665,14 +666,14 @@ const cardioHeartFailure: Scenario = {
       'Mildly breathless when undressing. Jugular venous pressure raised 4 cm. Apex beat displaced to the anterior axillary line. ' +
       'Heart sounds regular, soft pansystolic murmur at the apex, no gallop rhythm heard. ' +
       'Fine inspiratory crackles at both lung bases up to the lower third. Liver edge 2 cm below the costal margin, tender. ' +
-      'Pitting oedema of both lower legs to mid-shin. Feet warm, foot pulses weak but present.',
+      'Pitting edema of both lower legs to mid-shin. Feet warm, foot pulses weak but present.',
     diagnosis:
-      'Chronic heart failure, NYHA class II–III, worsening; reduced ejection fraction suspected (ischaemic cardiomyopathy). ' +
+      'Chronic heart failure, NYHA class II–III, worsening; reduced ejection fraction suspected (ischemic cardiomyopathy). ' +
       'Mitral regurgitation, probably functional. Coronary artery disease: old inferior myocardial infarction, stent in the right coronary artery; ' +
       'exertional angina. Hypertension. Type 2 diabetes. Regular NSAID use as an aggravating factor.',
     lifestyle:
       'Weigh every morning after the toilet and before breakfast, write it down; call the clinic if weight goes up by more than 2 kg in 3 days ' +
-      'or breathlessness gets worse. Fluids up to 1.5 litres a day, salt under 5 g. No ibuprofen or other NSAIDs; paracetamol for the knees. ' +
+      'or breathlessness gets worse. Fluids up to 1.5 liters a day, salt under 5 g. No ibuprofen or other NSAIDs; acetaminophen for the knees. ' +
       'Short walks at a comfortable pace every day. Flu and pneumococcal vaccination. ' +
       'Call an ambulance for chest pain at rest lasting over 15 minutes or breathlessness at rest.',
     drugs:
@@ -685,7 +686,7 @@ const cardioHeartFailure: Scenario = {
   },
 }
 
-// ============ Gynaecology ============
+// ============ Gynecology ============
 
 const gynPregnancy: Scenario = {
   id: 'gyn-pregnancy', template: 'gyn', doctor: 'gyn', ages: [22, 40], sex: 'female', completion: 0.9,
@@ -695,10 +696,10 @@ const gynPregnancy: Scenario = {
     lmp: ({ date }) => {
       const d = new Date(`${date}T00:00:00Z`)
       d.setUTCDate(d.getUTCDate() - 49)
-      return d.toISOString().slice(0, 10).split('-').reverse().join('/')
+      return formatSheetDate(d.toISOString().slice(0, 10))
     },
     cycle: '28 days, regular',
-    obstetric: oneOf('First pregnancy.', 'One previous birth (vaginal, 2022).', 'One previous birth (caesarean section, 2021).'),
+    obstetric: oneOf('First pregnancy.', 'One previous birth (vaginal, 2022).', 'One previous birth (cesarean section, 2021).'),
     contraception: 'none',
     breasts: 'no abnormalities',
     speculum: 'Cervix clean, closed, bluish. Discharge normal.',
@@ -709,18 +710,18 @@ const gynPregnancy: Scenario = {
   lab: { always: ['3015', '3001', '3017', 'CL-214', 'CL-215', '3005', 'CL-213'], maybe: [['3013', 0.6]] },
   instrumental: { always: ['2009'] },
   external: { instrumental: [['Combined first-trimester screening (11–14 weeks)', 0.8]] },
-  lifestyle: 'No alcohol or smoking, avoid raw meat and unpasteurised cheese, moderate activity.',
+  lifestyle: 'No alcohol or smoking, avoid raw meat and unpasteurized cheese, moderate activity.',
   drugs: 'Folic acid 400 micrograms daily until 12 weeks. Vitamin D 10 micrograms daily.',
   followUp: 'Review with the ultrasound and results in 2 weeks.',
 }
 
 const gynScreening: Scenario = {
   id: 'gyn-screening', template: 'gyn', doctor: 'gyn', ages: [25, 64], sex: 'female', completion: 0.85,
-  complaints: 'No complaints. Attends for routine cervical screening and a gynaecological check-up.',
+  complaints: 'No complaints. Attends for routine cervical screening and a gynecological check-up.',
   history: 'Last cervical screening 3 years ago, normal.',
   extra: {
     cycle: '28–30 days, regular',
-    obstetric: oneOf('Two births (2016, 2019), vaginal.', 'One birth (2018), caesarean section.', 'No pregnancies.'),
+    obstetric: oneOf('Two births (2016, 2019), vaginal.', 'One birth (2018), cesarean section.', 'No pregnancies.'),
     contraception: oneOf('IUD', 'combined pill', 'condoms', 'none'),
     breasts: 'no abnormalities',
     speculum: 'Cervix clean, no visible lesions. Smear and HPV sample taken.',
@@ -738,7 +739,7 @@ const gynHeavyBleeding: Scenario = {
   id: 'gyn-hmb', template: 'gyn', doctor: 'gyn', ages: [28, 50], sex: 'female', completion: 0.65,
   durations: ['half a year', 'a year', '8 months'],
   complaints: 'Heavy periods lasting 7–9 days with clots for {d}; on the heaviest days changes pads every 1–2 hours. Tiredness.',
-  history: 'Referred by the GP with low ferritin. No bleeding between periods.',
+  history: 'Referred by the PCP with low ferritin. No bleeding between periods.',
   extra: {
     cycle: '26–28 days, regular',
     obstetric: oneOf('Two births, vaginal.', 'One birth, vaginal.'),
@@ -747,7 +748,7 @@ const gynHeavyBleeding: Scenario = {
     speculum: 'Cervix clean, no contact bleeding.',
     bimanual: 'Uterus slightly enlarged, irregular, non-tender. Adnexa normal.',
   },
-  diagnosis: 'Heavy menstrual bleeding; uterine fibroids suspected. Iron-deficiency anaemia.',
+  diagnosis: 'Heavy menstrual bleeding; uterine fibroids suspected. Iron-deficiency anemia.',
   lab: { always: ['3001', '3011'], maybe: [['3013', 0.5], ['3016', 0.5]] },
   instrumental: { always: ['2008'] },
   consultation: { maybe: [['1010', 0.4]] },
@@ -787,7 +788,7 @@ const neuroMigraine: Scenario = {
     {
       complaints: 'One-sided throbbing headaches 4–6 times a month with nausea and light sensitivity, some with a visual aura.',
       history: 'Since adolescence, more frequent over the last {d}; painkillers up to 12 days a month.',
-      prevTreatment: 'Ibuprofen 400 mg, paracetamol 1 g, with partial effect.',
+      prevTreatment: 'Ibuprofen 400 mg, acetaminophen 1 g, with partial effect.',
     },
     {
       complaints: 'Review after 2 months of prevention. Attacks down to 2–3 a month and shorter; sumatriptan helps within an hour.',
@@ -822,13 +823,13 @@ const neuroMigraine: Scenario = {
       'Has missed 5 working days in the last 3 months. Mood low because of the headaches; sleep broken.',
     history:
       'Migraine since the age of 14; mother and sister also have migraine. Attacks were 2–3 a month until a change of job with long screen hours 2 years ago. ' +
-      'Takes painkillers on 15–18 days a month: ibuprofen 400–800 mg, paracetamol 1 g, combination tablets with codeine from the pharmacy 2–3 times a week. ' +
+      'Takes painkillers on 15–18 days a month: ibuprofen 400–800 mg, acetaminophen 1 g, combination tablets with codeine from the pharmacy 2–3 times a week. ' +
       'Tried amitriptyline 10 mg for a month a year ago, stopped because of morning drowsiness. No head injury. No fever, weight loss or night-time waking with headache.',
     prevTreatment:
-      'Ibuprofen, paracetamol and co-codamol on most days; sumatriptan has never been tried. Combined contraceptive pill was stopped 2 years ago because of aura.',
+      'Ibuprofen, acetaminophen and co-codamol on most days; sumatriptan has never been tried. Combined contraceptive pill was stopped 2 years ago because of aura.',
     medicalHistory: 'No chronic conditions. No high blood pressure. Not pregnant, uses condoms.',
     examNotes:
-      'Alert, oriented. Speech normal. Fundoscopy: discs sharp, no papilloedema. Visual fields full to confrontation. ' +
+      'Alert, oriented. Speech normal. Fundoscopy: discs sharp, no papilledema. Visual fields full to confrontation. ' +
       'No focal neurological deficit. Gait normal, tandem walking normal, Romberg negative. ' +
       'Marked tenderness of the temporal, occipital and trapezius muscles. Blood pressure normal.',
     diagnosis:
@@ -863,7 +864,7 @@ const neuroCarpalTunnel: Scenario = {
   lab: { always: ['3004', '3010', '3013'], maybe: [['NL-102', 0.6]] },
   instrumental: { always: ['2021'] },
   consultation: { maybe: [['1014', 0.4]] },
-  external: { consultation: [['Hand surgeon consultation', 0.3]] },
+  external: { consultation: [['Hand surgery consult', 0.3]] },
   lifestyle: 'Wrist splint at night, a break from typing every hour.',
   drugs: 'None at this stage.',
   followUp: 'Review with the nerve conduction results.',
@@ -891,7 +892,7 @@ const neuroRadiculopathy: Scenario = {
   id: 'neuro-radiculopathy', template: 'neuro', doctor: 'neuro', ages: [28, 66], completion: 0.5,
   durations: ['3 weeks', 'a month', '6 weeks'],
   complaints: 'Low back pain spreading down the back of the left leg to the foot, with numbness of the outer foot, for {d}.',
-  history: 'Started after lifting. GP prescribed ibuprofen and physiotherapy with little effect. No bladder or bowel problems.',
+  history: 'Started after lifting. PCP prescribed ibuprofen and physical therapy with little effect. No bladder or bowel problems.',
   extra: {
     cranial_nerves: 'intact', reflexes: 'asymmetrical', sensation: 'reduced', coordination: 'normal',
     motor: 'Weakness of left foot plantar flexion, 4/5.',
@@ -946,7 +947,7 @@ const usThyroidNodule: Scenario = {
     thyroid_vascularity: 'normal', lymph_nodes: 'not enlarged', ...thyroidSizes(8, 12),
     nodules: 'Right lobe, middle third: solid isoechoic nodule 14 × 11 × 10 mm, smooth margins, wider than tall, no calcifications, peripheral blood flow. TI-RADS 3.',
   },
-  diagnosis: 'Nodular goitre: nodule in the right lobe, TI-RADS 3.',
+  diagnosis: 'Nodular goiter: nodule in the right lobe, TI-RADS 3.',
   consultation: { always: ['1003'] },
   instrumental: { maybe: [['2018', 0.35]] },
   lab: { maybe: [['3013', 0.4]] },
@@ -987,11 +988,11 @@ const usAbdoGallstones: Scenario = {
   },
   diagnosis: 'Gallstones, no signs of acute cholecystitis. Common bile duct not dilated.',
   lab: { always: ['3007'], maybe: [['3001', 0.5]] },
-  external: { consultation: [['Surgical consultation', 1]] },
+  external: { consultation: [['Surgical consult', 1]] },
 }
 
 export const SCENARIOS: Scenario[] = [
-  gpHypothyroid, gpHypertension, gpAnaemia, gpAnnual, gpUrti, gpBackPain, gpGerd, gpDiabetes, gpUti, gpPreop, gpCertificate,
+  gpHypothyroid, gpHypertension, gpAnemia, gpAnnual, gpUrti, gpBackPain, gpGerd, gpDiabetes, gpUti, gpPreop, gpCertificate,
   gastroIbs, gastroDyspepsia, gastroFattyLiver,
   endoDiabetes, endoHypothyroid, endoNodule, endoObesity,
   cardioAngina, cardioPalpitations, cardioHypertension, cardioHeartFailure,
@@ -1003,7 +1004,7 @@ export const SCENARIOS: Scenario[] = [
 export const scenarioById = new Map(SCENARIOS.map((s) => [s.id, s]))
 
 // ============ Episodes ============
-// A patient's story across visits: e.g. the GP suspects hypothyroidism, the ultrasound doctor scans the thyroid,
+// A patient's story across visits: e.g. the PCP suspects hypothyroidism, the radiologist scans the thyroid,
 // the endocrinologist starts treatment and reviews it. gap — days after the previous step.
 
 /** cases — allowed case indices of the scenario; sameCase — the case of the previous step (e.g. the same drugs). */
@@ -1037,7 +1038,7 @@ export const EPISODES: Episode[] = [
   { id: 'diabetes', count: 6, steps: [{ scenario: 'gp-t2dm' }, { scenario: 'endo-t2dm', gap: [5, 12], cases: [2] }, { scenario: 'endo-t2dm', gap: [80, 100], cases: [0, 1] }] },
   { id: 'diabetes-known', count: 4, steps: [{ scenario: 'endo-t2dm', cases: [0, 1] }, { scenario: 'endo-t2dm', gap: [85, 100], cases: [0, 1] }] },
   { id: 'obesity', count: 3, steps: [{ scenario: 'endo-obesity' }] },
-  { id: 'anaemia', count: 5, steps: [{ scenario: 'gp-anaemia' }, { scenario: 'gyn-hmb', gap: [7, 21], chance: 0.8 }] },
+  { id: 'anemia', count: 5, steps: [{ scenario: 'gp-anemia' }, { scenario: 'gyn-hmb', gap: [7, 21], chance: 0.8 }] },
   { id: 'annual', count: 10, steps: [{ scenario: 'gp-annual' }, { scenario: 'us-abdo-normal', gap: [1, 7], chance: 0.6 }] },
   { id: 'annual-steatosis', count: 4, steps: [{ scenario: 'gp-annual' }, { scenario: 'us-abdo-steatosis', gap: [1, 7] }, { scenario: 'gastro-fatty-liver', gap: [7, 21], chance: 0.8 }] },
   { id: 'urti', count: 11, steps: [{ scenario: 'gp-urti' }] },

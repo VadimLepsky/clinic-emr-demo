@@ -129,12 +129,12 @@ export function DocumentSheet({
         value={patient.birth_date ? `${birthDate}${age === null ? '' : ` (${formatAge(age)})`}` : '—'}
       />
       {documentNumber && <InfoLine label="Document No." value={documentNumber} />}
-      {/* Doctor and date are in the signature row; without it they go here. */}
+      {/* Provider and date are in the signature row; without it they go here. */}
       {!showSignature && (
         <>
           <InfoLine label="Visit date" value={documentDate} />
           <InfoLine
-            label="Doctor"
+            label="Provider"
             value={doctor.specialty ? `${doctor.full_name}, ${doctor.specialty}` : doctor.full_name}
           />
         </>
@@ -170,13 +170,13 @@ export function DocumentSheet({
           <SheetInfoGrid
             left={[
               ['Date', documentDate],
-              ['Record No.', String(patient.crm_client_id)],
+              ['MRN', String(patient.crm_client_id)],
               ['Patient', patient.full_name],
               ['Date of birth', birthDate],
             ]}
             right={[
               ['Document No.', documentNumber ?? '—'],
-              ['Doctor', doctor.full_name],
+              ['Provider', doctor.full_name],
             ]}
           />
         ),
@@ -192,7 +192,7 @@ export function DocumentSheet({
         {showSignature && (
           <div className="flex flex-wrap items-end justify-between gap-x-gutter">
             <p>
-              <span className="font-semibold">Doctor:</span> {doctor.full_name}
+              <span className="font-semibold">Provider:</span> {doctor.full_name}
               <span className="ml-6 tracking-widest" aria-hidden="true">
                 __________
               </span>
@@ -249,12 +249,12 @@ export function DocumentSheet({
                 ['Age', formatAge(age)],
                 ['Date of birth', birthDate],
                 ['Sex', patient.sex ? sexLabels[patient.sex] : '—'],
-                ['Record No.', String(patient.crm_client_id)],
+                ['MRN', String(patient.crm_client_id)],
               ]}
             />
             <InfoRows
               rows={[
-                ['Doctor', doctor.full_name],
+                ['Provider', doctor.full_name],
                 ['Specialty', doctor.specialty ?? '—'],
                 ['Visit date', documentDate],
                 ['Document No.', documentNumber ?? '—'],
@@ -271,7 +271,7 @@ export function DocumentSheet({
           {showSignature && (
             <div className="flex flex-wrap items-end justify-between gap-4">
               <p>
-                <span className="font-semibold">Doctor:</span> {doctor.full_name}
+                <span className="font-semibold">Provider:</span> {doctor.full_name}
                 <span className="ml-6 tracking-widest" aria-hidden="true">
                   __________
                 </span>

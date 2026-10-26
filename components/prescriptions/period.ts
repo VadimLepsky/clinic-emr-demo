@@ -1,6 +1,6 @@
-export type Period = 'all' | 'current' | 'previous'
+import { formatMonthYear } from '@/lib/format'
 
-const monthFormatter = new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric' })
+export type Period = 'all' | 'current' | 'previous'
 
 function toIso(date: Date) {
   const mm = String(date.getMonth() + 1).padStart(2, '0')
@@ -23,5 +23,5 @@ export function periodRange(period: Period): { from?: string; to?: string } {
 
 export function monthLabel(period: 'current' | 'previous') {
   const now = new Date()
-  return monthFormatter.format(new Date(now.getFullYear(), now.getMonth() + (period === 'current' ? 0 : -1), 1))
+  return formatMonthYear(now.getFullYear(), now.getMonth() + (period === 'current' ? 0 : -1))
 }

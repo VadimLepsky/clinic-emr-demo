@@ -74,7 +74,7 @@ export function ConsultationDocument({ patient, documentId }: ConsultationDocume
   // The template (or null for a lost one) gives the editor its type, for the wording of its messages.
   const ready = document && version && doctor && template !== undefined && letterheads
   // Editing takes the same right as creating a document of this type (canCreateKind): front desk and the contact
-  // centre only view and print.
+  // center only view and print.
   const mayEdit = Boolean(template && currentUser && canCreateKind(currentUser.role, template.kind))
 
   return (
@@ -170,7 +170,7 @@ export function ConsultationDocument({ patient, documentId }: ConsultationDocume
               className="flex items-center gap-3 rounded-2xl bg-card px-8 py-5 text-card-foreground transition-colors hover:bg-muted print:hidden dark:border dark:border-border"
             >
               <span className="min-w-0 flex-1 truncate">
-                <span className="font-semibold">Care plan:</span>
+                <span className="font-semibold">Orders:</span>
                 {` ${prescription.title} · ${formatMoney(prescription.total_amount)} · ${prescription.completion_pct}% completed`}
               </span>
               <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />

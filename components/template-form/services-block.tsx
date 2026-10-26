@@ -22,12 +22,12 @@ type ServicesBlockProps = {
   context?: ServicesEditContext
 }
 
-/** Shown instead of the bundles bar when the document's care plan is paid (services are read-only). */
+/** Shown instead of the bundles bar when the document's orders are paid (services are read-only). */
 export function LockedServicesNote() {
   return (
     <p className="flex items-center gap-1.5 text-sm text-muted-foreground print:hidden">
       <LockIcon className="size-3.5 shrink-0" aria-hidden="true" />
-      The care plan has been paid — services can&apos;t be changed here.
+      The orders have been paid — services can&apos;t be changed here.
     </p>
   )
 }

@@ -33,7 +33,7 @@ export function usePrintPrescription() {
 
     try {
       const detail = await getPrescription(prescriptionId)
-      if (!detail) throw new Error('Care plan not found')
+      if (!detail) throw new Error('Orders not found')
       const { summary, items } = detail
       const [patient, clinicSettings] = await Promise.all([getPatient(summary.patient_id), getClinicSettings()])
       if (!patient) throw new Error('Patient not found')

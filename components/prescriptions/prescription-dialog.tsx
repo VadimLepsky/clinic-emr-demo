@@ -72,8 +72,8 @@ function ExistingPrescription({
     return (
       <div className="flex flex-col gap-6" aria-busy="true">
         <DialogHeader>
-          <DialogTitle>Care plan</DialogTitle>
-          <DialogDescription className="sr-only">Loading the care plan</DialogDescription>
+          <DialogTitle>Orders</DialogTitle>
+          <DialogDescription className="sr-only">Loading the orders</DialogDescription>
         </DialogHeader>
         <Skeleton className="h-5 w-2/3" />
         <Skeleton className="mx-auto h-[50svh] w-full max-w-[210mm]" />
@@ -85,7 +85,7 @@ function ExistingPrescription({
     return (
       <div className="flex flex-col gap-6">
         <DialogHeader>
-          <DialogTitle>Care plan not found</DialogTitle>
+          <DialogTitle>Orders not found</DialogTitle>
           <DialogDescription>It may have been deleted.</DialogDescription>
         </DialogHeader>
         <DialogFooter>
@@ -129,7 +129,7 @@ function PrescriptionEditor({
   const { data: clinicSettings } = useSWR('clinic-settings', getClinicSettings)
   const summary = detail?.summary ?? null
   const locked = Boolean(summary?.locked_at)
-  // Doctor, medical staff and manager edit everything (canEditPrescriptions); reception and the contact centre only
+  // Doctor, medical staff and manager edit everything (canEditPrescriptions); reception and the contact center only
   // the discount of a saved prescription (canSetPrescriptionDiscount). A paid one is closed to every change.
   const mayEdit = Boolean(currentUser && canEditPrescriptions(currentUser.role))
   const mayDiscount = Boolean(currentUser && canSetPrescriptionDiscount(currentUser.role))
@@ -157,7 +157,7 @@ function PrescriptionEditor({
   const setDiscountAll = (pct: number) =>
     setRows((current) => current.map((r) => (r.serviceId !== null ? { ...r, discountPct: pct } : r)))
 
-  // A row added twice in this session gets +1 instead of a second row (catalogue by id, External by name).
+  // A row added twice in this session gets +1 instead of a second row (catalog by id, External by name).
   const addRow = (row: Omit<Row, 'key' | 'quantity' | 'discountPct'>) => {
     setRows((current) => {
       const same = (r: Row) =>
@@ -193,10 +193,10 @@ function PrescriptionEditor({
         else await createPrescription({ patientId, items })
       }
       await refresh()
-      toast.success('Care plan saved')
+      toast.success('Orders saved')
       onTargetChange(null)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Could not save the care plan')
+      toast.error(error instanceof Error ? error.message : 'Could not save the orders')
     } finally {
       setSaving(false)
     }
@@ -207,10 +207,10 @@ function PrescriptionEditor({
     try {
       const copy = await duplicatePrescription(summary.id)
       await refresh()
-      toast.success('Created a copy of the care plan')
+      toast.success('Created a copy of the orders')
       onTargetChange(copy.id)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Could not duplicate the care plan')
+      toast.error(error instanceof Error ? error.message : 'Could not duplicate the orders')
     }
   }
 
@@ -223,7 +223,7 @@ function PrescriptionEditor({
       <DialogHeader className="flex-row flex-wrap items-start justify-between gap-x-6 gap-y-4 pr-0 pb-6">
         <div className="flex min-w-0 flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-2">
-            <DialogTitle>{summary ? prescriptionTitle(summary.created_at, 'dialog') : 'New care plan'}</DialogTitle>
+            <DialogTitle>{summary ? prescriptionTitle(summary.created_at, 'dialog') : 'New orders'}</DialogTitle>
             {status && (
               <span className={`rounded-md px-2 py-0.5 text-xs leading-tight font-medium ${status.className}`}>
                 {status.label}
@@ -231,7 +231,7 @@ function PrescriptionEditor({
             )}
           </div>
           <DialogDescription>
-            {summary ? `${summary.doctor_name} · created ${formatDate(summary.created_at)}` : `Doctor: ${doctorName}`}
+            {summary ? `${summary.doctor_name} · created ${formatDate(summary.created_at)}` : `Provider: ${doctorName}`}
             {sourceDocument && summary?.source_document_id && (
               <>
                 {' · '}

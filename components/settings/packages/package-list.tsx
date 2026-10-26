@@ -50,7 +50,7 @@ export function PackageList() {
         <div className="flex min-w-0 flex-col gap-1">
           <CardTitle>Service bundles</CardTitle>
           <CardDescription>
-            Ready-made sets of services a doctor adds to a care plan in one click.
+            Ready-made sets of services a provider adds to orders in one click.
           </CardDescription>
         </div>
         <Button onClick={() => setEditing('new')}>
@@ -113,7 +113,7 @@ export function PackageList() {
           <DialogHeader>
             <DialogTitle>Delete bundle?</DialogTitle>
             <DialogDescription>
-              Bundle «{deleting?.name}» will be deleted. Existing care plans won&apos;t change.
+              Bundle «{deleting?.name}» will be deleted. Existing orders won&apos;t change.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

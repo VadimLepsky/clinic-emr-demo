@@ -27,10 +27,10 @@ type Icon = React.ComponentType<{ className?: string }>
 
 // Documents filled in from a template: an item opens the template picker for its type.
 const TEMPLATE_OPTIONS: { kind: TemplateKind; label: string; icon: Icon }[] = [
-  { kind: 'consultation', label: 'Consultation', icon: StethoscopeIcon },
+  { kind: 'consultation', label: 'Visit note', icon: StethoscopeIcon },
   { kind: 'ultrasound', label: 'Ultrasound', icon: ScanLineIcon },
   { kind: 'lab', label: 'Lab results', icon: FlaskConicalIcon },
-  { kind: 'certificate', label: 'Certificate', icon: FileBadgeIcon },
+  { kind: 'certificate', label: 'Letter or form', icon: FileBadgeIcon },
 ]
 
 // Results from labs and devices still arrive as files; «Upload from computer» is for everyone.

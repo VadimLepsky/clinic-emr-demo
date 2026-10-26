@@ -19,7 +19,7 @@ import { formatMoney, lineTotal, prescriptionTitle } from './format'
 
 export type PrescriptionSheetRow = {
   key: string
-  /** The catalogue service's name, or the name an External service was typed with. */
+  /** The catalog service's name, or the name an External service was typed with. */
   name: string
   /** null — an External service: it goes to «External referrals» (no price). */
   serviceId: string | null
@@ -31,20 +31,20 @@ export type PrescriptionSheetRow = {
 }
 
 /**
- * view — read only. edit — services, quantities and the discount (doctor, nurse, clinic manager).
- * discount — only the discount (front desk and the contact centre).
+ * view — read only. edit — services, quantities and the discount (doctor, nurse, practice manager).
+ * discount — only the discount (front desk and the contact center).
  */
 export type PrescriptionSheetMode = 'view' | 'edit' | 'discount'
 
 type PrescriptionSheetProps = {
-  /** The care plan letterhead: header and footer images (ClinicSettings, «Care plan letterhead»); null — none. */
+  /** The orders letterhead: header and footer images (ClinicSettings, «Orders letterhead»); null — none. */
   clinicSettings: ClinicSettings
   patient: Patient
   doctorName: string
-  /** ISO date the care plan was created; the title is «Care plan from the visit on <date>». */
+  /** ISO date the orders were created; the title is «Orders from the visit on <date>». */
   date: string
   rows: PrescriptionSheetRow[]
-  /** Old care plans only: the free «External» text, shown as is in the External block. */
+  /** Old orders only: the free «External» text, shown as is in the External block. */
   externalRecommendations: string
   mode?: PrescriptionSheetMode
   onRowChange?: (key: string, patch: Partial<Pick<PrescriptionSheetRow, 'quantity' | 'discountPct'>>) => void
@@ -64,7 +64,7 @@ const span = { 1: 'col-span-1', 2: 'col-span-2', 6: 'col-span-6', 7: 'col-span-7
 
 const DISCLAIMER =
   'This document is an estimate of the cost of services available at the clinic. ' +
-  "Medical recommendations are given in the doctor's consultation note."
+  "Medical recommendations are given in the provider's visit note."
 
 export function isPrescriptionRowValid(row: Pick<PrescriptionSheetRow, 'quantity' | 'discountPct'>) {
   return Number.isInteger(row.quantity) && row.quantity >= 1 && row.discountPct >= 0 && row.discountPct <= 100
@@ -96,7 +96,7 @@ const numberInput = cn(
   'h-line w-full text-center text-doc tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
 )
 
-// The care plan as an A4 sheet: one layout for the dialog (view / edit / discount) and for print.
+// The orders as an A4 sheet: one layout for the dialog (view / edit / discount) and for print.
 // Width 210mm, height follows the content (screen and print); the footer follows the information text.
 export function PrescriptionSheet({
   clinicSettings,
@@ -171,8 +171,8 @@ export function PrescriptionSheet({
   }
 
   return (
-    // Unlike the consultation note (A4 pages, footer at the bottom): as tall as its content, the footer right after
-    // the information text — on screen and in print. Paper, type and bars as in the consultation note.
+    // Unlike the visit note (A4 pages, footer at the bottom): as tall as its content, the footer right after
+    // the information text — on screen and in print. Paper, type and bars as in the visit note.
     <article
       className={cn(
         sheetPaperClass,
@@ -183,7 +183,7 @@ export function PrescriptionSheet({
     >
       <DocGridOverlay />
       <div className={subgridClass}>
-        {header && <SheetHeader src={header} alt="Care plan header" />}
+        {header && <SheetHeader src={header} alt="Orders header" />}
 
         <SheetInfoGrid
           className="mt-line first:mt-0"
@@ -193,12 +193,12 @@ export function PrescriptionSheet({
             ['Sex', patient.sex ? sexLabels[patient.sex] : '—'],
           ]}
           right={[
-            ['Doctor', doctorName],
+            ['Provider', doctorName],
             ['Date', formatSheetDate(date)],
           ]}
         />
 
-        {/* As in the consultation note: centered, the title size, medium weight. */}
+        {/* As in the visit note: centered, the title size, medium weight. */}
         <h1 className="mt-[calc(var(--doc-line)*1.5)] text-center text-doc-title text-balance font-medium">{prescriptionTitle(date)}</h1>
 
         <section className={cn('mt-[calc(var(--doc-line)*1.5)]', subgridClass)} aria-labelledby="rx-clinic">
@@ -347,7 +347,7 @@ export function PrescriptionSheet({
           </div>
         </section>
 
-        {/* Only when it has something: External services (no price), or an old care plan's free text. */}
+        {/* Only when it has something: External services (no price), or old orders' free text. */}
         {(outsideRows.length > 0 || external) && (
           <section className={cn('mt-line break-inside-avoid', subgridClass)} aria-labelledby="rx-outside">
             <h2 id="rx-outside" className="font-semibold">
@@ -384,7 +384,7 @@ export function PrescriptionSheet({
 
       <footer className="col-span-full flex flex-col gap-line pt-line break-inside-avoid">
         <p className="text-doc-small text-muted-foreground">{DISCLAIMER}</p>
-        {footer && <SheetFooterImage src={footer} alt="Care plan footer" />}
+        {footer && <SheetFooterImage src={footer} alt="Orders footer" />}
       </footer>
     </article>
   )

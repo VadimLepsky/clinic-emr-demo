@@ -14,10 +14,10 @@ import { Skeleton } from '@/components/ui/skeleton'
 const SEARCH_THRESHOLD = 6
 
 const kindGroups: { kind: TemplateKind; label: string }[] = [
-  { kind: 'consultation', label: 'Consultations' },
+  { kind: 'consultation', label: 'Visit notes' },
   { kind: 'ultrasound', label: 'Ultrasound' },
   { kind: 'lab', label: 'Lab results' },
-  { kind: 'certificate', label: 'Certificates' },
+  { kind: 'certificate', label: 'Letters & forms' },
   { kind: 'other', label: 'Other' },
 ]
 

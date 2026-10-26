@@ -1,7 +1,7 @@
 import { AllPrescriptions } from '@/components/prescriptions/all-prescriptions'
 import { isPeriod } from '@/components/prescriptions/period'
 
-export const metadata = { title: 'Care plans' }
+export const metadata = { title: 'Orders' }
 
 export default async function PrescriptionsPage({
   searchParams,

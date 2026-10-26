@@ -24,10 +24,10 @@ import { todayIso } from './format'
 import { TemplatePickerDialog } from './template-picker-dialog'
 
 const newDocumentTitles: Record<TemplateKind, string> = {
-  consultation: 'New consultation note',
+  consultation: 'New visit note',
   ultrasound: 'New ultrasound report',
   lab: 'New lab results',
-  certificate: 'New certificate',
+  certificate: 'New letter or form',
   other: 'New document',
 }
 

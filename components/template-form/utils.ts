@@ -24,7 +24,7 @@ export const sectionElementId = (sectionId: string) => `tf-section-${sectionId}`
 export const fieldElementId = (fieldId: string) => `tf-field-${fieldId}`
 export const cleanLabel = (label: string) => label.trim().replace(/:\s*$/, '')
 
-/** Variables land on the sheet, so dates take the sheet format (24/10/2026). */
+/** Variables land on the sheet, so dates take the sheet format (10/24/2026). */
 function formatIsoDate(iso: string | null) {
   return iso ? formatSheetDate(iso.slice(0, 10)) : ''
 }
